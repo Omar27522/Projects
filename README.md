@@ -10,7 +10,7 @@ I'm currently learning PHP, HTML, and CSS, and this projects page serves as a sh
   - **Description**: [A simple page with alternative syntax for control structures.]
   - **Technologies Used**: PHP, HTML, CSS
 
-(Repeat the above structure for each project)
+<!--(Repeat the above structure for each project)-->
 
 ## How to Use
 
