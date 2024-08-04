@@ -11,7 +11,7 @@ I'm currently learning PHP, HTML, and CSS, and this projects page serves as a sh
   - **Technologies Used**: PHP, HTML, CSS
  
   - - **Project Name**: [Snake Game]
-  - **Description**: [Afun Snake Game from annother coder]
+  - **Description**: [A fun Snake Game from annother coder]
   - **Technologies Used**: JavaScript, HTML, CSS
 
 <!--(Repeat the above structure for each project)-->
