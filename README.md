@@ -9,6 +9,10 @@ I'm currently learning PHP, HTML, and CSS, and this projects page serves as a sh
 - **Project Name**: [Alternative Syntax for Control Structures]
   - **Description**: [A simple page with alternative syntax for control structures.]
   - **Technologies Used**: PHP, HTML, CSS
+ 
+  - - **Project Name**: [Snake Game]
+  - **Description**: [Afun Snake Game from annother coder]
+  - **Technologies Used**: JavaScript, HTML, CSS
 
 <!--(Repeat the above structure for each project)-->
 
