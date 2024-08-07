@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display&family=VT323&display=swap" rel="stylesheet">
+    <title>Snake Game</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <div><div><a href="./snake.html"><h2 style="position: relative;">Go here to know more.</h2></a>
+        <script>
+            document.addEventListener('keydown', function(event) {
+                if (event.code === 'Space') {
+                    document.querySelectorAll('a').forEach(function(link) {
+                        link.style.display = 'none';
+                    });
+                }
+            });
+        </script>
+    </div>
+    <div class="game-container">
+        <img src="./snake.png" alt="snake-logo" id="logo">
+        <div class="scores">
+          <h2 id="score">000</h2>
+          <h2 id="highScore">000</h2>
+        </div>
+        <div class="game-border-1">
+          <div class="game-border-2">
+            <div class="game-border-3">
+              <div id="game-board"></div>
+            </div>
+          </div>
+        </div>
+        <h2 id="instruction-text">Press Spacebar to start the game</h2>
+      </div>
+</body>
+</html>
