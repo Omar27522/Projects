@@ -26,6 +26,7 @@ function draw() {
 }
 
 // Draw snake
+// Draw snake
 function drawSnake() {
   snake.forEach((segment, index) => {
     const snakeElement = createGameElement('div', 'snake');
@@ -35,7 +36,10 @@ function drawSnake() {
     setPosition(snakeElement, segment);
     board.appendChild(snakeElement);
   });
+
+  rotateSnakeHead(); // Rotate the head of the snake after drawing
 }
+
 
 // Create a snake or food cube/div
 function createGameElement(tag, className) {
@@ -123,7 +127,7 @@ function startGame() {
   }, gameSpeedDelay);
 }
 
-// Keypress event listener
+// Keypress event listener// Keypress event listener
 function handleKeyPress(event) {
   if (
     (!gameStarted && event.code === 'Space') ||
@@ -131,24 +135,61 @@ function handleKeyPress(event) {
   ) {
     startGame();
   } else {
+    let newDirection;
     switch (event.key) {
       case 'ArrowUp':
-        direction = 'up';
+        newDirection = 'up';
         break;
       case 'ArrowDown':
-        direction = 'down';
+        newDirection = 'down';
         break;
       case 'ArrowLeft':
-        direction = 'left';
+        newDirection = 'left';
         break;
       case 'ArrowRight':
-        direction = 'right';
+        newDirection = 'right';
         break;
+    }
+
+    // Only update the direction if it's not directly opposite to the current one
+    if (
+      (direction === 'up' && newDirection !== 'down') ||
+      (direction === 'down' && newDirection !== 'up') ||
+      (direction === 'left' && newDirection !== 'right') ||
+      (direction === 'right' && newDirection !== 'left')
+    ) {
+      direction = newDirection;
+      rotateSnakeHead(); // Rotate the head of the snake on direction change
     }
   }
 }
 
 document.addEventListener('keydown', handleKeyPress);
+
+
+function rotateSnakeHead() {
+  const snakeHead = document.getElementById('firstSnake');
+  if (!snakeHead) return;
+
+  let rotation;
+  switch (direction) {
+    case 'up':
+      rotation = 'rotate(270deg)';
+      break;
+    case 'down':
+      rotation = 'rotate(90deg)';
+      break;
+    case 'left':
+      rotation = 'rotate(180deg)';
+      break;
+    case 'right':
+      rotation = 'rotate(0deg)';
+      break;
+  }
+  snakeHead.style.transform = rotation;
+}
+
+
 
 function increaseSpeed() {
   //   console.log(gameSpeedDelay);
@@ -229,10 +270,22 @@ function handleTouchMove(event) {
   let dx = touchEndX - touchStartX;
   let dy = touchEndY - touchStartY;
 
+  let newDirection;
   if (Math.abs(dx) > Math.abs(dy)) {
-    direction = dx > 0 ? 'right' : 'left';
+    newDirection = dx > 0 ? 'right' : 'left';
   } else {
-    direction = dy > 0 ? 'down' : 'up';
+    newDirection = dy > 0 ? 'down' : 'up';
+  }
+
+  // Only update the direction if it's not directly opposite to the current one
+  if (
+    (direction === 'up' && newDirection !== 'down') ||
+    (direction === 'down' && newDirection !== 'up') ||
+    (direction === 'left' && newDirection !== 'right') ||
+    (direction === 'right' && newDirection !== 'left')
+  ) {
+    direction = newDirection;
+    rotateSnakeHead(); // Rotate the head of the snake on direction change
   }
 
   touchStartX = 0;
@@ -245,4 +298,5 @@ function handleTouchMove(event) {
 
   event.preventDefault();
 }
+
 instructionText.textContent = 'Tap to start, then swipe to control the snake';

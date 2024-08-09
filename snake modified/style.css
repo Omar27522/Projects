@@ -57,14 +57,19 @@ html, body {
     
   }
   
-  .snake {
+  .snake { /*Make the skin rotate so its always parallel to the snake*/
     border: #5a55a5 0.2vmin dotted;
     border-radius: .7vmin;
     background-image:url('skin.png');
+    background-size: contain;
+  
+    
   }
   #firstSnake {
     /* Your specific styles for the first snake */
     background-image:url('head.png');
+    background-size: fill;
+    background-repeat: no-repeat;
     
 
   }
