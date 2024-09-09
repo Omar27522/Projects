@@ -8,7 +8,7 @@
             "type": "chrome",
             "request": "launch",
             "name": "Launch Chrome against localhost",
-            "url": "http://projects/jQuery",
+            "url": "http://projects/",
             "webRoot": "${workspaceFolder}"
         }
     ]
