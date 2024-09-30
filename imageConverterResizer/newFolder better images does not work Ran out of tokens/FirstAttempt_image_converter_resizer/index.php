@@ -36,5 +36,9 @@ Quality: <input type="range" value="Desired Quality" >
 <!-- multipart/form-data	 This value is necessary if the user will upload a file through the form> -->
 <form action="process_image.php" method="post" enctype="multipart/form-data">
 <input type="file" name="image" accept="image/*">
+    <p>
+<input type="text" value="height">
+<input type="text" value="width">
+    </p>
 <input type="submit" value="Submit">
 </form>

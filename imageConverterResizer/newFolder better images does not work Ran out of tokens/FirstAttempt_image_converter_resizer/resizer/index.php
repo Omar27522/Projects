@@ -12,8 +12,8 @@ $source = imagecreatefromjpeg('flag.jpg');
 list($width, $height) = getimagesize('flag.jpg');
 
 // Define new dimensions (200x200 pixels)
-$newWidth = 500;
-$newHeight = 200;
+$newWidth = 100;
+$newHeight = 50;
 
 // Create a new image
 $thumb = imagecreatetruecolor($newWidth, $newHeight);

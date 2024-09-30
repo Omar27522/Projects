@@ -7,25 +7,34 @@
         <input type="file" name="image" accept="image/*">
         <input type="submit" value="Submit">
     </form>
-    I would like to show what the file that was uploaded was when I navigate to process_image.php
+    I would like to show what the file that was uploaded was, when I navigate to process_image.php
     -->
+
     <h1>Gemini release 2024.09.04</h1>
-    <!-- This code does the following:
 
-    Checks for an uploaded image: It verifies if an image was submitted through the form by checking if the $_FILES['image'] array is set and if there's no upload error.
+<!-- This code does the following:
 
-    Gets file information: If an image was uploaded, it retrieves the temporary file path and the original filename.
+    Checks for an uploaded image:
+        It verifies if an image was submitted through the form by checking if the
+            $_FILES['image'] array is set and if there's no upload error.
 
-    Sets the destination path: It specifies the desired destination path for the uploaded image, which is uploads/ followed by the original filename.
+    Gets file information:
+        If an image was uploaded, it retrieves the temporary file path and the original filename.
 
-    Moves the uploaded file: It moves the uploaded file from its temporary location to the specified destination path using move_uploaded_file().
+    Sets the destination path:
+        It specifies the desired destination path for the uploaded image, which is uploads/ followed by the original filename.
 
-    Displays the image: If the file was moved successfully, it displays the uploaded image using an <img> tag with the destination path as the source. If there was an error, it displays an error message.
+    Moves the uploaded file:
+        It moves the uploaded file from its temporary location to the specified destination path using move_uploaded_file().
 
-    Handles no upload: If no image was uploaded, it displays a message indicating that.
+    Displays the image:
+        If the file was moved successfully, it displays the uploaded image using an
+            <img> tag with the destination path as the source. If there was an error, it displays an error message.
+
+    Handles no upload:
+        If no image was uploaded, it displays a message indicating that.
 
         **Make sure to create the uploads directory in your project's root directory to store the uploaded images.**
-
 -->
     <title>Uploaded Image</title>
 </head>
@@ -43,6 +52,7 @@
         // Move the uploaded file to its final destination
         if (move_uploaded_file($tmp_name, $destination_path)) {
             // Display the uploaded image
+            echo $original_filename.'<br/>';
             echo '<img src="' . $destination_path . '" alt="Uploaded Image">';
         } else {
             echo 'Error uploading the image.';
