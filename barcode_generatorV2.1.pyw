@@ -346,19 +346,17 @@ def open_input_window():
     """Main input window with settings, preview, and output options."""
     input_window = Toplevel(app)  # Use Toplevel for the main input window
     input_window.title("Enter Label Details")
+    input_window.attributes('-topmost', True)  # Set window to be always on top by default
 
-    # Add stay on top state variable
-    stay_on_top = tk.BooleanVar(value=False)
+    # Control buttons frame (Settings and Reset)
+    control_frame = tk.Frame(input_window)
+    control_frame.grid(row=0, column=0, columnspan=2, sticky="ew", pady=5)
 
-    def toggle_stay_on_top():
-        """Toggle the window's stay-on-top state"""
-        current_state = stay_on_top.get()
-        input_window.attributes('-topmost', current_state)
-        stay_on_top_btn.config(text="Always On Top ✓" if current_state else "Always On Top")
+    settings_button = tk.Button(control_frame, text="Settings", command=lambda: toggle_settings())
+    settings_button.pack(side=tk.LEFT, padx=10)
 
-    # Add stay on top button at the top of the window
-    stay_on_top_btn = tk.Button(input_window, text="Always On Top", command=lambda: [stay_on_top.set(not stay_on_top.get()), toggle_stay_on_top()])
-    stay_on_top_btn.grid(row=0, column=0, columnspan=2, pady=5)
+    reset_button = tk.Button(control_frame, text="Reset", command=lambda: clear_inputs(inputs))
+    reset_button.pack(side=tk.RIGHT, padx=10)
 
     inputs = {}
     labels = [
@@ -403,16 +401,6 @@ def open_input_window():
     global png_count_label
     png_count_label = tk.Label(buttons_frame, text="")
     png_count_label.pack(side=tk.LEFT, padx=5)
-
-    # Control buttons frame (Settings and Reset)
-    control_frame = tk.Frame(input_window)
-    control_frame.grid(row=0, column=0, columnspan=2, sticky="ew", pady=5)
-
-    settings_button = tk.Button(control_frame, text="Settings", command=toggle_settings)
-    settings_button.pack(side=tk.LEFT, padx=10)
-
-    reset_button = tk.Button(control_frame, text="Reset", command=lambda: clear_inputs(inputs))
-    reset_button.pack(side=tk.RIGHT, padx=10)
 
     generate_button = tk.Button(input_window, text="Generate Label", command=lambda: generate_and_save_fixed_label(inputs))
     generate_button.grid(row=len(labels)+3, column=0, columnspan=2, pady=10)
