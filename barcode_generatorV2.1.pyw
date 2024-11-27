@@ -348,6 +348,16 @@ def open_input_window():
     input_window.title("Enter Label Details")
     input_window.attributes('-topmost', True)  # Set window to be always on top by default
 
+    # Create right-click context menu
+    def create_context_menu(widget):
+        menu = tk.Menu(widget, tearoff=0)
+        menu.add_command(label="Paste", command=lambda: widget.event_generate('<<Paste>>'))
+        return menu
+
+    def show_context_menu(event, widget):
+        menu = create_context_menu(widget)
+        menu.post(event.x_root, event.y_root)
+
     # Control buttons frame (Settings and Reset)
     control_frame = tk.Frame(input_window)
     control_frame.grid(row=0, column=0, columnspan=2, sticky="ew", pady=5)
@@ -374,6 +384,9 @@ def open_input_window():
         if key == "upc_code":
             entry.config(validate="key")
             entry.bind("<KeyRelease>", lambda e: entry.delete(12, tk.END) if len(entry.get()) > 12 else None)
+        
+        # Bind right-click event to show context menu
+        entry.bind("<Button-3>", lambda event, widget=entry: show_context_menu(event, widget))
         
         entry.grid(row=idx+1, column=1, padx=10, pady=5)  # Shifted down by 1 row
         inputs[key] = entry
