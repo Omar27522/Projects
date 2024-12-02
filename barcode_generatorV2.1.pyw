@@ -346,21 +346,23 @@ def open_input_window():
     """Main input window with settings, preview, and output options."""
     input_window = Toplevel(app)  # Use Toplevel for the main input window
     input_window.title("Enter Label Details")
-    input_window.attributes('-topmost', True)  # Set window to be always on top by default
 
-    # Create right-click context menu
-    def create_context_menu(widget):
-        menu = tk.Menu(widget, tearoff=0)
-        menu.add_command(label="Paste", command=lambda: widget.event_generate('<<Paste>>'))
-        return menu
+    # Add stay on top state variable
+    stay_on_top = tk.BooleanVar(value=False)
 
-    def show_context_menu(event, widget):
-        menu = create_context_menu(widget)
-        menu.post(event.x_root, event.y_root)
+    def toggle_stay_on_top():
+        """Toggle the window's stay-on-top state"""
+        current_state = stay_on_top.get()
+        input_window.attributes('-topmost', current_state)
+        stay_on_top_btn.config(text="Always On Top ✓" if current_state else "Always On Top")
+
+    # Add stay on top button at the top of the window
+    stay_on_top_btn = tk.Button(input_window, text="Always On Top", command=lambda: [stay_on_top.set(not stay_on_top.get()), toggle_stay_on_top()])
+    stay_on_top_btn.grid(row=0, column=0, columnspan=2, pady=5)
 
     # Control buttons frame (Settings and Reset)
     control_frame = tk.Frame(input_window)
-    control_frame.grid(row=0, column=0, columnspan=2, sticky="ew", pady=5)
+    control_frame.grid(row=1, column=0, columnspan=2, sticky="ew", pady=5)  # Moved down one row
 
     settings_button = tk.Button(control_frame, text="Settings", command=lambda: toggle_settings())
     settings_button.pack(side=tk.LEFT, padx=10)
@@ -377,7 +379,7 @@ def open_input_window():
     ]
 
     for idx, (label_text, key) in enumerate(labels):
-        tk.Label(input_window, text=label_text).grid(row=idx+1, column=0, padx=10, pady=5)  # Shifted down by 1 row
+        tk.Label(input_window, text=label_text).grid(row=idx+2, column=0, padx=10, pady=5)  # Shifted down by 2 rows
         entry = tk.Entry(input_window)
         
         # Add validation to the UPC Code entry to accept only numeric inputs and restrict to 12 characters
@@ -388,21 +390,21 @@ def open_input_window():
         # Bind right-click event to show context menu
         entry.bind("<Button-3>", lambda event, widget=entry: show_context_menu(event, widget))
         
-        entry.grid(row=idx+1, column=1, padx=10, pady=5)  # Shifted down by 1 row
+        entry.grid(row=idx+2, column=1, padx=10, pady=5)  # Shifted down by 2 rows
         inputs[key] = entry
 
     def toggle_settings():
         """Toggle the visibility of the settings frame and adjust button positions."""
         if settings_frame.winfo_ismapped():
             settings_frame.grid_remove()
-            generate_button.grid(row=len(labels)+3, column=0, columnspan=2, pady=10)
-        else:
-            settings_frame.grid(row=len(labels)+3, column=0, columnspan=2, pady=10)
             generate_button.grid(row=len(labels)+4, column=0, columnspan=2, pady=10)
+        else:
+            settings_frame.grid(row=len(labels)+4, column=0, columnspan=2, pady=10)
+            generate_button.grid(row=len(labels)+5, column=0, columnspan=2, pady=10)
 
     # Buttons Frame
     buttons_frame = tk.Frame(input_window)
-    buttons_frame.grid(row=len(labels)+1, column=0, columnspan=2, pady=10)
+    buttons_frame.grid(row=len(labels)+2, column=0, columnspan=2, pady=10)
 
     preview_btn = tk.Button(buttons_frame, text="Preview", command=lambda: preview_label(inputs))
     preview_btn.pack(side=tk.LEFT, padx=5)
@@ -416,7 +418,7 @@ def open_input_window():
     png_count_label.pack(side=tk.LEFT, padx=5)
 
     generate_button = tk.Button(input_window, text="Generate Label", command=lambda: generate_and_save_fixed_label(inputs))
-    generate_button.grid(row=len(labels)+3, column=0, columnspan=2, pady=10)
+    generate_button.grid(row=len(labels)+4, column=0, columnspan=2, pady=10)
 
     # Settings Frame - adjust its position
     settings_frame = tk.Frame(input_window)
