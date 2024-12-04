@@ -1,0 +1,11 @@
+I would like to build a PHP system that will allow the user to post, an article witin the site.
+
+I would like to create a directory where each post is stored in .xml format.
+[2024-12-03 19:24:22] some text more more
+[2024-12-03 19:30:55] some text this is some other text.
+[2024-12-03 19:49:49] some text this is some other text.
+[2024-12-03 19:50:13] What is this text?
+[2024-12-03 19:53:44] Como estas? bien agustin
+[2024-12-03 19:56:28] Como estas? bien agustin
+[2024-12-03 12:04:25 PM PST] LA, DOGERS Champions
+[2024-12-03 12:05:39 PM PST] <p style="color:red;">SOME OTHER TEXT</p>
