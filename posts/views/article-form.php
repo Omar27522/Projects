@@ -10,7 +10,7 @@
             <input type="text" id="articleTitle" name="articleTitle" required>
         </div>
         <div class="form-group">
-            <label for="articleContent">Article Content:</label>
+            <label for="articleContent">Article Content:</label><br />
             <textarea id="articleContent" name="articleContent" rows="10" required></textarea>
         </div>
         <div class="form-group">

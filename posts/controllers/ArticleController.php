@@ -23,8 +23,4 @@ class ArticleController {
             trim($data['authorName'])
         );
     }
-
-    public function parseArticle($line) {
-        return $this->model->parse($line);
-    }
 }

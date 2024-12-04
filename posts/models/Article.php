@@ -26,16 +26,4 @@ class Article {
     public function getAll() {
         return $this->db->getArticles();
     }
-
-    public function parse($line) {
-        if (preg_match('/\[(.*?)\] (.*) by (.*)/', $line, $matches)) {
-            return [
-                'timestamp' => $matches[1],
-                'title' => $matches[2],
-                'author' => $matches[3],
-                'content' => substr($line, strpos($line, "\n") + 1)
-            ];
-        }
-        return null;
-    }
 }
