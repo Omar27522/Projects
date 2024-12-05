@@ -30,6 +30,8 @@ table {
     width: 80%;
     max-width: 600px;
     overflow: hidden;
+    position: relative;
+    z-index: 1;
 }
 
 th {
@@ -39,6 +41,9 @@ th {
     text-transform: uppercase;
     font-size: 0.875rem;
     padding: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 2;
 }
 
 td {
@@ -53,6 +58,16 @@ tr:last-child td {
 
 tr:hover td {
     background-color: #f7fafc;
+}
+
+.empty-row td {
+    background-color: #f9f9f9;
+    border: 1px solid #eee;
+    font-style: italic;
+}
+
+.empty-row:hover td {
+    background-color: #f9f9f9;
 }
 
 .new-entry-btn {
@@ -86,6 +101,7 @@ tr:hover td {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
     justify-content: center;
     align-items: center;
 }
@@ -95,11 +111,14 @@ tr:hover td {
 }
 
 .modal-content {
-    background: white;
-    padding: 2rem;
-    border-radius: 10px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     width: 90%;
     max-width: 500px;
+    padding: 2rem;
+    position: relative;
+    z-index: 1001;
 }
 
 .form-group {
@@ -445,4 +464,100 @@ input[type="text"]::-webkit-calendar-picker-indicator {
     width: 90%;
     max-width: 500px;
     padding: 2rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.action-buttons button {
+    border: none;
+    border-radius: 4px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #333;
+    background-color: #fff;
+    border: 1px solid #ddd;
+}
+
+.action-buttons .edit-btn {
+    color: #4a90e2;
+    background-color: #fff;
+}
+
+.action-buttons .edit-btn:hover {
+    background-color: #4a90e2;
+    color: white;
+}
+
+.action-buttons .delete-btn {
+    color: #e74c3c;
+    background-color: #fff;
+}
+
+.action-buttons .delete-btn:hover {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.action-buttons .save-btn {
+    color: #2ecc71;
+    background-color: #fff;
+}
+
+.action-buttons .save-btn:hover {
+    background-color: #2ecc71;
+    color: white;
+}
+
+.action-buttons .cancel-btn {
+    color: #e74c3c;
+    background-color: #fff;
+}
+
+.action-buttons .cancel-btn:hover {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.action-buttons i {
+    font-size: 14px;
+}
+
+/* Add a subtle hover effect to the buttons */
+.action-buttons button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Add active state effect */
+.action-buttons button:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* Make sure the icons are centered */
+.action-buttons button i {
+    position: relative;
+    top: 0;
+    left: 0;
+}
+
+/* Add focus state for accessibility */
+.action-buttons button:focus {
+    outline: 2px solid #4a90e2;
+    outline-offset: 2px;
+}
+
+/* Ensure buttons maintain shape in edit mode */
+.edit-mode .action-buttons button {
+    width: 32px;
+    height: 32px;
 }
