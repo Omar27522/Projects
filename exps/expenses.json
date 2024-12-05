@@ -1,0 +1,74 @@
+{
+    "expenses": [
+        {
+            "date": "2-Dec",
+            "item": "Burguer",
+            "place": "Burguer Joint",
+            "amount": "$9.21",
+            "type": "Food"
+        },
+        {
+            "date": "3-Dec",
+            "item": "tacos",
+            "place": "Burguer Joint",
+            "amount": "$8.21",
+            "type": "Food"
+        },
+        {
+            "date": "5-Dec",
+            "item": "Tacosh",
+            "place": "651",
+            "amount": "$6",
+            "type": "clothing"
+        },
+        {
+            "date": "5-Dec",
+            "item": "eight",
+            "place": "shop",
+            "amount": "$21",
+            "type": "personal"
+        },
+        {
+            "date": "5-Dec",
+            "item": "burguer",
+            "place": "651",
+            "amount": "$54",
+            "type": "Drinks"
+        },
+        {
+            "date": "5-Dec",
+            "item": "Pizza",
+            "place": "The Pizza Place",
+            "amount": "$50",
+            "type": "Food"
+        },
+        {
+            "date": "5-Dec",
+            "item": "shoes",
+            "place": "shoe place",
+            "amount": "$10",
+            "type": "loks"
+        },
+        {
+            "date": "5-Dec",
+            "item": "dsa",
+            "place": "dsa",
+            "amount": "$980",
+            "type": "6546"
+        },
+        {
+            "date": "5-Dec",
+            "item": "Tax",
+            "place": "Bank",
+            "amount": "$50",
+            "type": "Tax"
+        },
+        {
+            "date": "5-Dec",
+            "item": "Tax",
+            "place": "Bank",
+            "amount": "$40",
+            "type": "Tax"
+        }
+    ]
+}

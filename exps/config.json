@@ -1,0 +1,28 @@
+{
+    "items": [
+        {
+            "name": "Coffee",
+            "category": "Drinks"
+        },
+        {
+            "name": "dsa",
+            "category": "6546"
+        },
+        {
+            "name": "Pizza",
+            "category": "Food"
+        },
+        {
+            "name": "shoes",
+            "category": "loks"
+        },
+        {
+            "name": "Tacos",
+            "category": "Food"
+        },
+        {
+            "name": "Tax",
+            "category": "Tax"
+        }
+    ]
+}
