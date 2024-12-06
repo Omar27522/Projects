@@ -1,12 +1,28 @@
 {
     "items": [
         {
+            "name": "",
+            "category": "what?"
+        },
+        {
             "name": "dfgv",
             "category": "gdg"
         },
         {
             "name": "item",
             "category": "sa"
+        },
+        {
+            "name": "ok",
+            "category": ""
+        },
+        {
+            "name": "some item",
+            "category": "fix"
+        },
+        {
+            "name": "this",
+            "category": ""
         }
     ]
 }

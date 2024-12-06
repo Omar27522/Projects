@@ -1,3 +1,51 @@
+<?php
+// Initialize default values
+$config = ['items' => []];
+$expenses = ['expenses' => []];
+
+// Helper function to format date
+function formatDate($dateStr) {
+    $date = new DateTime($dateStr);
+    return $date->format('j-M');
+}
+
+// Load configuration and expenses data
+try {
+    if (file_exists('config.json')) {
+        $configData = file_get_contents('config.json');
+        $config = json_decode($configData, true) ?: ['items' => []];
+    }
+    
+    if (file_exists('expenses.json')) {
+        $expensesData = file_get_contents('expenses.json');
+        $expenses = json_decode($expensesData, true) ?: ['expenses' => []];
+    }
+} catch (Exception $e) {
+    error_log("Error loading data: " . $e->getMessage());
+}
+
+// Get unique places from expenses
+$uniquePlaces = array_unique(array_map(function($expense) {
+    return $expense['place'];
+}, $expenses['expenses']));
+
+// Get unique types combining both config categories and expense types
+$uniqueTypes = array_unique(array_merge(
+    array_map(function($item) { return $item['category']; }, $config['items']),
+    array_map(function($expense) { return $expense['type']; }, $expenses['expenses'])
+));
+
+// Sort arrays alphabetically
+sort($uniquePlaces);
+sort($uniqueTypes);
+
+// Sort items alphabetically
+if (!empty($config['items'])) {
+    usort($config['items'], function($a, $b) {
+        return strcasecmp($a['name'], $b['name']);
+    });
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,44 +56,52 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css" type="text/css">
     <style>
+        .table-container {
+            width: 100%;
+            max-width: 1200px;
+            overflow-x: auto;
+            margin: 0 auto 1em;
+            padding: 0 1rem;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
             table-layout: fixed;
-            min-width: 800px;
-            
-        }
-
-        .table-container {
-            width: 100%;
-            overflow-x: auto;
-            margin-bottom: 1em;
-            display: flex;
-            justify-content: center;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         th, td {
-            padding: 8px;
+            padding: 12px;
             text-align: left;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            border-bottom: 1px solid #e2e8f0;
         }
 
         th {
-            background-color: #black;
+            background-color: #4299e1;
+            color: white;
+            font-weight: 500;
             position: sticky;
             top: 0;
             z-index: 1;
         }
 
+        tr:hover td {
+            background-color: #f7fafc;
+        }
+
         /* Column widths */
-        th:nth-child(1), td:nth-child(1) { width: 15%; } /* Date */
+        th:nth-child(1), td:nth-child(1) { width: 12%; } /* Date */
         th:nth-child(2), td:nth-child(2) { width: 25%; } /* Item */
-        th:nth-child(3), td:nth-child(3) { width: 20%; } /* Place */
-        th:nth-child(4), td:nth-child(4) { width: 15%; } /* Amount */
+        th:nth-child(3), td:nth-child(3) { width: 25%; } /* Place */
+        th:nth-child(4), td:nth-child(4) { width: 12%; } /* Amount */
         th:nth-child(5), td:nth-child(5) { width: 15%; } /* Type */
-        th:nth-child(6), td:nth-child(6) { width: 10%; } /* Actions */
+        th:nth-child(6), td:nth-child(6) { width: 11%; } /* Actions */
 
         .action-buttons {
             white-space: nowrap;
@@ -58,11 +114,11 @@
             cursor: pointer;
             padding: 5px;
             margin: 0 2px;
-            transition: transform 0.1s ease;
+            transition: all 0.2s ease;
         }
 
         .action-buttons button:hover {
-            transform: scale(1.2);
+            transform: scale(1.1);
         }
 
         .edit-btn i {
@@ -75,125 +131,170 @@
 
         .edit-mode input {
             width: 100%;
-            padding: 4px;
-            border: 1px solid #ddd;
+            padding: 8px;
+            border: 1px solid #e2e8f0;
             border-radius: 4px;
-            font-size: inherit;
             font-family: inherit;
         }
 
-        .edit-mode .action-buttons {
-            display: flex;
-            gap: 4px;
+        .edit-mode input:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.2);
         }
 
-        .save-btn {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .cancel-btn {
-            background-color: #f44336;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        @media screen and (max-width: 768px) {
-            table {
-                font-size: 0.9em;
+        @media (max-width: 768px) {
+            .table-container {
+                padding: 0 0.5rem;
             }
             
             th, td {
-                padding: 6px;
+                padding: 8px;
             }
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            width: 90%;
+            max-width: 500px;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .modal-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 1rem;
+        }
+
+        .tab-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: none;
+            color: #718096;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            color: #4299e1;
+            border-bottom: 2px solid #4299e1;
+        }
+
+        .tab-btn:hover {
+            color: #4299e1;
         }
     </style>
     <script>
         // Store all data for autofill
-        let itemsData = <?php echo json_encode($config['items'] ?? []); ?>;
-        let expensesData = <?php echo json_encode($expenses['expenses'] ?? []); ?>;
+        const itemsData = <?php echo json_encode($config['items']); ?>;
+        const expensesData = <?php echo json_encode($expenses['expenses']); ?>;
 
-        // Define all functions first
+        // Date formatting function
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const day = date.getDate();
+            const month = date.toLocaleString('en-US', { month: 'short' });
+            return `${day}-${month}`;
+        }
+
         function openModal() {
             document.getElementById('expenseModal').style.display = 'block';
-            // Reset form and show first step
-            document.getElementById('expenseForm').reset();
-            document.querySelectorAll('.form-step').forEach(step => step.classList.remove('active'));
-            document.getElementById('dateStep').classList.add('active');
-            // Pre-fill today's date
-            const today = new Date();
-            document.getElementById('date').value = today.toISOString().split('T')[0];
+            resetForm();
         }
 
         function closeModal() {
             document.getElementById('expenseModal').style.display = 'none';
+            resetForm();
+        }
+
+        function resetForm() {
             document.getElementById('expenseForm').reset();
+            document.querySelectorAll('.form-step').forEach(step => step.classList.remove('active'));
+            document.getElementById('dateStep').classList.add('active');
+            
+            // Pre-fill today's date
+            const today = new Date();
+            document.getElementById('date').value = today.toISOString().split('T')[0];
+            
+            // Reset tabs
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.tab-btn').classList.add('active');
+            
+            // Reset tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById('expenseTab').classList.add('active');
         }
 
-        function setupAutofill(inputId, datalistId) {
-            const input = document.getElementById(inputId);
-            const datalist = document.getElementById(datalistId);
-            
-            input.addEventListener('input', function(e) {
-                const value = e.target.value.toLowerCase();
-                
-                // Clear existing options
-                while (datalist.firstChild) {
-                    datalist.removeChild(datalist.firstChild);
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.toLowerCase().includes(tabName)) {
+                    btn.classList.add('active');
                 }
-                
-                // Add filtered options
-                let options = [];
-                if (inputId === 'item') {
-                    options = itemsData.map(item => item.name);
-                } else if (inputId === 'place') {
-                    options = [...new Set(expensesData.map(expense => expense.place))];
-                } else if (inputId === 'type') {
-                    options = [...new Set([
-                        ...itemsData.map(item => item.category),
-                        ...expensesData.map(expense => expense.type)
-                    ])];
-                }
-                
-                options.filter(opt => opt.toLowerCase().includes(value))
-                      .forEach(opt => {
-                          const option = document.createElement('option');
-                          option.value = opt;
-                          if (inputId === 'item') {
-                              const itemData = itemsData.find(item => item.name === opt);
-                              if (itemData) {
-                                  option.setAttribute('data-category', itemData.category);
-                              }
-                          }
-                          datalist.appendChild(option);
-                      });
             });
-
-            // Trigger initial population of datalist
-            input.dispatchEvent(new Event('input'));
-        }
-
-        function updateType() {
-            const itemInput = document.getElementById('item');
-            const typeInput = document.getElementById('type');
-            const selectedItem = itemInput.value;
             
-            const itemData = itemsData.find(item => item.name.toLowerCase() === selectedItem.toLowerCase());
-            if (itemData) {
-                typeInput.value = itemData.category;
-            }
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName + 'Tab').classList.add('active');
         }
 
         function nextStep(currentId, nextId) {
+            // Validate current step
+            const currentInputs = document.getElementById(currentId).querySelectorAll('input[required]');
+            let isValid = true;
+            currentInputs.forEach(input => {
+                if (!input.value) {
+                    isValid = false;
+                    input.classList.add('error');
+                } else {
+                    input.classList.remove('error');
+                }
+            });
+            
+            if (!isValid) return;
+
+            // If moving to review step, update review content
+            if (nextId === 'reviewStep') {
+                updateReviewContent();
+            }
+
+            // Switch steps
             document.getElementById(currentId).classList.remove('active');
-            document.getElementById(nextId).classList.add('active');
+            const nextStep = document.getElementById(nextId);
+            nextStep.classList.add('active');
+
+            // Focus on the first input field in the next step
+            const nextInput = nextStep.querySelector('input');
+            if (nextInput && nextId !== 'reviewStep') {
+                nextInput.focus();
+            }
         }
 
         function prevStep(currentId, prevId) {
@@ -201,263 +302,37 @@
             document.getElementById(prevId).classList.add('active');
         }
 
-        function showConfirmation() {
-            // Update confirmation values
-            document.getElementById('reviewDate').textContent = document.getElementById('date').value;
+        function updateReviewContent() {
+            const date = new Date(document.getElementById('date').value);
+            document.getElementById('reviewDate').textContent = formatDate(date);
             document.getElementById('reviewItem').textContent = document.getElementById('item').value;
             document.getElementById('reviewPlace').textContent = document.getElementById('place').value;
-            document.getElementById('reviewAmount').textContent = document.getElementById('amount').value;
+            document.getElementById('reviewAmount').textContent = '$' + parseFloat(document.getElementById('amount').value).toFixed(2);
             document.getElementById('reviewType').textContent = document.getElementById('type').value;
-
-            // Show confirmation step
-            document.getElementById('typeStep').classList.remove('active');
-            document.getElementById('reviewStep').classList.add('active');
-        }
-
-        function cancelExpense() {
-            // Reset the form
-            document.getElementById('expenseForm').reset();
-            
-            // Reset to first step
-            document.querySelectorAll('.form-step').forEach(step => {
-                step.classList.remove('active');
-            });
-            document.getElementById('dateStep').classList.add('active');
-            
-            // Close the modal
-            closeModal();
         }
 
         function submitExpense() {
             const formData = new FormData(document.getElementById('expenseForm'));
+            const data = Object.fromEntries(formData.entries());
             
             fetch('add_expense.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    closeModal();
-                    location.reload();
-                } else {
-                    alert('Failed to add expense. Please try again.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again.');
-            });
-        }
-
-        function editExpense(button) {
-            const row = button.closest('tr');
-            const cells = row.cells;
-            const index = Array.from(row.parentElement.children).indexOf(row);
-            
-            // Store original values
-            const originalValues = {
-                date: cells[0].textContent,
-                item: cells[1].textContent,
-                place: cells[2].textContent,
-                amount: cells[3].textContent.replace('$', ''),
-                type: cells[4].textContent
-            };
-            
-            // Add edit-mode class to row
-            row.classList.add('edit-mode');
-            
-            // Replace cell contents with input fields
-            cells[0].innerHTML = `<input type="text" value="${originalValues.date}" placeholder="DD-MMM">`;
-            cells[1].innerHTML = `<input type="text" value="${originalValues.item}">`;
-            cells[2].innerHTML = `<input type="text" value="${originalValues.place}">`;
-            cells[3].innerHTML = `<input type="text" value="${originalValues.amount}" placeholder="Enter amount">`;
-            cells[4].innerHTML = `<input type="text" value="${originalValues.type}">`;
-            cells[5].innerHTML = `
-                <div class="action-buttons">
-                    <button class="save-btn" title="Save" data-action="save-edit">
-                        <i class="fas fa-check"></i>
-                    </button>
-                    <button class="cancel-btn" title="Cancel" data-action="cancel-edit">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            `;
-        }
-
-        function saveEdit(button) {
-            const row = button.closest('tr');
-            const cells = row.cells;
-            const index = Array.from(row.parentElement.children).indexOf(row);
-            
-            const updatedExpense = {
-                date: cells[0].querySelector('input').value,
-                item: cells[1].querySelector('input').value,
-                place: cells[2].querySelector('input').value,
-                amount: cells[3].querySelector('input').value,
-                type: cells[4].querySelector('input').value
-            };
-            
-            fetch('edit_expense.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: `index=${index}&date=${updatedExpense.date}&item=${updatedExpense.item}&place=${updatedExpense.place}&amount=${updatedExpense.amount}&type=${updatedExpense.type}`
+                body: new URLSearchParams(data)
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Update the row with new values
-                    cells[0].textContent = updatedExpense.date;
-                    cells[1].textContent = updatedExpense.item;
-                    cells[2].textContent = updatedExpense.place;
-                    cells[3].textContent = '$' + updatedExpense.amount;
-                    cells[4].textContent = updatedExpense.type;
-                    cells[5].innerHTML = `
-                        <div class="action-buttons">
-                            <button class="edit-btn" title="Edit" data-action="edit">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="delete-btn" title="Delete" data-action="delete">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    `;
-                    
-                    // Remove edit-mode class
-                    row.classList.remove('edit-mode');
+                    location.reload();
                 } else {
-                    alert('Failed to save changes: ' + (data.message || 'Unknown error'));
+                    alert('Error adding expense: ' + (data.message || 'Unknown error'));
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Failed to save changes');
-            });
-        }
-
-        function cancelEdit(button, originalValues) {
-            const row = button.closest('tr');
-            const cells = row.cells;
-            
-            // Restore original values
-            cells[0].textContent = originalValues.date;
-            cells[1].textContent = originalValues.item;
-            cells[2].textContent = originalValues.place;
-            cells[3].textContent = '$' + originalValues.amount;
-            cells[4].textContent = originalValues.type;
-            cells[5].innerHTML = `
-                <div class="action-buttons">
-                    <button class="edit-btn" title="Edit" data-action="edit">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="delete-btn" title="Delete" data-action="delete">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            `;
-            
-            // Remove edit-mode class
-            row.classList.remove('edit-mode');
-        }
-
-        function deleteExpense(button) {
-            const row = button.closest('tr');
-            const index = Array.from(row.parentElement.children).indexOf(row);
-            
-            if (confirm('Are you sure you want to delete this expense?')) {
-                fetch('delete_expense.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: 'index=' + index
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        row.remove();
-                        // Check if this was the last row
-                        const tbody = document.querySelector('tbody');
-                        if (tbody.children.length === 0) {
-                            tbody.innerHTML = `
-                                <tr class="empty-row">
-                                    <td colspan="6" style="text-align: center; padding: 20px; color: #666;">
-                                        No expenses found. Click the "Add Expense" button to add one.
-                                    </td>
-                                </tr>
-                            `;
-                        }
-                    } else {
-                        alert('Failed to delete expense: ' + (data.message || 'Unknown error'));
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Failed to delete expense');
-                });
-            }
-        }
-
-        function switchTab(tab) {
-            // Remove active class from all tabs and contents
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            
-            // Add active class to selected tab and content
-            const selectedTab = document.querySelector(`.tab-btn[onclick="switchTab('${tab}')"]`);
-            const selectedContent = document.getElementById(tab + 'Tab');
-            
-            if (selectedTab) {
-                selectedTab.classList.add('active');
-            }
-            if (selectedContent) {
-                selectedContent.classList.add('active');
-            }
-        }
-
-        function editItem(btn) {
-            const item = btn.closest('.item-row');
-            const modal = document.getElementById('editItemModal');
-            document.getElementById('oldName').value = item.dataset.name;
-            document.getElementById('newName').value = item.dataset.name;
-            document.getElementById('newCategory').value = item.dataset.category;
-            modal.classList.add('show');
-        }
-
-        function closeEditModal() {
-            document.getElementById('editItemModal').classList.remove('show');
-            document.getElementById('editItemForm').reset();
-        }
-
-        function deleteItem(btn) {
-            if (!confirm('Are you sure you want to delete this item?')) return;
-            
-            const item = btn.closest('.item-row');
-            const formData = new FormData();
-            formData.append('action', 'delete');
-            formData.append('name', item.dataset.name);
-            
-            fetch('manage_items.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    item.remove();
-                } else {
-                    alert('Failed to delete item. Please try again.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again.');
+                alert('Error adding expense: ' + error.message);
             });
         }
 
@@ -467,42 +342,43 @@
             const today = new Date();
             document.getElementById('date').value = today.toISOString().split('T')[0];
 
-            // Set up input event listeners
-            setupAutofill('item', 'items');
-            setupAutofill('place', 'places');
-            setupAutofill('type', 'types');
-
-            // Add keypress event listener for the review step
+            // Add keypress event listener for form navigation
             document.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
-                    const reviewStep = document.getElementById('reviewStep');
-                    if (reviewStep && reviewStep.classList.contains('active')) {
-                        e.preventDefault();
+                    e.preventDefault(); // Prevent default form submission
+                    
+                    const currentStep = document.querySelector('.form-step.active');
+                    if (!currentStep) return;
+
+                    // If we're on the review step, submit the form
+                    if (currentStep.id === 'reviewStep') {
                         submitExpense();
-                    } else {
-                        // For other steps, trigger the next button click
-                        const currentStep = document.querySelector('.form-step.active');
-                        if (currentStep) {
-                            const nextBtn = currentStep.querySelector('.next-btn');
-                            if (nextBtn) {
-                                e.preventDefault();
-                                nextBtn.click();
-                            }
-                        }
+                        return;
+                    }
+
+                    // For other steps, trigger the next button click
+                    const nextBtn = currentStep.querySelector('.next-btn');
+                    if (nextBtn) {
+                        nextBtn.click();
                     }
                 }
             });
             
             // Add event listeners for next buttons
-            document.querySelectorAll('.next-btn').forEach(button => {
-                button.addEventListener('click', () => {
-                    const currentStep = button.closest('.form-step');
+            document.querySelectorAll('.next-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const currentStep = this.closest('.form-step');
                     const nextStep = currentStep.nextElementSibling;
-                    
                     if (nextStep) {
                         currentStep.classList.remove('active');
                         nextStep.classList.add('active');
-                        updateReviewStep();
+                        updateReviewContent();
+                        
+                        // Focus on the first input field in the next step
+                        const nextInput = nextStep.querySelector('input');
+                        if (nextInput && !nextStep.id.includes('review')) {
+                            nextInput.focus();
+                        }
                     }
                 });
             });
@@ -540,112 +416,17 @@
                 newEntryBtn.addEventListener('click', openModal);
             }
 
-            // Add event listener for edit item form submission
-            document.getElementById('editItemForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const formData = new FormData();
-                formData.append('action', 'edit');
-                formData.append('oldName', document.getElementById('oldName').value);
-                formData.append('newName', document.getElementById('newName').value);
-                formData.append('category', document.getElementById('newCategory').value);
-                
-                fetch('manage_items.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        closeEditModal();
-                        location.reload();
-                    } else {
-                        alert('Failed to update item. Please try again.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred. Please try again.');
-                });
-            });
-
-            // Add event delegation for dynamic buttons
-            document.addEventListener('click', function(e) {
-                const button = e.target.closest('[data-action]');
-                if (!button) return;
-
-                const action = button.getAttribute('data-action');
-                switch (action) {
-                    case 'edit':
-                        editExpense(button);
-                        break;
-                    case 'delete':
-                        deleteExpense(button);
-                        break;
-                    case 'save-edit':
-                        saveEdit(button);
-                        break;
-                    case 'cancel-edit':
-                        const row = button.closest('tr');
-                        const cells = row.cells;
-                        cancelEdit(button, {
-                            date: cells[0].querySelector('input').value,
-                            item: cells[1].querySelector('input').value,
-                            place: cells[2].querySelector('input').value,
-                            amount: cells[3].querySelector('input').value,
-                            type: cells[4].querySelector('input').value
-                        });
-                        break;
-                    case 'new':
-                        openModal();
-                        break;
+            // Format existing dates in the table
+            const dateColumns = document.querySelectorAll('td:first-child:not(.empty-row td)');
+            dateColumns.forEach(cell => {
+                if (cell.textContent.trim()) {
+                    cell.textContent = formatDate(cell.textContent);
                 }
             });
         });
     </script>
 </head>
 <body>
-<?php
-// Load configuration and expenses data
-$config = ['items' => []];
-$expenses = ['expenses' => []];
-
-try {
-    if (file_exists('config.json')) {
-        $configData = file_get_contents('config.json');
-        $config = json_decode($configData, true) ?? ['items' => []];
-    }
-    
-    if (file_exists('expenses.json')) {
-        $expensesData = file_get_contents('expenses.json');
-        $expenses = json_decode($expensesData, true) ?? ['expenses' => []];
-    }
-} catch (Exception $e) {
-    error_log("Error loading data: " . $e->getMessage());
-}
-
-// Get unique places from expenses
-$uniquePlaces = array_unique(array_map(function($expense) {
-    return $expense['place'];
-}, $expenses['expenses']));
-
-// Get unique types combining both config categories and expense types
-$uniqueTypes = array_unique(array_merge(
-    array_map(function($item) { return $item['category']; }, $config['items']),
-    array_map(function($expense) { return $expense['type']; }, $expenses['expenses'])
-));
-
-// Sort arrays alphabetically
-sort($uniquePlaces);
-sort($uniqueTypes);
-
-// Sort items alphabetically
-if (isset($config['items'])) {
-    usort($config['items'], function($a, $b) {
-        return strcasecmp($a['name'], $b['name']);
-    });
-}
-?>
 <h1>Expenses</h1>
 
 <div class='table-container'>
@@ -669,19 +450,15 @@ if (isset($config['items'])) {
 <?php else: ?>
     <?php foreach ($expenses['expenses'] as $index => $expense): ?>
         <tr>
-            <td><?= htmlspecialchars($expense['date']) ?></td>
+            <td><?= htmlspecialchars(formatDate($expense['date'])) ?></td>
             <td><?= htmlspecialchars($expense['item']) ?></td>
             <td><?= htmlspecialchars($expense['place']) ?></td>
             <td><?= htmlspecialchars($expense['amount']) ?></td>
             <td><?= htmlspecialchars($expense['type']) ?></td>
             <td>
                 <div class="action-buttons">
-                    <button class="edit-btn" title="Edit" data-action="edit">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="delete-btn" title="Delete" data-action="delete">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    <button class="edit-btn" data-action="edit"><i class="fas fa-edit"></i></button>
+                    <button class="delete-btn" data-action="delete"><i class="fas fa-trash"></i></button>
                 </div>
             </td>
         </tr>

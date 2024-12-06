@@ -13,6 +13,55 @@
             "place": "",
             "amount": "40",
             "type": "sa"
+        },
+        {
+            "date": "2024-12-06",
+            "item": "",
+            "place": "some place",
+            "amount": "",
+            "type": "what?"
+        },
+        {
+            "date": "2024-12-06",
+            "item": "some item",
+            "place": "place",
+            "amount": "50",
+            "type": "fix"
+        },
+        {
+            "date": "2024-12-06",
+            "item": "some item",
+            "place": "place",
+            "amount": "50",
+            "type": "fix"
+        },
+        {
+            "date": "2024-12-06",
+            "item": "some item",
+            "place": "place",
+            "amount": "50",
+            "type": "fix"
+        },
+        {
+            "date": "2024-12-06",
+            "item": "",
+            "place": "some okace",
+            "amount": "",
+            "type": "thus ts"
+        },
+        {
+            "date": "2024-12-06",
+            "item": "this",
+            "place": "",
+            "amount": "",
+            "type": ""
+        },
+        {
+            "date": "2024-12-06",
+            "item": "ok",
+            "place": "",
+            "amount": "415",
+            "type": ""
         }
     ]
 }
