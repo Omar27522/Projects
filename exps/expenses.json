@@ -4,8 +4,15 @@
             "date": "5-Dec",
             "item": "dfgv",
             "place": "gdfg",
-            "amount": "$34543",
+            "amount": "34543",
             "type": "gdg"
+        },
+        {
+            "date": "2024-12-06",
+            "item": "item",
+            "place": "",
+            "amount": "40",
+            "type": "sa"
         }
     ]
 }

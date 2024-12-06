@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'date' => $_POST['date'],
         'item' => $_POST['item'],
         'place' => $_POST['place'],
-        'amount' => '$' . $_POST['amount'],
+        'amount' => $_POST['amount'],
         'type' => $_POST['type']
     ];
 

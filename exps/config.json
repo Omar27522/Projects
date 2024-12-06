@@ -3,6 +3,10 @@
         {
             "name": "dfgv",
             "category": "gdg"
+        },
+        {
+            "name": "item",
+            "category": "sa"
         }
     ]
 }
