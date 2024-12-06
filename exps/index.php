@@ -163,21 +163,20 @@ if (!empty($config['items'])) {
             height: 100%;
             background-color: rgba(0, 0, 0, 0.5);
             z-index: 1000;
+            display: flex;
             justify-content: center;
             align-items: center;
         }
 
-        .modal.show {
-            display: flex;
-        }
-
         .modal-content {
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             width: 90%;
-            max-width: 500px;
-            padding: 2rem;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
             position: relative;
         }
 
