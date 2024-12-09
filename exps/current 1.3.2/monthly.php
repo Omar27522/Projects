@@ -39,7 +39,7 @@
             '10' => 'October', '11' => 'November', '12' => 'December'
         ];
 
-        echo "<div style='margin-bottom: 15px;'>Monthly Total: <strong>$" . number_format($total, 2) . "</strong>
+        echo "<div style='margin-bottom: 15px;'>Monthly Total: <strong>$" . number_format($total) . "|</strong>
         <select id='monthSelect' style=\"display:inline-block; width: 170px; margin-left:4px;\" name=\"month\">";
         foreach ($months as $num => $name) {
             $selected = ($num == $selectedMonth) ? 'selected' : '';

@@ -15,7 +15,7 @@
         <section>
             <input type="text" name="date" placeholder="Date"
                 value="<?php date_default_timezone_set("America/Los_Angeles"); echo date("M-j"); ?>" required>
-            <hr><input type="text" name="item" placeholder="Item" required>
+            <hr><input type="text" name="item" placeholder="Item" required id="item">
             <hr><input type="text" name="place" placeholder="Place" required>
             <hr><input type="number" step="1" name="amount" placeholder="Amount" min="0" required>
             <hr><select name="type" required>
@@ -56,20 +56,12 @@
             );
             if ($result) {
                 // Redirect to prevent form resubmission
-                header('Location: ' . $_SERVER['PHP_SELF'] . '?success=1');
-                exit;
+                echo "<a style=\"display:inline-block;border:none;\" href='index.php#item'><p style='color: green;'>Expenses will be added successfully!</p></a>";
+                //header('Location: ' . $_SERVER['PHP_SELF'] . '?success=1');
             } else {
                 $error = "Error adding expense.";
             }
         }
-    }
-    $expenses = $db->getAllExpenses();
-    // Display messages after redirect
-    if (isset($_GET['success'])) {
-        echo "<p style='color: green;'>Expense added successfully!</p>";
-    }
-    if (isset($error)) {
-        echo "<p style='color: red;'>" . htmlspecialchars($error) . "</p>";
     }
     ?>
     <div class="footer">
