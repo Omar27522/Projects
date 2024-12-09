@@ -1,0 +1,19 @@
+I need to make a new page called data
+where monthly data can be downloaded.
+
+there is expense(index), expenses, and data.
+
+It looks like this might be a little robust system.
+more time and testing will be needed in order to rely
+on this new implementation of the expense report.
+
+Make the filters more intuitive, and easier to use.
+
+Eventually this expense report will become the new
+budget management system.
+
+fix the data display, so that it doesn't shift when the data overflows.
+
+
+Perhaps we will have the whole sheet here in no time. Purchases, GAS, Budget, Tips, LAPC, and the Bank.
+good job on the financial week.
