@@ -4,11 +4,9 @@ class Database {
 
     public function __construct() {
         try {
-            $this->db = new PDO('sqlite:expenses.db');
-            $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $this->db = new SQLite3('expenses.db');
             $this->createTable();
-            $this->createGasTable();
-        } catch (PDOException $e) {
+        } catch (Exception $e) {
             echo "Error connecting to database: " . $e->getMessage();
         }
     }
@@ -23,31 +21,16 @@ class Database {
             type TEXT NOT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )";
-        
-        $this->db->exec($query);
-    }
-
-    private function createGasTable() {
-        $query = "CREATE TABLE IF NOT EXISTS gas (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            date TEXT NOT NULL,
-            station TEXT NOT NULL,
-            type TEXT NOT NULL,
-            amount REAL NOT NULL,
-            gallons REAL NOT NULL,
-            price_per_gallon REAL NOT NULL
-        )";
-        
         $this->db->exec($query);
     }
 
     public function addExpense($date, $item, $place, $amount, $type) {
         $query = $this->db->prepare('INSERT INTO expenses (date, item, place, amount, type) VALUES (:date, :item, :place, :amount, :type)');
-        $query->bindValue(':date', $date, PDO::PARAM_STR);
-        $query->bindValue(':item', $item, PDO::PARAM_STR);
-        $query->bindValue(':place', $place, PDO::PARAM_STR);
-        $query->bindValue(':amount', $amount, PDO::PARAM_STR);
-        $query->bindValue(':type', $type, PDO::PARAM_STR);
+        $query->bindValue(':date', $date, SQLITE3_TEXT);
+        $query->bindValue(':item', $item, SQLITE3_TEXT);
+        $query->bindValue(':place', $place, SQLITE3_TEXT);
+        $query->bindValue(':amount', $amount, SQLITE3_FLOAT);
+        $query->bindValue(':type', $type, SQLITE3_TEXT);
         return $query->execute();
     }
 
@@ -58,8 +41,7 @@ class Database {
                   strftime('%d', date) as day
                   FROM expenses 
                   ORDER BY date DESC";
-        $stmt = $this->db->query($query);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->db->query($query);
     }
 
     public function getMonthlyExpenses() {
@@ -67,39 +49,38 @@ class Database {
                   date, item, place, amount, type
                   FROM expenses 
                   ORDER BY date DESC";
-        $stmt = $this->db->query($query);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->db->query($query);
     }
 
     public function getExpenseById($id) {
         $query = $this->db->prepare('SELECT * FROM expenses WHERE id = :id');
-        $query->bindValue(':id', $id, PDO::PARAM_INT);
-        $query->execute();
-        return $query->fetch(PDO::FETCH_ASSOC);
+        $query->bindValue(':id', $id, SQLITE3_INTEGER);
+        $result = $query->execute();
+        return $result->fetchArray(SQLITE3_ASSOC);
     }
 
     public function updateExpense($id, $date, $item, $place, $amount, $type) {
         $query = $this->db->prepare('UPDATE expenses SET date = :date, item = :item, place = :place, amount = :amount, type = :type WHERE id = :id');
-        $query->bindValue(':id', $id, PDO::PARAM_INT);
-        $query->bindValue(':date', $date, PDO::PARAM_STR);
-        $query->bindValue(':item', $item, PDO::PARAM_STR);
-        $query->bindValue(':place', $place, PDO::PARAM_STR);
-        $query->bindValue(':amount', $amount, PDO::PARAM_STR);
-        $query->bindValue(':type', $type, PDO::PARAM_STR);
+        $query->bindValue(':id', $id, SQLITE3_INTEGER);
+        $query->bindValue(':date', $date, SQLITE3_TEXT);
+        $query->bindValue(':item', $item, SQLITE3_TEXT);
+        $query->bindValue(':place', $place, SQLITE3_TEXT);
+        $query->bindValue(':amount', $amount, SQLITE3_FLOAT);
+        $query->bindValue(':type', $type, SQLITE3_TEXT);
         return $query->execute();
     }
 
     public function deleteExpense($id) {
         $query = $this->db->prepare('DELETE FROM expenses WHERE id = :id');
-        $query->bindValue(':id', $id, PDO::PARAM_INT);
+        $query->bindValue(':id', $id, SQLITE3_INTEGER);
         return $query->execute();
     }
 
     public function getDistinctTypes() {
         $query = "SELECT DISTINCT type FROM expenses ORDER BY type ASC";
-        $stmt = $this->db->query($query);
+        $result = $this->db->query($query);
         $types = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
             $types[] = $row['type'];
         }
         return $types;
@@ -107,9 +88,9 @@ class Database {
 
     public function getDistinctYears() {
         $query = "SELECT DISTINCT strftime('%Y', date) as year FROM expenses ORDER BY year DESC";
-        $stmt = $this->db->query($query);
+        $result = $this->db->query($query);
         $years = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
             $years[] = $row['year'];
         }
         return $years;
@@ -130,13 +111,17 @@ class Database {
         $sql .= " ORDER BY date DESC";
         
         $query = $this->db->prepare($sql);
-        $query->bindValue(':monthPattern', $monthStr . '-%', PDO::PARAM_STR);
+        $query->bindValue(':monthPattern', $monthStr . '-%', SQLITE3_TEXT);
         if ($type) {
-            $query->bindValue(':type', $type, PDO::PARAM_STR);
+            $query->bindValue(':type', $type, SQLITE3_TEXT);
         }
         
-        $query->execute();
-        return $query->fetchAll(PDO::FETCH_ASSOC);
+        $result = $query->execute();
+        $expenses = [];
+        while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+            $expenses[] = $row;
+        }
+        return $expenses;
     }
 
     public function getExpensesByMonthYear($month, $year) {
@@ -146,10 +131,9 @@ class Database {
         try {
             $stmt = $this->db->prepare($query);
             $yearMonth = $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT);
-            $stmt->bindValue(':yearMonth', $yearMonth, PDO::PARAM_STR);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
+            $stmt->bindValue(':yearMonth', $yearMonth, SQLITE3_TEXT);
+            return $stmt->execute();
+        } catch (Exception $e) {
             echo "Error: " . $e->getMessage();
             return null;
         }
@@ -157,8 +141,7 @@ class Database {
 
     public function getYearlyExpenses() {
         $query = "SELECT id, date, item, place, amount, type FROM expenses ORDER BY date DESC";
-        $stmt = $this->db->query($query);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->db->query($query);
     }
 
     public function getYearlyExpensesSummary() {
@@ -168,8 +151,7 @@ class Database {
                   FROM expenses 
                   GROUP BY year 
                   ORDER BY year DESC";
-        $stmt = $this->db->query($query);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->db->query($query);
     }
 
     public function getMonthlyExpensesSummary() {
@@ -179,36 +161,13 @@ class Database {
                   FROM expenses 
                   GROUP BY month 
                   ORDER BY month DESC";
-        $stmt = $this->db->query($query);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->db->query($query);
     }
 
     public function getExpensesByYear($year) {
         $query = $this->db->prepare('SELECT * FROM expenses WHERE strftime("%Y", date) = :year ORDER BY date DESC');
-        $query->bindValue(':year', $year, PDO::PARAM_STR);
-        $query->execute();
-        return $query->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function insertGasEntry($date, $station, $type, $amount, $gallons, $price) {
-        $query = "INSERT INTO gas (date, station, type, amount, gallons, price_per_gallon) 
-                 VALUES (:date, :station, :type, :amount, :gallons, :price)";
-        
-        $stmt = $this->db->prepare($query);
-        $stmt->bindValue(':date', $date, PDO::PARAM_STR);
-        $stmt->bindValue(':station', $station, PDO::PARAM_STR);
-        $stmt->bindValue(':type', $type, PDO::PARAM_STR);
-        $stmt->bindValue(':amount', $amount, PDO::PARAM_STR);
-        $stmt->bindValue(':gallons', $gallons, PDO::PARAM_STR);
-        $stmt->bindValue(':price', $price, PDO::PARAM_STR);
-        
-        return $stmt->execute();
-    }
-
-    public function getAllGasEntries() {
-        $query = "SELECT * FROM gas ORDER BY date DESC";
-        $stmt = $this->db->query($query);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $query->bindValue(':year', $year, SQLITE3_TEXT);
+        return $query->execute();
     }
 }
 ?>
