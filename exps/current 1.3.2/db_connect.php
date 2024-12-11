@@ -28,17 +28,16 @@ class Database {
     }
 
     private function createGasTable() {
-        $query = "CREATE TABLE IF NOT EXISTS gas (
+        $this->db->exec("CREATE TABLE IF NOT EXISTS gas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             date TEXT NOT NULL,
+            year INTEGER NOT NULL,
             station TEXT NOT NULL,
             type TEXT NOT NULL,
             amount REAL NOT NULL,
             gallons REAL NOT NULL,
             price_per_gallon REAL NOT NULL
-        )";
-        
-        $this->db->exec($query);
+        )");
     }
 
     public function addExpense($date, $item, $place, $amount, $type) {
@@ -93,6 +92,12 @@ class Database {
         $query = $this->db->prepare('DELETE FROM expenses WHERE id = :id');
         $query->bindValue(':id', $id, PDO::PARAM_INT);
         return $query->execute();
+    }
+
+    public function addGasEntry($date, $station, $type, $amount, $gallons, $ppg) {
+        $year = date('Y'); // Get current year
+        $query = $this->db->prepare("INSERT INTO gas (date, year, station, type, amount, gallons, price_per_gallon) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        return $query->execute([$date, $year, $station, $type, $amount, $gallons, $ppg]);
     }
 
     public function getDistinctTypes() {
@@ -190,25 +195,72 @@ class Database {
         return $query->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function insertGasEntry($date, $station, $type, $amount, $gallons, $price) {
-        $query = "INSERT INTO gas (date, station, type, amount, gallons, price_per_gallon) 
-                 VALUES (:date, :station, :type, :amount, :gallons, :price)";
-        
-        $stmt = $this->db->prepare($query);
-        $stmt->bindValue(':date', $date, PDO::PARAM_STR);
-        $stmt->bindValue(':station', $station, PDO::PARAM_STR);
-        $stmt->bindValue(':type', $type, PDO::PARAM_STR);
-        $stmt->bindValue(':amount', $amount, PDO::PARAM_STR);
-        $stmt->bindValue(':gallons', $gallons, PDO::PARAM_STR);
-        $stmt->bindValue(':price', $price, PDO::PARAM_STR);
-        
-        return $stmt->execute();
-    }
-
     public function getAllGasEntries() {
         $query = "SELECT * FROM gas ORDER BY date DESC";
         $stmt = $this->db->query($query);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function deleteGasEntry($id) {
+        $query = $this->db->prepare('DELETE FROM gas WHERE id = :id');
+        $query->bindValue(':id', $id, PDO::PARAM_INT);
+        return $query->execute();
+    }
+
+    public function updateGasEntry($id, $date, $station, $type, $amount, $gallons, $ppg) {
+        $year = date('Y'); // Get current year
+        $query = $this->db->prepare("UPDATE gas SET date = ?, year = ?, station = ?, type = ?, amount = ?, gallons = ?, price_per_gallon = ? WHERE id = ?");
+        return $query->execute([$date, $year, $station, $type, $amount, $gallons, $ppg, $id]);
+    }
+
+    public function getFilteredEntries($year = null, $month = null) {
+        $query = "SELECT * FROM gas WHERE 1=1";
+        $params = [];
+        
+        if ($year) {
+            $query .= " AND year = ?";
+            $params[] = $year;
+        }
+        
+        if ($month) {
+            // Create a mapping of month numbers to their abbreviations
+            $monthAbbreviations = [
+                1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr',
+                5 => 'May', 6 => 'Jun', 7 => 'Jul', 8 => 'Aug',
+                9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dec'
+            ];
+            
+            // If month is provided as a number, get its abbreviation
+            $monthAbbr = $monthAbbreviations[(int)$month];
+            $query .= " AND date LIKE ?";
+            $params[] = $monthAbbr . " %";
+        }
+        
+        $query .= " ORDER BY date DESC";
+        
+        try {
+            $stmt = $this->db->prepare($query);
+            if (!empty($params)) {
+                $stmt->execute($params);
+            } else {
+                $stmt->execute();
+            }
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Error filtering entries: " . $e->getMessage());
+            return false;
+        }
+    }
+}
+
+function footer () {
+    echo '<div class="footer">
+        <a href="monthly.php">Monthly Expenses</a>
+        <a href="gas.php">GAS</a>
+        <a href="#Budget">Budget</a>
+        <a href="#tips">tips</a>
+        <a href="#LAPC">LAPC</a>
+        <a href="bank.php">Bank</a>
+        <div>';
 }
 ?>
