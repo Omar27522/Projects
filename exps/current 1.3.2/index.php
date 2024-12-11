@@ -63,15 +63,10 @@
             }
         }
     }
+    require_once 'db_connect.php';
+     footer();
     ?>
-    <div class="footer">
-        <a href="monthly.php">Monthly Expenses</a>
-        <a href="gas.php">GAS</a>
-        <a href="#Budget">Budget</a>
-        <a href="#tips">tips</a>
-        <a href="#LAPC">LAPC</a>
-        <a href="#Bank">Bank</a>
-        <div>
+
 </body>
 
 </html>

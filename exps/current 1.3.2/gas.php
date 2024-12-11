@@ -1,419 +1,243 @@
-<!DOCTYPE html>
 <?php
 require_once 'db_connect.php';
-$db = new Database();
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    if (isset($_POST['add_station'])) {
-        $new_station = $_POST['new_station'] ?? '';
-        if (!empty($new_station)) {
-            $db->addStation($new_station);
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $db = new Database();
+    $response = ['success' => false, 'message' => ''];
+
+    if (isset($_POST['delete_id'])) {
+        try {
+            $db->deleteGasEntry($_POST['delete_id']);
+            $response['success'] = true;
+            $response['message'] = 'Entry deleted successfully';
+        } catch (Exception $e) {
+            $response['message'] = "Error: " . $e->getMessage();
         }
-        header("Location: " . $_SERVER['PHP_SELF']);
+        echo json_encode($response);
         exit();
-    }
-    
-    $date = $_POST['date'] ?? '';
-    $station = $_POST['station'] ?? '';
-    $type = $_POST['type'] ?? '';
-    $amount = $_POST['amount'] ?? '';
-    $gallons = $_POST['gallons'] ?? '';
-    $price = $_POST['price'] ?? '';
-    
-    try {
-        $db->addGasEntry($date, $station, $type, $amount, $gallons, $price);
-        header("Location: " . $_SERVER['PHP_SELF']);
+    } elseif (isset($_POST['action']) && $_POST['action'] === 'filter') {
+        $year = isset($_POST['filter_year']) ? $_POST['filter_year'] : null;
+        $month = isset($_POST['filter_month']) ? $_POST['filter_month'] : null;
+        
+        $entries = $db->getFilteredEntries($year, $month);
+        
+        if ($entries !== false) {
+            echo json_encode(['success' => true, 'entries' => $entries]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Error filtering entries']);
+        }
+        exit;
+    } else {
+        $date = $_POST['date'];
+        $station = $_POST['station'];
+        $type = $_POST['type'];
+        $amount = $_POST['amount'];
+        $gallons = $_POST['gallons'];
+        $ppg = $_POST['ppg'];
+
+        if (isset($_POST['entry_id']) && !empty($_POST['entry_id'])) {
+            // Update existing entry
+            $success = $db->updateGasEntry($_POST['entry_id'], $date, $station, $type, $amount, $gallons, $ppg);
+            $message = $success ? 'Entry updated successfully' : 'Error updating entry';
+        } else {
+            // Add new entry
+            $success = $db->addGasEntry($date, $station, $type, $amount, $gallons, $ppg);
+            $message = $success ? 'Entry added successfully' : 'Error adding entry';
+        }
+
+        $response = [
+            'success' => $success,
+            'message' => $message,
+            'entries' => $db->getAllGasEntries()
+        ];
+        
+        echo json_encode($response);
         exit();
-    } catch(Exception $e) {
-        echo "Error: " . $e->getMessage();
     }
 }
 
-// Fetch all gas entries
-$entries = [];
-try {
-    $result = $db->getAllGasEntries();
-    while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-        $entries[] = $row;
-    }
-} catch(Exception $e) {
-    echo "Error: " . $e->getMessage();
-}
-
-// Fetch all stations
-$stations = [];
-try {
-    $result = $db->getAllStations();
-    while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-        $stations[] = $row;
-    }
-} catch(Exception $e) {
-    echo "Error: " . $e->getMessage();
-}
+// If it's not a POST request, show the regular page
 ?>
+<!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="gas.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="table_sort.js" defer></script>
+    <script src="gas.js" defer></script>
     <title>GAS</title>
 </head>
+
 <body>
-<h1>GAS</h1>
-<h2>Month: current month</h2>
+    <h1>Add New Gas Entry</h1>
 
-<!-- Add new entry form -->
-<div class="boxes-container">
-    <div class="left-column">
-        <div class="box">
-            <h3>Add New Gas Entry</h3>
-            <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
-                <div class="form-group">
-                    <label for="date">Date:</label>
-                    <input type="date" id="date" name="date" value="<?php echo date('Y-m-d'); ?>" required>
-                </div>
-                <div class="form-group">
-                    <label for="station">Station:</label>
-                    <select id="station" name="station" required>
-                        <option value="">Select Station</option>
-                        <?php foreach ($stations as $station) { ?>
-                        <option value="<?php echo $station['name']; ?>"><?php echo $station['name']; ?></option>
-                        <?php } ?>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="type">Type:</label>
-                    <div class="select-wrapper">
-                        <select id="type" name="type" required>
-                            <option value="">Select Type</option>
-                            <option value="Regular">Regular</option>
-                            <option value="Plus">Plus</option>
-                            <option value="Premium">Premium</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="amount">Amount:</label>
-                    <div class="input-with-symbol">
-                        <span class="currency-symbol">$</span>
-                        <input type="number" id="amount" name="amount" step="0.01" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="gallons">Gallons:</label>
-                    <div class="input-with-symbol">
-                        <span class="unit-symbol">gal</span>
-                        <input type="number" id="gallons" name="gallons" step="0.001" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="price">Price/Gallon:</label>
-                    <div class="input-with-symbol">
-                        <span class="currency-symbol">$</span>
-                        <input type="number" id="price" name="price" step="0.01" required>
-                    </div>
-                </div>
-                <button type="submit">Add Entry</button>
-            </form>
+    <!-- Add new entry form -->
+
+    <form id="gasForm" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+        <input type="hidden" id="entry_id" name="entry_id" value="">
+        <div class="form-group">
+            <label for="date">Date:</label>
+            <input type="text" id="date" name="date" value="<?php echo date('M j'); ?>" required>
+        </div>
+        <div class="form-group">
+            <label for="station">Station:</label>
+            <select id="station" name="station"
+                onchange="if(this.value=='other') document.getElementById('newStationDiv').style.display='block'; else document.getElementById('newStationDiv').style.display='none';">
+                <option value="">Select Station</option>
+                <option value="Pemex">Pemex</option>
+                <option value="Shell">Shell</option>
+                <option value="Chevron">Chevron</option>
+                <option value="Arco">Arco</option>
+                <option value="Costco">Costco</option>
+                <option value="76">76</option>
+                <option value="other">Add New Station...</option>
+            </select>
+            <button type="button" onclick="removeStation()"
+                style="margin-left: 5px; transform: translateY(-1px); padding: 2px 6px; background: none; border: none; cursor: pointer;">
+                <i class="fas fa-trash-alt" style="color: #666; font-size: 14px;"></i>
+            </button>
+            <hr>
+            <div id="newStationDiv"
+                style="display:none; margin-top: 10px;margin-bottom:0px; transform: translateY(70px) translateX(-220px);">
+                <input type="text" id="newStation" name="newStation" placeholder="Enter new station name">
+                <button type="button" onclick="addNewStation()"
+                    style="transform: translateY(-13px) translateX(-2px);float: right;">Add</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="type">Type:</label>
+            <select id="type" name="type" required>
+                <option value="">Select Type</option>
+                <option value="89 Regular">89 Regular</option>
+                <option value="90 Plus">90 Plus</option>
+                <option value="91 Premium">91 Premium</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="amount">Amount ($):</label>
+            <input type="number" id="amount" name="amount" step="0.01" required oninput="calculatePPG()">
+        </div>
+        <div class="form-group">
+            <label for="gallons">Gallons:</label>
+            <input type="number" id="gallons" name="gallons" step="0.001" required oninput="calculatePPG()">
+        </div>
+        <div class="form-group">
+            <label for="ppg">Price/Gallon:</label>
+            <input type="number" id="ppg" name="ppg" step="0.001" readonly style="background-color: #f0f0f0;">
+        </div>
+        <button type="submit">Add Entry</button>
+    </form>
+
+    <details>
+        <summary>Filter Entries</summary>
+        <form id="filterForm" class="filter-form">
+        <select id="yearFilter" name="year">
+            <option value="">Select Year</option>
+            <?php
+            $currentYear = date('Y');
+            for($y = $currentYear - 1; $y <= $currentYear + 1; $y++) {
+                echo "<option value='$y'>$y</option>";
+            }
+            ?>
+        </select>
+        <select id="monthFilter" name="month">
+            <option value="">Select Month</option>
+            <?php
+            $months = [
+                1 => 'January', 2 => 'February', 3 => 'March', 
+                4 => 'April', 5 => 'May', 6 => 'June',
+                7 => 'July', 8 => 'August', 9 => 'September',
+                10 => 'October', 11 => 'November', 12 => 'December'
+            ];
+            foreach($months as $num => $name) {
+                echo "<option value='$num'>$name</option>";
+            }
+            ?>
+        </select>
+        <button type="button" id="applyFilter">Apply Filter</button>
+        <button type="button" id="resetFilter">Reset</button>
+    </form>
+    </details>
+    <!-- Display existing entries -->
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Station</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Gallons</th>
+                <th>P / G</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php
+            $db = new Database();
+            $entries = $db->getAllGasEntries();
+            foreach ($entries as $entry) {
+                echo "<tr onclick='showEntry(" . json_encode($entry) . ")'>";
+                echo "<td>{$entry['date']}</td>";
+                echo "<td>{$entry['station']}</td>";
+                echo "<td>{$entry['type']}</td>";
+                echo "<td>{$entry['amount']}</td>";
+                echo "<td>{$entry['gallons']}</td>";
+                echo "<td>{$entry['price_per_gallon']}</td>";
+                echo "</tr>";
+            }
+            ?>
+        </tbody>
+    </table>
+
+    <!-- Modal for viewing/editing entry -->
+    <div id="entryModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Gas Entry Details</h2>
+            <div id="entryDetails">
+                <p><strong>Date:</strong> <span id="modalDate"></span></p>
+                <p><strong>Station:</strong> <span id="modalStation"></span></p>
+                <p><strong>Type:</strong> <span id="modalType"></span></p>
+                <p><strong>Amount:</strong> $<span id="modalAmount"></span></p>
+                <p><strong>Gallons:</strong> <span id="modalGallons"></span></p>
+                <p><strong>Price per Gallon:</strong> $<span id="modalPPG"></span></p>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-edit" onclick="editEntry()">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn-delete" onclick="deleteEntry()">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
         </div>
     </div>
-    <div class="right-column">
-        <div class="box">
-            <h3>Add New Station</h3>
-            <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
-                <div class="form-group">
-                    <label for="new_station">Station Name:</label>
-                    <input type="text" id="new_station" name="new_station" required>
-                </div>
-                <button type="submit" name="add_station">Add Station</button>
-            </form>
-        </div>
-        <div class="box">
-            <h3>Price Calculator</h3>
-            <div class="form-group">
-                <label for="calc_amount">Amount:</label>
-                <div class="input-with-symbol">
-                    <span class="currency-symbol">$</span>
-                    <input type="number" id="calc_amount" step="0.01" oninput="calculatePrice()">
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="calc_gallons">Gallons:</label>
-                <input type="number" id="calc_gallons" step="0.001" oninput="calculatePrice()">
-            </div>
-            <div class="form-group">
-                <label for="calc_price">Price/Gallon:</label>
-                <div class="input-with-symbol">
-                    <span class="currency-symbol">$</span>
-                    <input type="number" id="calc_price" readonly>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-function addNewRow(event) {
-    event.preventDefault();
-    
-    const table = document.querySelector('table');
-    const newRow = document.createElement('tr');
-    
-    const fields = ['date', 'station', 'type', 'amount', 'gallons', 'price'];
-    fields.forEach(field => {
-        const td = document.createElement('td');
-        td.textContent = document.getElementById(field).value;
-        newRow.appendChild(td);
-    });
-    
-    table.appendChild(newRow);
-    document.getElementById('gasForm').reset();
-    return false;
-}
-
-function calculatePrice() {
-    const amount = parseFloat(document.getElementById('calc_amount').value);
-    const gallons = parseFloat(document.getElementById('calc_gallons').value);
-    const price = amount / gallons;
-    document.getElementById('calc_price').value = price.toFixed(2);
-}
-</script>
-
-<style>
-.input-form {
-    margin: 20px;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-}
-
-/* Add spacing between forms */
-.input-form + .input-form {
-    margin-top: 10px;
-}
-
-/* Make the new station form more compact */
-.input-form:nth-child(2) {
-    max-width: 300px;
-}
-
-input#new_station {
-    width: 200px;
-}
-
-.form-group {
-    margin: 15px 0;
-    display: flex;
-    align-items: center;
-}
-
-.form-group label {
-    width: 100px;
-    margin-right: 15px;
-}
-
-/* Base style for all inputs */
-input[type="text"],
-input[type="number"],
-input[type="date"],
-.select-wrapper select {
-    width: 200px;
-    padding: 10px;
-    padding-right: 30px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-    font-size: 14px;
-    height: 38px;
-}
-
-/* Focus state for all inputs */
-input:focus,
-.select-wrapper select:focus {
-    outline: none;
-    border-color: #2e8b57;
-    color: #2e8b57;
-}
-
-/* Amount input specific styles */
-.input-with-symbol {
-    position: relative;
-    display: inline-block;
-}
-
-.currency-symbol {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 14px;
-    color: #666;
-}
-
-.unit-symbol {
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 14px;
-    color: #666;
-}
-
-.input-with-symbol input[type="number"] {
-    padding-left: 25px;
-}
-
-/* Remove spinner buttons from number inputs */
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-input[type="number"] {
-    -moz-appearance: textfield;
-}
-
-.select-wrapper {
-    position: relative;
-    display: inline-block;
-}
-
-.select-wrapper::after {
-    content: "";
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 0;
-    height: 0;
-    border-left: 6px solid transparent;
-    border-right: 6px solid transparent;
-    border-top: 6px solid #666;
-    pointer-events: none;
-}
-
-.select-wrapper select {
-    padding-right: 30px;
-    background-color: white;
-    cursor: pointer;
-}
-
-.select-wrapper select:focus {
-    outline: none;
-    border-color: #2e8b57;
-    color: #2e8b57;
-}
-
-.select-wrapper select:focus + .select-wrapper::after {
-    border-top-color: #2e8b57;
-}
-
-button {
-    margin-top: 10px;
-    padding: 8px 15px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-    width:200px
-}
-
-button:hover {
-    background-color: #45a049;
-}
-
-.boxes-container {
-    display: flex;
-    gap: 20px;
-    margin: 20px;
-}
-
-.left-column {
-    flex: 1;
-    min-width: 400px;
-}
-
-.right-column {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    width: 350px;
-}
-
-.box {
-    padding: 20px;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.box h3 {
-    margin-top: 0;
-    margin-bottom: 20px;
-    color: #333;
-    font-size: 18px;
-    text-align: center;
-}
-
-@media (max-width: 1000px) {
-    .boxes-container {
-        flex-direction: column;
-    }
-    
-    .right-column {
-        width: 100%;
-    }
-    
-    .left-column {
-        min-width: 100%;
-    }
-}
-
-/* Calculator specific styles */
-#calc_price {
-    background-color: #f8f8f8;
-    color: #2e8b57;
-    font-weight: bold;
-}
-
-/* Box specific styles */
-.box:nth-child(1) {
-    flex: 2;
-}
-
-.box:nth-child(2), .box:nth-child(3) {
-    flex: 1;
-}
-
-@media (max-width: 1200px) {
-    .box {
-        flex: 1 1 100%;
-    }
-}
-</style>
-<table>
-<tr>
-        <th>date</th>
-        <th>station</th>
-        <th>type</th>
-        <th>Amount</th>
-        <th>Gallons</th>
-        <th>Actual Price per gallon</th>
-    </tr>
-    <?php foreach ($entries as $entry) { ?>
-    <tr>
-        <td><?php echo $entry['date']; ?></td>
-        <td><?php echo $entry['station']; ?></td>
-        <td><?php echo $entry['type']; ?></td>
-        <td><?php echo $entry['amount']; ?></td>
-        <td><?php echo $entry['gallons']; ?></td>
-        <td><?php echo $entry['price']; ?></td>
-    </tr>
-    <?php } ?>
-</table>
+    <table>
+        <thead>Total Milles Driven</thead>
+        <tbody>
+            <tr>
+                <td>Total Miles Driven:</td>
+                <td id="totalMiles">80</td>
+            </tr>
+            <tr>
+                <td>First of the month:</td>
+                <td id="first_of_the_month">80</td>
+            </tr>
+            <tr>
+                <td>Last of the month:</td>
+                <td id="first_of_the_month">80</td>
+            </tr>
+            <tr>
+                <td>Monthly Miles:</td>
+                <td id="monthly_miles">=first-last</td>
+            </tr>
+        </tbody>
+    </table>
+    <hr class="divider">
+    <?php footer();?>
 </body>
+
 </html>

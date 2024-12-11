@@ -15,20 +15,22 @@
     <div class="monthly-summary">
         <?php
         require_once 'db_connect.php';
-        $db = new Database();
+        $db = new Database();       
         $total = 0;
-
+        
         // Calculate total first
         $rows = [];
         $currentMonth = date('m');
         $selectedMonth = isset($_GET['month']) ? $_GET['month'] : $currentMonth;
         $currentYear = date('Y');
-
+        
         $monthlyExpenses = $db->getExpensesByMonthYear($selectedMonth, $currentYear);
-        foreach ($monthlyExpenses as $row) {
+        
+        while ($row = $monthlyExpenses->fetchArray(SQLITE3_ASSOC)) {
             $total += $row['amount'];
             $rows[] = $row;
         }
+        
         // Display total
         $months = [
             '01' => 'January', '02' => 'February', '03' => 'March',
@@ -43,7 +45,7 @@
             $selected = ($num == $selectedMonth) ? 'selected' : '';
             echo "<option value='$num' $selected>$name</option>";
         }
-    echo "</select><a href=\"download_data.php\" style=\"margin-right:14px;float:right;\">DOWNLOAD DATA</a></div>" ;
+    echo "</select><a href=\"download_data.php\" style=\"margin-right:14px;float:right;\">DOWNLOAD DATA</a></div>";
 
         echo "<h3>" . $months[$selectedMonth] . " " . $currentYear . " Expenses</h3>";
         echo "<table class='monthly-table'>";
@@ -70,6 +72,7 @@
         }
         echo "<tr class='total-row'>";
         echo "<td colspan='5'><strong>Total $" . number_format($total) . "</strong></td>";
+        
         echo "</tr>";
         echo "</tbody>";
         echo "</table>";
@@ -81,10 +84,6 @@
         });
         </script>
     </div>
-    <?php
-    require_once 'db_connect.php';
-    footer();
-    ?>
 </body>
 
 </html>

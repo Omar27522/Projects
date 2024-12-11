@@ -16,7 +16,7 @@ if ($format === 'csv') {
     fputcsv($output, ['Date', 'Item', 'Place', 'Amount', 'Type', 'Year']);
     // Get and write data
     $result = $db->getYearlyExpenses();
-    while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+    foreach ($result as $row) {
         $rowYear = date('Y', strtotime($row['date']));
         $rowMonth = date('m', strtotime($row['date']));
         // Skip if year is selected and doesn't match
@@ -397,7 +397,7 @@ if ($format === 'csv') {
             <?php
                 $result = $db->getYearlyExpenses();
                 $totalAmount = 0;
-                while ($row = $result->fetchArray(SQLITE3_ASSOC)):
+                foreach ($result as $row):
                     $rowYear = date('Y', strtotime($row['date']));
                     $rowMonth = date('m', strtotime($row['date']));
                     // Skip if year is selected and doesn't match
@@ -422,7 +422,7 @@ if ($format === 'csv') {
                 <td><?php echo htmlspecialchars($row['type']); ?></td>
                 <td><?php echo date('Y', strtotime($row['date'])); ?></td>
             </tr>
-            <?php endwhile; ?>
+            <?php endforeach; ?>
             <tr>
                 <td colspan="3"><strong>Total</strong></td>
                 <td class="amount"><strong>$<?php echo number_format($totalAmount, 2); ?></strong></td>
