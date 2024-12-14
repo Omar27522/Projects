@@ -29,6 +29,7 @@ th:nth-child(3), td:nth-child(3) { width: 5%; padding-left: .5%; padding-right: 
 th:nth-child(4), td:nth-child(4) { width: 5%; padding-left: .5%;padding-right: .5%;text-align: center;}
 th:nth-child(5), td:nth-child(5) { width: 5%; padding-left: .5%;padding-right: .5%;text-align: center;}
 th:nth-child(6), td:nth-child(6) { width: 5%; padding-left: .5%;padding-right: .5%;text-align: center;}
+th:nth-child(7), td:nth-child(7) { width: 5%; padding-left: .5%;padding-right: .5%;text-align: center;}
 
 tr:nth-child(even) {
     background-color: #f8f9fa;
@@ -116,6 +117,30 @@ button:active {
 /* Numeric Input Styling */
 input[type="number"] {
     font-family: 'Consolas', monospace;
+}
+
+/* Input field styling */
+#tankSize {
+    width: 100px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+    text-align: right;
+    background-color: #fff;
+}
+
+#tankSize:focus {
+    border-color: #2c3e50;
+    outline: none;
+    box-shadow: 0 0 5px rgba(44, 62, 80, 0.2);
+}
+
+#tankSize::-webkit-inner-spin-button,
+#tankSize::-webkit-outer-spin-button {
+    opacity: 1;
+    height: 20px;
 }
 
 /* Filter Form Styling */
@@ -242,4 +267,74 @@ tr:hover {
 }
 .btn-delete:hover {
     color: #c82333;
+}
+
+/* Modal styling for tank size */
+.modal-content p:last-child {
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+/* Stats Table Styling */
+.stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    background-color: #ffffff;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.stats-table th,
+.stats-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.stats-table th {
+    background-color: #2c3e50;
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.9em;
+    letter-spacing: 0.5px;
+}
+
+.stats-table tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.stats-table tr {
+    transition: all 0.3s ease;
+}
+
+.stats-table tr:hover {
+    background-color: #e8f4f8;
+    transform: scale(1.01);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stats-table td:first-child {
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.stats-table td:last-child {
+    font-weight: 600;
+    text-align: right;
+}
+
+/* Remove previous stats styling */
+.stats-fieldset,
+.stats-header,
+.stats-select,
+.stats-config,
+.stats-input-group,
+.stats-input,
+.stats-results,
+.stats-row {
+    display: none;
 }

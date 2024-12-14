@@ -7,17 +7,28 @@ function calculatePPG() {
     document.getElementById('ppg').value = ppg;
 }
 
+function calculateTanksPerDollarMile(amount, gallons, tankSize) {
+    if (amount <= 0 || gallons <= 0 || tankSize <= 0) return '0.000';
+    const tanksPerDollarMile = (tankSize / gallons) / amount;
+    return tanksPerDollarMile.toFixed(3);
+}
+
 function updateTable(entries) {
     const tbody = document.querySelector('table tbody');
     if (!tbody) return;
 
-    // Clear existing tbody content
     tbody.innerHTML = '';
+    const tankSize = parseFloat(document.getElementById('tankSize').value) || 18;
 
-    // Add new rows
     entries.forEach(entry => {
         const tr = document.createElement('tr');
         tr.onclick = () => showEntry(entry);
+        
+        const tanksPerDollarMile = calculateTanksPerDollarMile(
+            parseFloat(entry.amount), 
+            parseFloat(entry.gallons),
+            tankSize
+        );
         
         tr.innerHTML = `
             <td>${entry.date}</td>
@@ -26,10 +37,49 @@ function updateTable(entries) {
             <td>${entry.amount}</td>
             <td>${entry.gallons}</td>
             <td>${entry.price_per_gallon}</td>
+            <td>${tanksPerDollarMile}</td>
         `;
         
         tbody.appendChild(tr);
     });
+}
+
+function updateMonthlyStats(entries) {
+    const gallonsPerTank = parseFloat(document.getElementById('gallonsPerTank').value) || 18;
+    const milesPerTank = parseFloat(document.getElementById('milesPerTank').value) || 370;
+
+    // Filter entries based on selected month and year
+    const selectedMonth = document.getElementById('statsMonthFilter').value;
+    const selectedYear = document.getElementById('statsYearFilter').value;
+    
+    const filteredEntries = entries.filter(entry => {
+        const entryDate = new Date(entry.date);
+        return (!selectedMonth || entryDate.getMonth() + 1 === parseInt(selectedMonth)) &&
+               (!selectedYear || entryDate.getFullYear() === parseInt(selectedYear));
+    });
+
+    let totalGallons = 0;
+    let totalAmount = 0;
+    let totalMiles = 0;
+
+    filteredEntries.forEach(entry => {
+        const gallons = parseFloat(entry.gallons) || 0;
+        const amount = parseFloat(entry.amount) || 0;
+        
+        totalGallons += gallons;
+        totalAmount += amount;
+        totalMiles += (gallons / gallonsPerTank) * milesPerTank;
+    });
+
+    const avgPricePerGallon = totalGallons > 0 ? totalAmount / totalGallons : 0;
+    const tanksUsed = totalGallons / gallonsPerTank;
+
+    // Update the stats table
+    document.getElementById('gasPerMonth').textContent = totalGallons.toFixed(3);
+    document.getElementById('dollarsPerMonth').textContent = '$' + totalAmount.toFixed(2);
+    document.getElementById('avgPricePerGallon').textContent = '$' + avgPricePerGallon.toFixed(3);
+    document.getElementById('milesTraveled').textContent = Math.round(totalMiles);
+    document.getElementById('tanksUsed').textContent = tanksUsed.toFixed(2);
 }
 
 function filterEntries() {
@@ -49,6 +99,7 @@ function filterEntries() {
     .then(data => {
         if (data.success) {
             updateTable(data.entries);
+            updateMonthlyStats(data.entries);
         } else {
             alert(data.message || 'Error filtering entries');
         }
@@ -69,6 +120,29 @@ function resetFilter() {
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('applyFilter').addEventListener('click', filterEntries);
     document.getElementById('resetFilter').addEventListener('click', resetFilter);
+    
+    // Add listeners for stats filters and inputs
+    document.getElementById('statsMonthFilter').addEventListener('change', () => {
+        document.getElementById('monthFilter').value = '';  // Clear main filter
+        filterEntries();
+    });
+    
+    document.getElementById('statsYearFilter').addEventListener('change', () => {
+        document.getElementById('yearFilter').value = '';  // Clear main filter
+        filterEntries();
+    });
+    
+    // Tank size and miles per tank listeners
+    ['gallonsPerTank', 'milesPerTank'].forEach(id => {
+        document.getElementById(id).addEventListener('input', () => {
+            const entries = Array.from(document.querySelectorAll('table:not(.stats-table) tbody tr')).map(row => ({
+                date: row.cells[0].textContent,
+                gallons: parseFloat(row.cells[4].textContent),
+                amount: parseFloat(row.cells[3].textContent)
+            }));
+            updateMonthlyStats(entries);
+        });
+    });
 });
 
 function showEntry(entry) {

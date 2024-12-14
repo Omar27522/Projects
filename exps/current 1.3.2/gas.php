@@ -215,6 +215,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
     </div>
+    <fieldset id="tanksPerMonth" style="">
+        <legend>Tanks of Gas Per Month</legend>
+        <aside style="float: right;">
+            <select style=" width: auto;height: 30px; margin: 0; padding: 0;">
+                <option>Month</option>
+                <option>January</option>
+                <option>February</option>
+                <option>March</option>
+                <option>April</option>
+                <option>May</option>
+                <option>June</option>
+                <option>July</option>
+                <option>August</option>
+                <option>September</option>
+                <option>October</option>
+                <option>November</option>
+                <option>December</option>
+            </select>
+        </aside>
+        <h2 style="margin-top: 3%;">
+            <input type="number" id="gallonsPerMonth" value="18" min="0" step="0.25" style="width: 30px; height: 30px; padding: 5px;"> Gallons
+            <small><input type="number" id="milesPerTank" value="370" min="0" step="5.00" style="width: 40px; height: 30px; padding: 5px;"> Miles per Tank</small>
+        </h2>
+        <p>
+            Gas this month:<br />
+            <span style="padding-left: 200px;"><span id="gasPerMonth">0.000</span> Gallons</span>
+        </p>
+        <p>
+            Total Amount this month:<br />
+            <span style="padding-left: 200px;"><span id="dollarsPerMonth">$0.00</span></span>
+        </p>
+        <p>
+            Average Price per Gallon:<br />
+            <span style="padding-left: 200px;"><span id="avgPricePerGallon">$0.00</span></span>
+        </p>
+        <p>
+            Miles Traveled this month:<br />
+            <span style="padding-left: 200px;"><span id="milesTraveled">0</span> Miles Traveled</span>
+        </p>
+        </fieldset>
     <table>
         <thead>Total Milles Driven</thead>
         <tbody>
