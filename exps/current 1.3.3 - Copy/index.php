@@ -11,7 +11,7 @@
 </head>
 
 <body>
-    <h1>New Expense</h1><div class="links"><?php links(); ?></div>
+    <div class="links"><h1 style="float: left; display: inline;">New Expense</h1><?php links(); ?></div>
     <form method="POST" action="">
         <section><input type="hidden" id="year" name="year" value="<?php echo date('Y h:i:a'); ?>" >
             <input type="text" name="date" placeholder="Date"

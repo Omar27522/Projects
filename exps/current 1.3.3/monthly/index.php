@@ -9,9 +9,55 @@
     <script src="../table_sort.js" defer></script>
     <title>Monthly Expenses</title>
 </head>
+<style>
+    .back-button{
+        text-decoration: none;
+        color: black;
+        font-size:larger;
+        border: 1px solid black;
+        padding: 5px 10px;
+        margin-left: 10px;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+        display: inline;
+        width: fit-content;
+    }
+    .back-button:hover{
+        background-color: #e0e0e0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    .back-button:active{
+        background-color: #c0c0c0;
+        transform: scale(0.98);
+        transition: transform 0.2s ease;
+    }
 
+    .download-data{
+        margin-right:14px;float:right;
+        background-color: #f2f2f2;
+        border: 1px solid #ccc;
+        padding: 8px 16px;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #333;
+        font-size: 14px;
+        transition: background-color 0.3s ease;
+    }
+    .download-data:hover{
+        background-color: #e0e0e0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        transform: scale(0.98);
+        transition: transform 0.2s ease;
+    }
+    .download-data:active{
+        background-color: #c0c0c0;
+        transform: scale(0.96);
+        transition: transform 0.2s ease;
+    }
+</style>
 <body>
-    <h1>Monthly Expenses</h1><a href="../">Back</a>
+<h1 style="float: left; display: inline;">Monthly Expenses</h1>
+    <a href="../" class="back-button">Back</a>
     <?php
     try {
         $db = new Database();
@@ -52,7 +98,7 @@
             $selected = ($num == $selectedMonth) ? 'selected' : '';
             echo "<option value='$num' $selected>$name</option>";
         }
-        echo "</select><a href=\"download_data.php\" style=\"margin-right:14px;float:right;\">DOWNLOAD DATA</a></div>";
+        echo "</select><a href=\"download_data.php\" class=\"download-data\">DOWNLOAD DATA</a></div>";
 
         echo "<h3>" . $months[$selectedMonth] . " " . $currentYear . " Expenses</h3>";
         echo '<table class="sortable">';

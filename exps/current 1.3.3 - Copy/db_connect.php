@@ -257,23 +257,23 @@ class Database {
 }
 
 function links () {
-    echo '<div class="">
-        <a href="./monthly/">Monthly Expenses</a>
-        <a href="#">GAS</a>
+    echo '<div class="crumbs">
+        <a href="../monthly/">Monthly Expenses</a>
+        <a href="../gas">GAS</a>
         <a href="#Budget">Budget</a>
         <a href="#tips">tips</a>
         <a href="#LAPC">LAPC</a>
-        <a href="./bank/">Bank</a>
+        <a href="../bank/">Bank</a>
         </div>';
 }
 function footer () {
     echo '<div class="footer">
-        <a href="./monthly/">Monthly Expenses</a>
-        <a href="./gas">GAS</a>
+        <a href="../monthly/">Monthly Expenses</a>
+        <a href="../gas">GAS</a>
         <a href="#Budget">Budget</a>
         <a href="#tips">tips</a>
         <a href="#LAPC">LAPC</a>
-        <a href="./bank/">Bank</a>
+        <a href="../bank/">Bank</a>
         </div>';
 }
 ?>

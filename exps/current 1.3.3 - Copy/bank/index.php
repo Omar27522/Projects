@@ -1,15 +1,16 @@
+<?php include'../db_connect.php';?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="bank.css">
-    <script src="table_sort.js" defer></script>
     <title>Bank</title>
 </head>
 <body>
-    <h1>Bank</h1>
+    <div class="links"><h1 style="float: left; display: inline;">Bank</h1><?php links(); ?></div>
     <div class="container">
         <fieldset>
             <legend>Goals</legend>
@@ -223,7 +224,7 @@
             </tr>
         </table>
     <hr class="divider">
-    <?php require_once 'db_connect.php';
+    <?php
          footer();?>
     </div>
 </body>

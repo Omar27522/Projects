@@ -58,6 +58,18 @@ if ($format === 'csv') {
         border-radius: 3px;
     }
 
+    .download-links a:hover {
+        background-color: #45a049;
+        transform: scale(0.98);
+        transition: transform 0.2s ease;
+    }
+
+    .download-links a:active {
+        background-color: #3e8e41;
+        transform: scale(0.96);
+        transition: transform 0.2s ease;
+    }
+
     .download-links select {
         width: 30%;
         margin-right: 10px;
