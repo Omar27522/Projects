@@ -82,6 +82,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="form-group">
             <label for="date">Date:</label>
             <input type="text" id="date" name="date" value="<?php echo date('M j'); ?>" required>
+<script>
+  // Initialize a datepicker for the 'date' input
+  $(function() {
+    $("#date").datepicker();
+  });
+</script>
+
         </div>
         <div class="form-group">
             <label for="station">Station:</label>
