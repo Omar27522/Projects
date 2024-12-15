@@ -1,6 +1,0 @@
-The labels are on GitHub, and we can select local ones on the settings as backup. 
-
-I would like to have the ability to delete unwanted labels, but I need to do it in a fail proof way to ensure label quality.
-
-
-I have to make sure that saving the label saves it to the GitHub, for all users to share. I'm not sure where new labels are bein saved.
