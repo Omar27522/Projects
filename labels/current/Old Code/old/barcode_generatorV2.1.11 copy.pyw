@@ -4,10 +4,48 @@ from PIL import Image, ImageDraw, ImageFont, ImageTk
 import barcode
 from barcode.writer import ImageWriter
 import os
+import json
 
 # Initialize the main application window to create a root context
 app = tk.Tk()
 app.withdraw()  # Hide the main window immediately
+
+# Configure default font size (15% bigger)
+default_font = ('TkDefaultFont', 11)  # Default system font, 15% bigger
+button_font = ('TkDefaultFont', 11, 'normal')
+entry_font = ('TkDefaultFont', 11)
+label_font = ('TkDefaultFont', 11)
+
+# Configure fonts for all widgets
+app.option_add('*Font', default_font)
+app.option_add('*Button*Font', button_font)
+app.option_add('*Entry*Font', entry_font)
+app.option_add('*Label*Font', label_font)
+
+# Path for storing settings
+SETTINGS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'label_maker_settings.json')
+
+# Load settings
+def load_settings():
+    global output_directory
+    try:
+        if os.path.exists(SETTINGS_FILE):
+            with open(SETTINGS_FILE, 'r') as f:
+                settings = json.load(f)
+                output_directory = settings.get('last_directory', None)
+                if output_directory and not os.path.exists(output_directory):
+                    output_directory = None
+    except:
+        output_directory = None
+
+# Save settings
+def save_settings():
+    try:
+        settings = {'last_directory': output_directory}
+        with open(SETTINGS_FILE, 'w') as f:
+            json.dump(settings, f)
+    except:
+        pass
 
 # Default DPI and Label dimensions
 DPI = 300
@@ -27,6 +65,32 @@ barcode_width = IntVar(app, value=BARCODE_WIDTH)
 barcode_height = IntVar(app, value=BARCODE_HEIGHT)
 
 output_directory = None  # To hold the chosen output directory path
+
+# Add global always on top state variable
+always_on_top = tk.BooleanVar(app, value=False)
+
+def set_window_on_top(window):
+    """Set a window to be always on top if the global setting is enabled"""
+    if always_on_top.get():
+        window.attributes('-topmost', True)
+        window.lift()
+
+def toggle_always_on_top():
+    """Toggle the global always-on-top state"""
+    current_state = always_on_top.get()
+    # Update both Always on Top buttons
+    for btn in [always_on_top_btn, settings_always_on_top_btn]:
+        if btn.winfo_exists():  # Check if button still exists
+            btn.config(
+                text="Always On Top " if current_state else "Always On Top ",
+                bg='#90EE90' if current_state else 'SystemButtonFace',  # Light green when active
+                relief='sunken' if current_state else 'raised'
+            )
+    
+    # Update all existing Toplevel windows
+    for window in app.winfo_children():
+        if isinstance(window, Toplevel):
+            set_window_on_top(window)
 
 def generate_barcode_image(upc_code):
     """Generate a barcode image with python-barcode, adjusting quiet zone and text distance to avoid overlap."""
@@ -96,6 +160,9 @@ def preview_label(inputs):
         preview_window = Toplevel()
         preview_window.title("Label Preview")
         
+        # Apply always-on-top setting to new window
+        set_window_on_top(preview_window)
+        
         # Resize with LANCZOS for high-quality downscaling
         display_img = label_img.resize((LABEL_WIDTH // 2, LABEL_HEIGHT // 2), Image.LANCZOS)
         
@@ -139,21 +206,22 @@ def preview_label(inputs):
 def update_png_count_label():
     """Update the PNG count label with current count from output directory."""
     if not output_directory:
-        png_count_label.config(text="")
+        png_count_label.config(text="Labels: 0")
         return
     try:
         png_files = [f for f in os.listdir(output_directory) if f.lower().endswith('.png')]
         count = len(png_files)
-        png_count_label.config(text=f"Labels:# {count if count > 0 else '0'}")
+        png_count_label.config(text=f"Labels: {count}")
     except Exception:
         png_count_label.config(text="")
 
 def select_output_directory():
     """Allow the user to select an output directory."""
     global output_directory
-    output_directory = filedialog.askdirectory(title="Choose Output Directory")
-    if output_directory:
-        messagebox.showinfo("Success", "Output directory selected successfully!")
+    new_directory = filedialog.askdirectory(title="Choose Output Directory", initialdir=output_directory)
+    if new_directory:
+        output_directory = new_directory
+        save_settings()
         update_png_count_label()
 
 def generate_and_save_fixed_label(inputs):
@@ -197,8 +265,43 @@ def view_directory_files():
     # Create a new window
     file_window = Toplevel()
     file_window.title("Output Directory Files")
-    file_window.geometry("600x400")
-
+    
+    # Set window size 15% larger
+    file_window_width = 690  # Original 600 * 1.15
+    file_window_height = 460  # Original 400 * 1.15
+    file_window.geometry(f"{file_window_width}x{file_window_height}")
+    
+    # Create a variable for this window's always-on-top state
+    window_always_on_top = tk.BooleanVar(value=True)  # Default to True
+    
+    def toggle_window_on_top():
+        current_state = window_always_on_top.get()
+        file_window.attributes('-topmost', current_state)
+        if current_state:
+            file_window.lift()
+        window_top_btn.config(
+            text="Always On Top " if current_state else "Always On Top ",
+            bg='#90EE90' if current_state else 'SystemButtonFace',
+            relief='sunken' if current_state else 'raised'
+        )
+    
+    # Create top frame for the Always on Top button
+    top_frame = tk.Frame(file_window)
+    top_frame.pack(fill=tk.X, padx=5, pady=5)
+    
+    # Add Always on Top button
+    window_top_btn = tk.Button(top_frame, 
+        text="Always On Top ",  # Default to unchecked
+        bg='#90EE90',  # Default to green
+        relief='sunken',  # Default to pressed
+        command=lambda: [window_always_on_top.set(not window_always_on_top.get()), toggle_window_on_top()]
+    )
+    window_top_btn.pack(side=tk.LEFT, padx=5)
+    
+    # Set initial always-on-top state
+    file_window.attributes('-topmost', True)
+    file_window.lift()
+    
     # Create a frame for the search bar
     search_frame = tk.Frame(file_window)
     search_frame.pack(fill=tk.X, padx=5, pady=5)
@@ -292,6 +395,10 @@ def view_directory_files():
             # Create preview window
             preview_window = Toplevel()
             preview_window.title(f"File Preview: {file_name}")
+            
+            # Apply always-on-top setting to the preview window
+            set_window_on_top(preview_window)
+            
             preview_window.lift()  # Bring window to front
             preview_window.focus_force()  # Force focus
             
@@ -346,29 +453,50 @@ def open_input_window():
     """Main input window with settings, preview, and output options."""
     input_window = Toplevel(app)  # Use Toplevel for the main input window
     input_window.title("Enter Label Details")
+    
+    # Create main frame with padding
+    main_frame = tk.Frame(input_window, padx=30, pady=20)
+    main_frame.pack(expand=True, fill=tk.BOTH)
 
-    # Add stay on top state variable
-    stay_on_top = tk.BooleanVar(value=False)
+    # Add always on top button at the top of the window
+    global always_on_top_btn  # Make it accessible for updating text
+    always_on_top_btn = tk.Button(main_frame, 
+        text="Always On Top " if always_on_top.get() else "Always On Top ",
+        bg='#90EE90' if always_on_top.get() else 'SystemButtonFace',  # Light green when active
+        relief='sunken' if always_on_top.get() else 'raised',
+        command=lambda: [always_on_top.set(not always_on_top.get()), toggle_always_on_top()]
+    )
+    always_on_top_btn.grid(row=0, column=0, columnspan=2, pady=10)
 
-    def toggle_stay_on_top():
-        """Toggle the window's stay-on-top state"""
-        current_state = stay_on_top.get()
-        input_window.attributes('-topmost', current_state)
-        stay_on_top_btn.config(text="Always On Top ✓" if current_state else "Always On Top")
+    # Apply current always-on-top state
+    set_window_on_top(input_window)
 
-    # Add stay on top button at the top of the window
-    stay_on_top_btn = tk.Button(input_window, text="Always On Top", command=lambda: [stay_on_top.set(not stay_on_top.get()), toggle_stay_on_top()])
-    stay_on_top_btn.grid(row=0, column=0, columnspan=2, pady=5)
+    # Create right-click context menu
+    def create_context_menu(widget):
+        menu = tk.Menu(widget, tearoff=0)
+        menu.add_command(label="Copy", command=lambda: widget.event_generate('<<Copy>>'))
+        menu.add_command(label="Paste", command=lambda: widget.event_generate('<<Paste>>'))
+        menu.add_command(label="Cut", command=lambda: widget.event_generate('<<Cut>>'))
+        menu.add_separator()
+        menu.add_command(label="Select All", command=lambda: widget.select_range(0, tk.END))
+        return menu
+
+    def show_context_menu(event, widget):
+        menu = create_context_menu(widget)
+        try:
+            menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            menu.grab_release()
 
     # Control buttons frame (Settings and Reset)
-    control_frame = tk.Frame(input_window)
-    control_frame.grid(row=1, column=0, columnspan=2, sticky="ew", pady=5)  # Moved down one row
+    control_frame = tk.Frame(main_frame)
+    control_frame.grid(row=1, column=0, columnspan=2, sticky="ew", pady=10)  # Increased padding
 
     settings_button = tk.Button(control_frame, text="Settings", command=lambda: toggle_settings())
-    settings_button.pack(side=tk.LEFT, padx=10)
+    settings_button.pack(side=tk.LEFT, padx=15)
 
     reset_button = tk.Button(control_frame, text="Reset", command=lambda: clear_inputs(inputs))
-    reset_button.pack(side=tk.RIGHT, padx=10)
+    reset_button.pack(side=tk.RIGHT, padx=15)
 
     inputs = {}
     labels = [
@@ -379,8 +507,8 @@ def open_input_window():
     ]
 
     for idx, (label_text, key) in enumerate(labels):
-        tk.Label(input_window, text=label_text).grid(row=idx+2, column=0, padx=10, pady=5)  # Shifted down by 2 rows
-        entry = tk.Entry(input_window)
+        tk.Label(main_frame, text=label_text).grid(row=idx+2, column=0, padx=15, pady=10, sticky="e")
+        entry = tk.Entry(main_frame)
         
         # Add validation to the UPC Code entry to accept only numeric inputs and restrict to 12 characters
         if key == "upc_code":
@@ -390,47 +518,78 @@ def open_input_window():
         # Bind right-click event to show context menu
         entry.bind("<Button-3>", lambda event, widget=entry: show_context_menu(event, widget))
         
-        entry.grid(row=idx+2, column=1, padx=10, pady=5)  # Shifted down by 2 rows
+        entry.grid(row=idx+2, column=1, padx=15, pady=10)
         inputs[key] = entry
 
     def toggle_settings():
         """Toggle the visibility of the settings frame and adjust button positions."""
         if settings_frame.winfo_ismapped():
             settings_frame.grid_remove()
-            generate_button.grid(row=len(labels)+4, column=0, columnspan=2, pady=10)
-        else:
-            settings_frame.grid(row=len(labels)+4, column=0, columnspan=2, pady=10)
             generate_button.grid(row=len(labels)+5, column=0, columnspan=2, pady=10)
-
-    # Buttons Frame
-    buttons_frame = tk.Frame(input_window)
-    buttons_frame.grid(row=len(labels)+2, column=0, columnspan=2, pady=10)
-
-    preview_btn = tk.Button(buttons_frame, text="Preview", command=lambda: preview_label(inputs))
-    preview_btn.pack(side=tk.LEFT, padx=5)
-    
-    select_dir_btn = tk.Button(buttons_frame, text="Select Output Directory", command=select_output_directory)
-    select_dir_btn.pack(side=tk.LEFT, padx=5)
-
-    # Add PNG count label
-    global png_count_label
-    png_count_label = tk.Label(buttons_frame, text="")
-    png_count_label.pack(side=tk.LEFT, padx=5)
-
-    generate_button = tk.Button(input_window, text="Generate Label", command=lambda: generate_and_save_fixed_label(inputs))
-    generate_button.grid(row=len(labels)+4, column=0, columnspan=2, pady=10)
+        else:
+            settings_frame.grid(row=len(labels)+5, column=0, columnspan=2, pady=10)
+            generate_button.grid(row=len(labels)+6, column=0, columnspan=2, pady=10)
 
     # Settings Frame - adjust its position
-    settings_frame = tk.Frame(input_window)
-    tk.Label(settings_frame, text="Font Size for Name Lines:").grid(row=0, column=0, padx=10, pady=5)
-    tk.Entry(settings_frame, textvariable=font_size_large).grid(row=0, column=1, padx=10, pady=5)
-    tk.Label(settings_frame, text="Font Size for Variant:").grid(row=1, column=0, padx=10, pady=5)
-    tk.Entry(settings_frame, textvariable=font_size_medium).grid(row=1, column=1, padx=10, pady=5)
-    tk.Label(settings_frame, text="Barcode Width:").grid(row=2, column=0, padx=10, pady=5)
-    tk.Entry(settings_frame, textvariable=barcode_width).grid(row=2, column=1, padx=10, pady=5)
-    tk.Label(settings_frame, text="Barcode Height:").grid(row=3, column=0, padx=10, pady=5)
-    tk.Entry(settings_frame, textvariable=barcode_height).grid(row=3, column=1, padx=10, pady=5)
+    settings_frame = tk.Frame(main_frame)
+    
+    # Add Always on Top button at the top of settings
+    global settings_always_on_top_btn
+    settings_always_on_top_btn = tk.Button(settings_frame, 
+        text="Always On Top " if always_on_top.get() else "Always On Top ",
+        bg='#90EE90' if always_on_top.get() else 'SystemButtonFace',
+        relief='sunken' if always_on_top.get() else 'raised',
+        command=lambda: [always_on_top.set(not always_on_top.get()), toggle_always_on_top()]
+    )
+    settings_always_on_top_btn.grid(row=0, column=0, columnspan=2, pady=10)
+    
+    tk.Label(settings_frame, text="Font Size for Name Lines:").grid(row=1, column=0, padx=15, pady=10)
+    tk.Entry(settings_frame, textvariable=font_size_large).grid(row=1, column=1, padx=15, pady=10)
+    tk.Label(settings_frame, text="Font Size for Variant:").grid(row=2, column=0, padx=15, pady=10)
+    tk.Entry(settings_frame, textvariable=font_size_medium).grid(row=2, column=1, padx=15, pady=10)
+    tk.Label(settings_frame, text="Barcode Width:").grid(row=3, column=0, padx=15, pady=10)
+    tk.Entry(settings_frame, textvariable=barcode_width).grid(row=3, column=1, padx=15, pady=10)
+    tk.Label(settings_frame, text="Barcode Height:").grid(row=4, column=0, padx=15, pady=10)
+    tk.Entry(settings_frame, textvariable=barcode_height).grid(row=4, column=1, padx=15, pady=10)
     settings_frame.grid_remove()  # Hide initially
+
+    # Buttons Frame
+    buttons_frame = tk.Frame(main_frame)
+    buttons_frame.grid(row=len(labels)+7, column=0, columnspan=2, pady=15)
+
+    # Create and pack the directory label/button
+    global png_count_label
+    png_count_label = tk.Button(buttons_frame, text="Labels: 0", command=select_output_directory)
+    png_count_label.pack(side=tk.LEFT, padx=15)
+    
+    # Add View Files button
+    view_files_btn = tk.Button(buttons_frame, text="View Files", command=view_directory_files)
+    view_files_btn.pack(side=tk.LEFT, padx=15)
+    
+    # Update the label count if there's a directory already set
+    if output_directory:
+        update_png_count_label()
+    
+    preview_btn = tk.Button(buttons_frame, text="Preview", command=lambda: preview_label(inputs))
+    preview_btn.pack(side=tk.LEFT, padx=15)
+
+    generate_button = tk.Button(main_frame, text="Generate Label", command=lambda: generate_and_save_fixed_label(inputs))
+    generate_button.grid(row=len(labels)+5, column=0, columnspan=2, pady=10)
+
+    # After all widgets are added, update window size
+    input_window.update_idletasks()  # Make sure all widgets are rendered
+    input_window.geometry('')  # Reset any previous geometry
+    
+    # Center the window on screen
+    window_width = input_window.winfo_width()
+    window_height = input_window.winfo_height()
+    screen_width = input_window.winfo_screenwidth()
+    screen_height = input_window.winfo_screenheight()
+    x = (screen_width - window_width) // 2
+    y = (screen_height - window_height) // 2
+    input_window.geometry(f"+{x}+{y}")
+
+load_settings()
 
 # Directly call the input window at startup
 open_input_window()
