@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Add new entry form -->
 
     <form id="gasForm" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
-        <input type="hidden" id="entry_id" name="entry_id" value="<?php echo date('M j'); ?>" >
+        <input type="hidden" id="entry_id" name="entry_id" value="<?php echo date('Y'); ?>" >
         <div class="form-group">
             <label for="date">Date:</label>
             <input type="text" id="date" name="date" value="<?php echo date('M j'); ?>" required>
