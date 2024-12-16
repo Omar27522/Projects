@@ -107,7 +107,7 @@
         echo '<th>Date</th>';
         echo '<th>Item</th>';
         echo '<th>Place</th>';
-        echo '<th>Amount</th>';
+        echo '<th>$</th>';
         echo '<th>Type</th>';
         echo '</tr>';
         echo '</thead>';

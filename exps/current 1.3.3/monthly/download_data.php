@@ -1,40 +1,100 @@
 <?php
-require_once '../db_connect.php';
+include '../db_connect.php';
 
-// Initialize database connection
+// Initialize database connection and variables
 $db = new Database();
 $format = $_GET['format'] ?? 'html';
 $type = $_GET['type'] ?? 'yearly';
-$selectedYear = $_GET['year'] ?? '';
+$selectedYear = $_GET['year'] ?? date('Y');
 $selectedMonth = $_GET['month'] ?? '';
+$action = $_POST['action'] ?? '';
+$message = '';
+$error = '';
 
+// Handle form submissions
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if ($action === 'update') {
+        $id = $_POST['id'] ?? '';
+        $date = $_POST['date'] ?? '';
+        $item = $_POST['item'] ?? '';
+        $place = $_POST['place'] ?? '';
+        $amount = $_POST['amount'] ?? '';
+        $type = $_POST['type'] ?? '';
+
+        if ($id && $date && $item && $amount) {
+            try {
+                $result = $db->updateExpense($id, $date, $item, $place, $amount, $type);
+                if ($result) {
+                    $message = "Record updated successfully!";
+                } else {
+                    $error = "Failed to update record";
+                }
+            } catch (Exception $e) {
+                $error = "Error updating record: " . $e->getMessage();
+            }
+        }
+    }
+}
+
+// Get sort parameters
+$sortBy = $_POST['sort'] ?? 'date';
+$sortOrder = $_POST['order'] ?? 'desc';
+
+// Handle CSV download
 if ($format === 'csv') {
     header('Content-Type: text/csv');
-    header('Content-Disposition: attachment; filename="expenses_' . ($selectedYear ?: 'all') . ($selectedMonth ? '_' . $months[$selectedMonth] : '') . '.csv"');
+    header('Content-Disposition: attachment; filename="expenses_' . ($selectedYear ?: 'all') . ($selectedMonth ? '_' . date('F', mktime(0, 0, 0, $selectedMonth, 1)) : '') . '.csv"');
     $output = fopen('php://output', 'w');
-    // Write headers
     fputcsv($output, ['Date', 'Item', 'Place', 'Amount', 'Type', 'Year']);
-    // Get and write data
     $result = $db->getYearlyExpenses();
     foreach ($result as $row) {
         $rowYear = date('Y', strtotime($row['date']));
         $rowMonth = date('m', strtotime($row['date']));
-        // Skip if year is selected and doesn't match
         if ($selectedYear && $rowYear !== $selectedYear) continue;
-        // Skip if month is selected and doesn't match
         if ($selectedMonth && $rowMonth !== $selectedMonth) continue;
         fputcsv($output, [
-            date('M j' , strtotime($row['date'])),
+            date('M j', strtotime($row['date'])),
             $row['item'],
             $row['place'],
             $row['amount'],
             $row['type'],
-            date('Y', strtotime($row['date']))
+            $rowYear
         ]);
     }
     fclose($output);
     exit();
 }
+
+// Get data for display
+$expenses = $db->getYearlyExpenses();
+$filteredExpenses = array_filter($expenses, function($row) use ($selectedYear, $selectedMonth) {
+    $rowYear = date('Y', strtotime($row['date']));
+    $rowMonth = date('m', strtotime($row['date']));
+    
+    if ($selectedYear && $rowYear !== $selectedYear) return false;
+    if ($selectedMonth && $rowMonth !== $selectedMonth) return false;
+    return true;
+});
+
+// Sort the filtered expenses
+usort($filteredExpenses, function($a, $b) use ($sortBy, $sortOrder) {
+    $aVal = $sortBy === 'date' ? strtotime($a[$sortBy]) : $a[$sortBy];
+    $bVal = $sortBy === 'date' ? strtotime($b[$sortBy]) : $b[$sortBy];
+    
+    if ($sortBy === 'amount') {
+        $aVal = floatval($aVal);
+        $bVal = floatval($bVal);
+    }
+    
+    if ($aVal == $bVal) return 0;
+    
+    if ($sortOrder === 'asc') {
+        return $aVal > $bVal ? 1 : -1;
+    } else {
+        return $aVal < $bVal ? 1 : -1;
+    }
+});
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -43,413 +103,169 @@ if ($format === 'csv') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="monthly.css">
     <title>Download Expenses Data</title>
-    <style>
-    .download-links {
-        margin: 20px 0;
-    }
-
-    .download-links a {
-        margin-right: 10px;
-        padding: 5px 10px;
-        background-color: #4CAF50;
-        color: white;
-        text-decoration: none;
-        border-radius: 3px;
-    }
-
-    .download-links a:hover {
-        background-color: #45a049;
-        transform: scale(0.98);
-        transition: transform 0.2s ease;
-    }
-
-    .download-links a:active {
-        background-color: #3e8e41;
-        transform: scale(0.96);
-        transition: transform 0.2s ease;
-    }
-
-    .download-links select {
-        width: 30%;
-        margin-right: 10px;
-        padding: 5px 10px;
-        border-radius: 3px;
-    }
-
-    .amount {
-        text-align: right;
-    }
-
-    .date {
-        white-space: nowrap;
-    }
-
-    /* Modal styles */
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0,0,0,0.4);
-    }
-
-    .modal-content {
-        background-color: #fefefe;
-        margin: 15% auto;
-        padding: 20px;
-        border: 1px solid #888;
-        width: 80%;
-        max-width: 500px;
-        border-radius: 5px;
-        position: relative;
-    }
-
-    .close {
-        color: #aaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-        cursor: pointer;
-    }
-
-    .close:hover {
-        color: black;
-    }
-
-    .detail-row {
-        margin: 10px 0;
-        padding: 5px 0;
-        border-bottom: 1px solid #eee;
-    }
-
-    .detail-label {
-        font-weight: bold;
-        margin-right: 10px;
-        display: inline-block;
-        width: 80px;
-    }
-
-    .detail-value {
-        display: inline-block;
-    }
-
-    tbody tr {
-        cursor: pointer;
-    }
-
-    tbody tr:hover {
-        background-color: #f5f5f5;
-    }
-
-    .edit-mode input {
-        width: calc(100% - 100px);
-        padding: 5px;
-        margin: 2px 0;
-        border: 1px solid #ddd;
-        border-radius: 3px;
-    }
-
-    .button-group {
-        margin-top: 20px;
-        text-align: right;
-    }
-
-    .button-group button {
-        padding: 8px 15px;
-        margin-left: 10px;
-        border: none;
-        border-radius: 3px;
-        cursor: pointer;
-    }
-
-    .edit-btn {
-        background-color: #4CAF50;
-        color: white;
-    }
-
-    .save-btn {
-        background-color: #4CAF50;
-        color: white;
-    }
-
-    .cancel-btn {
-        background-color: #f44336;
-        color: white;
-    }
-
-    .success-message {
-        color: #4CAF50;
-        margin-top: 10px;
-        text-align: center;
-    }
-
-    .error-message {
-        color: #f44336;
-        margin-top: 10px;
-        text-align: center;
-    }
-    </style>
-    <script>
-    function formatDateForInput(dateStr) {
-        return dateStr; // Return the original format
-    }
-
-    function updateView() {
-        var year = document.getElementById('yearSelect').value;
-        var month = document.getElementById('monthSelect').value;
-        if (year !== 'View Yearly Data') {
-            window.location.href = 'download_data.php?year=' + year + (month !== '' ? '&month=' + month : '');
-        }
-    }
-
-    // Modal functionality
-    function showDetails(id, date, item, place, amount, type, year) {
-        const modal = document.getElementById('detailsModal');
-        const modalContent = document.getElementById('modalContent');
-        
-        modalContent.innerHTML = `
-            <span class="close">&times;</span>
-            <h2>Expense Details</h2>
-            <div class="detail-container">
-                <div class="detail-row">
-                    <span class="detail-label">Date:</span>
-                    <span class="detail-value" data-field="date">${date}</span>
-                    <input type="text" class="edit-input" style="display:none" value="${date}">
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Item:</span>
-                    <span class="detail-value" data-field="item">${item}</span>
-                    <input type="text" class="edit-input" style="display:none" value="${item}">
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Place:</span>
-                    <span class="detail-value" data-field="place">${place}</span>
-                    <input type="text" class="edit-input" style="display:none" value="${place}">
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Amount:</span>
-                    <span class="detail-value" data-field="amount">$${amount}</span>
-                    <input type="number" step="0.01" class="edit-input" style="display:none" value="${amount}">
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Type:</span>
-                    <span class="detail-value" data-field="type">${type}</span>
-                    <select class="edit-input" style="display:none">
-                        <option value="misc" ${type === 'misc' ? 'selected' : ''}>Misc</option>
-                        <option value="food" ${type === 'food' ? 'selected' : ''}>Food</option>
-                        <option value="entertainment" ${type === 'entertainment' ? 'selected' : ''}>Entertainment</option>
-                        <option value="tithe" ${type === 'tithe' ? 'selected' : ''}>Tithe</option>
-                        <option value="repairs" ${type === 'repairs' ? 'selected' : ''}>Repairs</option>
-                        <option value="maintenance" ${type === 'maintenance' ? 'selected' : ''}>Maintenance</option>
-                        <option value="clothing" ${type === 'clothing' ? 'selected' : ''}>Clothing</option>
-                        <option value="gifts" ${type === 'gifts' ? 'selected' : ''}>Gifts</option>
-                        <option value="personal" ${type === 'personal' ? 'selected' : ''}>Personal</option>
-                        <option value="tax" ${type === 'tax' ? 'selected' : ''}>Tax</option>
-                    </select>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Year:</span>
-                    <span class="detail-value">${year}</span>
-                </div>
-            </div>
-            <div class="button-group">
-                <button class="edit-btn" onclick="toggleEdit(this)">Edit</button>
-                <button class="save-btn" style="display:none" onclick="saveChanges(${id})">Save</button>
-                <button class="cancel-btn" style="display:none" onclick="cancelEdit()">Cancel</button>
-            </div>
-            <div id="statusMessage"></div>
-        `;
-
-        modal.style.display = 'block';
-
-        // Close button functionality
-        const closeBtn = modalContent.querySelector('.close');
-        closeBtn.onclick = function() {
-            modal.style.display = 'none';
-        }
-
-        // Click outside to close
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = 'none';
-            }
-        }
-    }
-
-    function toggleEdit(btn) {
-        const container = document.querySelector('.detail-container');
-        const editBtn = btn;
-        const saveBtn = document.querySelector('.save-btn');
-        const cancelBtn = document.querySelector('.cancel-btn');
-        
-        container.querySelectorAll('.detail-value').forEach(span => {
-            span.style.display = 'none';
-        });
-        
-        container.querySelectorAll('.edit-input').forEach(input => {
-            input.style.display = 'inline-block';
-        });
-        
-        editBtn.style.display = 'none';
-        saveBtn.style.display = 'inline-block';
-        cancelBtn.style.display = 'inline-block';
-    }
-
-    function cancelEdit() {
-        const container = document.querySelector('.detail-container');
-        const editBtn = document.querySelector('.edit-btn');
-        const saveBtn = document.querySelector('.save-btn');
-        const cancelBtn = document.querySelector('.cancel-btn');
-        
-        container.querySelectorAll('.detail-value').forEach(span => {
-            span.style.display = 'inline-block';
-        });
-        
-        container.querySelectorAll('.edit-input').forEach(input => {
-            input.style.display = 'none';
-        });
-        
-        editBtn.style.display = 'inline-block';
-        saveBtn.style.display = 'none';
-        cancelBtn.style.display = 'none';
-    }
-
-    function saveChanges(id) {
-        const inputs = document.querySelectorAll('.edit-input');
-        const formData = new FormData();
-        
-        formData.append('id', id);
-        inputs.forEach(input => {
-            const field = input.previousElementSibling.getAttribute('data-field');
-            let value = input.value;
-            formData.append(field, value);
-        });
-
-        fetch('update_expense.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            const messageDiv = document.getElementById('statusMessage');
-            if (data.success) {
-                messageDiv.className = 'success-message';
-                messageDiv.textContent = data.message;
-                // Update the displayed values
-                inputs.forEach(input => {
-                    const field = input.previousElementSibling.getAttribute('data-field');
-                    let displayValue = input.value;
-                    if (field === 'amount') {
-                        displayValue = '$' + displayValue;
-                    }
-                    input.previousElementSibling.textContent = displayValue;
-                });
-                // Return to view mode
-                cancelEdit();
-                // Reload the page after a short delay
-                setTimeout(() => {
-                    location.reload();
-                }, 1500);
-            } else {
-                messageDiv.className = 'error-message';
-                messageDiv.textContent = data.message;
-            }
-        })
-        .catch(error => {
-            const messageDiv = document.getElementById('statusMessage');
-            messageDiv.className = 'error-message';
-            messageDiv.textContent = 'An error occurred while saving changes';
-        });
-    }
-    </script>
 </head>
 
 <body>
-    <!-- Add modal dialog structure -->
-    <div id="detailsModal" class="modal">
-        <div id="modalContent" class="modal-content">
+    <div class="links">
+        <h1>Download Expenses Data</h1>
+        <?php links(); echo"</div>"; if ($message): ?>
+        <div class="success-message"><?php echo htmlspecialchars($message); ?></div>
+        <?php endif; ?>
+        <?php if ($error): ?>
+        <div class="error-message"><?php echo htmlspecialchars($error); ?></div>
+        <?php endif; ?>
+
+        <div class="download-links">
+            <form method="get" action="">
+                <select name="year">
+                    <option value="">All Years</option>
+                    <?php
+                    $years = array_unique(array_map(function($row) {
+                        return date('Y', strtotime($row['date']));
+                    }, $expenses));
+                    sort($years);
+                    foreach ($years as $year): ?>
+                    <option value="<?php echo $year; ?>" <?php echo $selectedYear == $year ? 'selected' : ''; ?>>
+                        <?php echo $year; ?>
+                    </option>
+                    <?php endforeach; ?>
+                </select>
+
+                <select name="month">
+                    <option value="">All Months</option>
+                    <?php for ($i = 1; $i <= 12; $i++): ?>
+                    <option value="<?php echo $i; ?>" <?php echo $selectedMonth == $i ? 'selected' : ''; ?>>
+                        <?php echo date('F', mktime(0, 0, 0, $i, 1)); ?>
+                    </option>
+                    <?php endfor; ?>
+                </select>
+
+                <button type="submit">Filter</button>
+                <a
+                    href="?format=csv<?php echo $selectedYear ? '&year=' . $selectedYear : ''; ?><?php echo $selectedMonth ? '&month=' . $selectedMonth : ''; ?>">
+                    Download CSV
+                </a>
+            </form>
+            <div class="sort-form" id="sort-form">
+                <form method="post" action="">
+                   <h3 style="padding: 0;margin: 0"> Sort by:</h3>
+                    <select name="sort">
+                        <option value="date" <?php echo $sortBy === 'date' ? 'selected' : ''; ?>>Date</option>
+                        <option value="amount" <?php echo $sortBy === 'amount' ? 'selected' : ''; ?>>Amount</option>
+                        <option value="type" <?php echo $sortBy === 'type' ? 'selected' : ''; ?>>Type</option>
+                        <option value="place" <?php echo $sortBy === 'place' ? 'selected' : ''; ?>>Place</option>
+                        <option value="item" <?php echo $sortBy === 'item' ? 'selected' : ''; ?>>Item</option>
+                    </select>
+                    <div class="order-radio">
+                        <input type="radio" id="asc" name="order" value="asc" <?php echo $sortOrder === 'asc' ? 'checked' : ''; ?>>
+                        <label for="asc">&#9650;</label>
+                        <input type="radio" id="desc" name="order" value="desc" <?php echo $sortOrder === 'desc' ? 'checked' : ''; ?>>
+                        <label for="desc">&#9660;</label>
+                    </div>
+                    <button type="submit">Sort</button>
+                </form>
+            </div>
         </div>
-    </div>
-    <div class="download-links">
-        <a href="download_data.php?format=csv">Download Data CSV</a>
-        <select name="year" id="yearSelect" onchange="updateView()">
-            <option>View Yearly Data</option>
-            <option value="2024">2024</option>
-            <option value="2025">2025</option>
 
-        </select>
-        <select name="month" id="monthSelect" onchange="updateView()">
-            <option value="">Select Month</option>
-            <?php
-            $months = [
-                '01' => 'January', '02' => 'February', '03' => 'March',
-                '04' => 'April', '05' => 'May', '06' => 'June',
-                '07' => 'July', '08' => 'August', '09' => 'September',
-                '10' => 'October', '11' => 'November', '12' => 'December'
-            ];
-            foreach ($months as $num => $name):
-            ?>
-            <option value="<?php echo $num; ?>" <?php echo $num === $selectedMonth ? 'selected' : ''; ?>>
-                <?php echo $name; ?>
-            </option>
-            <?php endforeach; ?>
-        </select><a style="display:inline;float:right;" href="./">Back</a>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Item</th>
+                    <th>Place</th>
+                    <th>$</th>
+                    <th>Type</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($filteredExpenses as $row): ?>
+                <tr>
+                    <td class="date"><?php echo date('M j', strtotime($row['date'])); ?></td>
+                    <td><?php echo htmlspecialchars($row['item']); ?></td>
+                    <td><?php echo htmlspecialchars($row['place']); ?></td>
+                    <td class="amount"><?php echo htmlspecialchars($row['amount']); ?></td>
+                    <td><?php echo htmlspecialchars($row['type']); ?></td>
+                    <td>
+                        <form method="post" action="">
+                            <input type="hidden" name="action" value="update">
+                            <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
+                            <button type="button"
+                                onclick="showEditForm(this.form, <?php echo htmlspecialchars(json_encode($row)); ?>)">Edit</button>
+                        </form>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
     </div>
 
-    <?php if ($format === 'html'): ?>
-    <table>
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Item</th>
-                <th>Place</th>
-                <th>Amount</th>
-                <th>Type</th>
-                <th>Year</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php
-                $result = $db->getYearlyExpenses();
-                $totalAmount = 0;
-                foreach ($result as $row):
-                    $rowYear = date('Y', strtotime($row['date']));
-                    $rowMonth = date('m', strtotime($row['date']));
-                    // Skip if year is selected and doesn't match
-                    if ($selectedYear && $rowYear !== $selectedYear) continue;
-                    // Skip if month is selected and doesn't match
-                    if ($selectedMonth && $rowMonth !== $selectedMonth) continue;
-                    $totalAmount += $row['amount'];
-                ?>
-            <tr onclick="showDetails(
-                <?php echo $row['id']; ?>,
-                '<?php echo $row['date']; ?>', 
-                '<?php echo addslashes(htmlspecialchars($row['item'])); ?>', 
-                '<?php echo addslashes(htmlspecialchars($row['place'])); ?>', 
-                '<?php echo number_format($row['amount'], 2); ?>', 
-                '<?php echo addslashes(htmlspecialchars($row['type'])); ?>', 
-                '<?php echo date('Y', strtotime($row['date'])); ?>'
-            )">
-                <td class="date"><?php echo date('M j', strtotime($row['date'])); ?></td>
-                <td><?php echo htmlspecialchars($row['item']); ?></td>
-                <td><?php echo htmlspecialchars($row['place']); ?></td>
-                <td class="amount">$<?php echo number_format($row['amount'], 2); ?></td>
-                <td><?php echo htmlspecialchars($row['type']); ?></td>
-                <td><?php echo date('Y', strtotime($row['date'])); ?></td>
-            </tr>
-            <?php endforeach; ?>
-            <tr>
-                <td colspan="3"><strong>Total</strong></td>
-                <td class="amount"><strong>$<?php echo number_format($totalAmount, 2); ?></strong></td>
-                <td colspan="2"></td>
-            </tr>
-        </tbody>
-    </table>
-    <?php endif; ?>
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Edit Expense</h2>
+            <form method="post" action="" id="editForm">
+                <input type="hidden" name="action" value="update">
+                <input type="hidden" name="id" id="editId">
+                <div class="detail-row">
+                    <label class="detail-label">Date:</label>
+                    <input type="date" name="date" id="editDate" required>
+                </div>
+
+                <div class="detail-row">
+                    <label class="detail-label">Item:</label>
+                    <input type="text" name="item" id="editItem" required>
+                </div>
+
+                <div class="detail-row">
+                    <label class="detail-label">Place:</label>
+                    <input type="text" name="place" id="editPlace">
+                </div>
+
+                <div class="detail-row">
+                    <label class="detail-label">Amount:</label>
+                    <input type="number" step="0.01" name="amount" id="editAmount" required>
+                </div>
+
+                <div class="detail-row">
+                    <label class="detail-label">Type:</label>
+                    <input type="text" name="type" id="editType">
+                </div>
+
+                <div class="button-group">
+                    <button type="button" class="cancel-btn" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="save-btn">Save Changes</button>
+                </div>
+            </form>
+        </div>
+        <?php footer();?>
+        </div>
+
+    <script>
+    function showEditForm(form, data) {
+        document.getElementById('editId').value = data.id;
+        document.getElementById('editDate').value = data.date;
+        document.getElementById('editItem').value = data.item;
+        document.getElementById('editPlace').value = data.place;
+        document.getElementById('editAmount').value = data.amount;
+        document.getElementById('editType').value = data.type;
+        document.getElementById('editModal').style.display = 'block';
+    }
+
+    function closeModal() {
+        document.getElementById('editModal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        if (event.target == document.getElementById('editModal')) {
+            closeModal();
+        }
+    }
+    </script>
+    
 </body>
-
 </html>

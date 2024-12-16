@@ -180,10 +180,24 @@ th:first-child,
 td:first-child {
   margin: 0;
   padding: 0;
+  width: 15%;
+
+}
+th:nth-child(4),
+td:nth-child(4)  {
+  width: 4%;
 }
 th:last-child,
 td:last-child {
-  width: fit-content;
+  width: 7%;
+  min-width: fit-content;
+  white-space: nowrap;
+}
+td:last-child {
+  font-size: xx-small;
+  font-weight: 400;
+  border-radius: 10%;
+  text-align: center;
 }
 
 th {
@@ -250,6 +264,9 @@ hr {
     display: inline;
     text-align: right;
     padding-right: 2%;
+}
+.links h1{
+  float: left; display: inline;
 }
 
 .crumbs a{

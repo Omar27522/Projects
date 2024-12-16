@@ -11,6 +11,7 @@ class Database {
             $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $this->createTable();//expenses table
             $this->createGasTable();//gas table
+            $this->createStationsTable();//stations table
         } catch (PDOException $e) {
             echo "Error connecting to database: " . $e->getMessage();
         }
@@ -41,6 +42,27 @@ class Database {
             gallons REAL NOT NULL,
             price_per_gallon REAL NOT NULL
         )");
+    }
+
+    private function createStationsTable() {
+        try {
+            $this->db->exec("CREATE TABLE IF NOT EXISTS stations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE
+            )");
+            
+            // Check if table is empty and add default stations
+            $count = $this->db->query("SELECT COUNT(*) FROM stations")->fetchColumn();
+            if ($count == 0) {
+                $defaultStations = ['Shell', 'BP', 'Chevron'];
+                $stmt = $this->db->prepare("INSERT INTO stations (name) VALUES (:name)");
+                foreach ($defaultStations as $station) {
+                    $stmt->execute([':name' => $station]);
+                }
+            }
+        } catch (PDOException $e) {
+            echo "Error creating stations table: " . $e->getMessage();
+        }
     }
 
     public function addExpense($date, $item, $place, $amount, $type) {
@@ -97,10 +119,24 @@ class Database {
         return $query->execute();
     }
 
-    public function addGasEntry($date, $station, $type, $amount, $gallons, $ppg) {
-        $year = date('Y'); // Get current year
-        $query = $this->db->prepare("INSERT INTO gas (date, year, station, type, amount, gallons, price_per_gallon) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        return $query->execute([$date, $year, $station, $type, $amount, $gallons, $ppg]);
+    public function addGasEntry($date, $station, $type, $amount, $gallons, $price_per_gallon) {
+        $year = date('Y', strtotime($date));
+        $query = $this->db->prepare('INSERT INTO gas (date, year, station, type, amount, gallons, price_per_gallon) 
+                                   VALUES (:date, :year, :station, :type, :amount, :gallons, :price_per_gallon)');
+        try {
+            $query->bindValue(':date', $date, PDO::PARAM_STR);
+            $query->bindValue(':year', $year, PDO::PARAM_INT);
+            $query->bindValue(':station', $station, PDO::PARAM_STR);
+            $query->bindValue(':type', $type, PDO::PARAM_STR);
+            $query->bindValue(':amount', $amount, PDO::PARAM_STR);
+            $query->bindValue(':gallons', $gallons, PDO::PARAM_STR);
+            $query->bindValue(':price_per_gallon', $price_per_gallon, PDO::PARAM_STR);
+            $query->execute();
+            return true;
+        } catch (PDOException $e) {
+            echo "Error: " . $e->getMessage();
+            return false;
+        }
     }
 
     public function getDistinctTypes() {
@@ -199,9 +235,15 @@ class Database {
     }
 
     public function getAllGasEntries() {
-        $query = "SELECT * FROM gas ORDER BY date DESC";
-        $stmt = $this->db->query($query);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $query = "SELECT id, date, station, type, amount, gallons, price_per_gallon FROM gas ORDER BY date DESC";
+        try {
+            $stmt = $this->db->query($query);
+            $entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $entries;
+        } catch (PDOException $e) {
+            echo "Error: " . $e->getMessage();
+            return [];
+        }
     }
 
     public function deleteGasEntry($id) {
@@ -211,9 +253,31 @@ class Database {
     }
 
     public function updateGasEntry($id, $date, $station, $type, $amount, $gallons, $ppg) {
-        $year = date('Y'); // Get current year
-        $query = $this->db->prepare("UPDATE gas SET date = ?, year = ?, station = ?, type = ?, amount = ?, gallons = ?, price_per_gallon = ? WHERE id = ?");
-        return $query->execute([$date, $year, $station, $type, $amount, $gallons, $ppg, $id]);
+        $year = date('Y', strtotime($date));
+        $query = "UPDATE gas SET 
+                 date = :date,
+                 year = :year,
+                 station = :station,
+                 type = :type,
+                 amount = :amount,
+                 gallons = :gallons,
+                 price_per_gallon = :ppg
+                 WHERE id = :id";
+        try {
+            $stmt = $this->db->prepare($query);
+            $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+            $stmt->bindValue(':date', $date, PDO::PARAM_STR);
+            $stmt->bindValue(':year', $year, PDO::PARAM_INT);
+            $stmt->bindValue(':station', $station, PDO::PARAM_STR);
+            $stmt->bindValue(':type', $type, PDO::PARAM_STR);
+            $stmt->bindValue(':amount', $amount, PDO::PARAM_STR);
+            $stmt->bindValue(':gallons', $gallons, PDO::PARAM_STR);
+            $stmt->bindValue(':ppg', $ppg, PDO::PARAM_STR);
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            echo "Error: " . $e->getMessage();
+            return false;
+        }
     }
 
     public function getFilteredEntries($year = null, $month = null) {
@@ -251,6 +315,52 @@ class Database {
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             error_log("Error filtering entries: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function getGasEntryById($id) {
+        $query = "SELECT * FROM gas WHERE id = :id";
+        try {
+            $stmt = $this->db->prepare($query);
+            $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            echo "Error: " . $e->getMessage();
+            return null;
+        }
+    }
+
+    public function getAllStations() {
+        try {
+            $query = "SELECT name FROM stations ORDER BY name ASC";
+            $stmt = $this->db->query($query);
+            return $stmt->fetchAll(PDO::FETCH_COLUMN);
+        } catch (PDOException $e) {
+            error_log("Error getting stations: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function addStation($name) {
+        try {
+            $query = $this->db->prepare('INSERT INTO stations (name) VALUES (:name)');
+            $query->bindValue(':name', $name, PDO::PARAM_STR);
+            return $query->execute();
+        } catch (PDOException $e) {
+            error_log("Error adding station: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function deleteStation($name) {
+        try {
+            $query = $this->db->prepare('DELETE FROM stations WHERE name = :name');
+            $query->bindValue(':name', $name, PDO::PARAM_STR);
+            return $query->execute();
+        } catch (PDOException $e) {
+            error_log("Error deleting station: " . $e->getMessage());
             return false;
         }
     }

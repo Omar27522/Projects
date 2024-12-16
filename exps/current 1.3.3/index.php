@@ -11,7 +11,7 @@
 </head>
 
 <body>
-    <div class="links"><h1 style="float: left; display: inline;">New Expense</h1><?php links(); ?></div>
+    <div class="links"><h1>New Expense</h1><?php links(); ?></div>
     <form method="POST" action="">
         <section><input type="hidden" id="year" name="year" value="<?php echo date('Y h:i:a'); ?>" >
             <input type="text" name="date" placeholder="Date"
@@ -74,7 +74,7 @@
         echo '<th>Date</th>';
         echo '<th>Item</th>';
         echo '<th>Place</th>';
-        echo '<th>Amount</th>';
+        echo '<th><i class="fas fa-dollar-sign">$</i></th>';
         echo '<th>Type</th>';
         echo '</tr>';
         echo '</thead>';
