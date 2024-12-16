@@ -1,5 +1,5 @@
 <?php
-require_once '../db_connect.php';
+include '../db_connect.php';
 
 // Initialize database connection and variables
 $db = new Database();
@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $place = $_POST['place'] ?? '';
         $amount = $_POST['amount'] ?? '';
         $type = $_POST['type'] ?? '';
-        
+
         if ($id && $date && $item && $amount) {
             try {
                 $result = $db->updateExpense($id, $date, $item, $place, $amount, $type);
@@ -108,7 +108,7 @@ usort($filteredExpenses, function($a, $b) use ($sortBy, $sortOrder) {
 </head>
 
 <body>
-    <div class="container"><div class="links">
+    <div class="links">
         <h1>Download Expenses Data</h1>
         <?php links(); echo"</div>"; if ($message): ?>
         <div class="success-message"><?php echo htmlspecialchars($message); ?></div>
@@ -241,7 +241,8 @@ usort($filteredExpenses, function($a, $b) use ($sortBy, $sortOrder) {
                 </div>
             </form>
         </div>
-    </div>
+        <?php footer();?>
+        </div>
 
     <script>
     function showEditForm(form, data) {
@@ -265,6 +266,6 @@ usort($filteredExpenses, function($a, $b) use ($sortBy, $sortOrder) {
         }
     }
     </script>
-    <?php footer();?>
+    
 </body>
 </html>
