@@ -297,3 +297,69 @@ hr {
     transition: transform 0.9s ease-out;
     box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
 }
+
+fieldset {
+  display: inline-block;
+  min-width: max-content;
+  margin: 2rem 0;
+  background: linear-gradient(
+    to right bottom,
+    rgba(255, 255, 255, 0.95),
+    rgba(240, 240, 240, 0.98)
+  );
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+}
+
+fieldset legend {
+  color: #2c3e50;
+  font-weight: 600;
+  padding: 0 1rem;
+  margin-bottom: 1rem;
+  white-space: normal;
+}
+
+fieldset table {
+  border-collapse: separate;
+  border-spacing: 20px 10px;  /* 20px horizontal, 10px vertical spacing */
+}
+
+fieldset td {
+  padding: 8px;
+}
+
+fieldset td input[type="number"] {
+  min-width: 100px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  text-align: right;
+  margin: 0 4px;
+}
+
+fieldset td input[type="number"]:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+  outline: none;
+}
+
+fieldset th {
+  padding: 8px 16px;
+  text-align: center;
+  white-space: nowrap;  /* Prevent header text from wrapping */
+}
+
+fieldset td input[type="number"] {
+  min-width: 80px;
+}
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}

@@ -364,13 +364,27 @@ class Database {
             return false;
         }
     }
+
+    public function query($sql, $params = []) {
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
+            return $stmt;
+        } catch (PDOException $e) {
+            throw new PDOException($e->getMessage());
+        }
+    }
+
+    public function exec($sql) {
+        return $this->db->exec($sql);
+    }
 }
 
 function links () {
     echo '<div class="crumbs">
         <a href="../monthly/">Monthly Expenses</a>
         <a href="../gas">GAS</a>
-        <a href="#Budget">Budget</a>
+        <a href="../budget">Budget</a>
         <a href="#tips">tips</a>
         <a href="#LAPC">LAPC</a>
         <a href="../bank/">Bank</a>
@@ -380,7 +394,7 @@ function footer () {
     echo '<div class="footer">
         <a href="../monthly/">Monthly Expenses</a>
         <a href="../gas">GAS</a>
-        <a href="#Budget">Budget</a>
+        <a href="../budget">Budget</a>
         <a href="#tips">tips</a>
         <a href="#LAPC">LAPC</a>
         <a href="../bank/">Bank</a>

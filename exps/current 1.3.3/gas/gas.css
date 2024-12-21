@@ -112,22 +112,37 @@ input[name="amount"] {
 }
 
 .message {
-    text-align: center;
     padding: 10px;
     margin: 10px 0;
-    border-radius: 5px;
+    border-radius: 4px;
+    text-align: center;
+    font-weight: bold;
 }
 
-.success {
-    background: #d4edda;
+.message.success {
+    background-color: #d4edda;
     color: #155724;
     border: 1px solid #c3e6cb;
 }
 
-.error {
-    background: #f8d7da;
+.message.error {
+    background-color: #f8d7da;
     color: #721c24;
     border: 1px solid #f5c6cb;
+}
+
+.submit-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.submit-btn:hover {
+    background-color: #218838;
 }
 
 .calculated {
@@ -308,27 +323,6 @@ input[name="amount"] {
     font-size: xx-small;
     font-weight: 400;
     text-align: center;
-}
-
-.miles-table-container {
-    margin-top: 10px !important;
-}
-
-.miles-table {
-    min-width: 600px !important; /* Slightly smaller than main table */
-}
-
-.miles-table th,
-.miles-table td {
-    width: 25%; /* Equal width columns */
-    padding: 8px;
-}
-
-.miles-table input[type="number"] {
-    width: 90%;
-    padding: 6px;
-    border: 1px solid #eee;
-    border-radius: 4px;
 }
 
 fieldset {
