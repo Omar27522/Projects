@@ -1,0 +1,5 @@
+2024-12-24 15:37:19,771 - label_manager - INFO - Starting Label Manager v1.0.0
+2024-12-24 15:37:19,773 - label_manager - INFO - Found labels directory: C:\Users\Justin\Documents\Labels
+2024-12-24 15:37:19,776 - label_manager - INFO - Found 997 PNG files
+2024-12-24 15:37:19,776 - label_manager - INFO - First 5 files: ['001 Search for_Using the Scanner_label_111010101010.png', '002 label search 4 label_nice!_label_111010101011.png', '37.5 Knit Neck Pillow_GRNGRYV1Standard_label_840168705849.png', '37.5 Knit The Eye Mask_BLKV1Standard_label_840168708741.png', '37.5 Knit The Eye Mask_MBLUV1Standard_label_840168708765.png']
+2024-12-24 15:38:08,112 - label_manager - INFO - Application shutdown complete
