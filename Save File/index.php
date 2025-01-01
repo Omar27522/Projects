@@ -27,7 +27,7 @@
             <!-- Table body with data -->
             <tbody>
                 <tr>
-                    <td><input type="text" name="id[]" value=" <?php echo $row['id']; ?>"></td>
+                    <td><input type="hidden" name="id[]" value=""></td>
                     <td><input type="text" name="name[]" value=""></td>
                     <td><input type="text" name="age[]" value=""></td>
                     <!-- Add more data rows as needed -->
