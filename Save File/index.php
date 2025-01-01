@@ -31,7 +31,7 @@
                     <td><input type="hidden" name="id[]" value=""></td>
                     <td><input type="text" name="title[]" value=""></td>
                     <td><input type="text" name="data[]" value=""></td>
-                    <td><button type="button" class="edit-button">Delete</button></td>
+                    <td></td>
                     <!-- Add more data rows as needed -->
                 </tr>
                 <!-- Data From the Database -->
@@ -43,6 +43,7 @@
                         echo '<td><input type="text" name="id[]" value="' . $row['id'] . '"></td>';
                         echo '<td><input type="text" name="title[]" value="' . $row['title'] . '"></td>';
                         echo '<td><input type="text" name="data[]" value="' . $row['data'] . '"></td>';
+                        echo '<td><button type="button" class="delete-button">Delete</button></td>';
                         echo '</tr>';
                     }
                 ?>
@@ -50,5 +51,39 @@
         </table>
         <button type="submit">Save Changes</button>
     </form>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteButtons = document.querySelectorAll('.delete-button');
+        
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const row = this.closest('tr');
+                const id = row.querySelector('input[name="id[]"]').value;
+                
+                if (confirm('Are you sure you want to delete this row?')) {
+                    fetch('deleteRow.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: 'id=' + encodeURIComponent(id)
+                    })
+                    .then(response => response.text())
+                    .then(result => {
+                        if (result === 'success') {
+                            row.remove();
+                        } else {
+                            alert('Error deleting row: ' + result);
+                        }
+                    })
+                    .catch(error => {
+                        alert('Error: ' + error);
+                    });
+                }
+            });
+        });
+    });
+    </script>
 </body>
 </html>

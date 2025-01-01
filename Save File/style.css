@@ -39,7 +39,7 @@ input[type="text"] {
 
 button {
     padding: 10px 20px;
-    background-color: #4CAF50;
+    background-color: #479c4b;
     color: white;
     border: none;
     cursor: pointer;
@@ -47,9 +47,19 @@ button {
 }
 
 button:hover {
-    background-color: #45a049;
+    background-color: #477a9c;
 }
 
 #displayTable tr:nth-child(even) {
     background-color: #f9f9f9;
 }
+.delete-button {
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.delete-button:hover {
+        background-color: #c02f25;
+    }

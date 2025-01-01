@@ -3,13 +3,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     try {
         require_once 'database_setup.php';
         $pdo->beginTransaction();
-        
+
         for ($i = 0; $i < count($_POST['id']); $i++) {
             // Skip if both title and data are empty
             if (empty($_POST['title'][$i]) && empty($_POST['data'][$i])) {
                 continue;
             }
-            
+
             if (empty($_POST['id'][$i])) {
                 // Insert new record
                 $stmt = $pdo->prepare("INSERT INTO your_table (title, data) VALUES (?, ?)");
