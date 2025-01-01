@@ -19,8 +19,9 @@
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Name</th>
-                    <th>Age</th>
+                    <th>Title</th>
+                    <th>Data</th>
+                    <th>Edit</th>
                     <!-- Add more headers as needed -->
                 </tr>
             </thead>
@@ -28,8 +29,9 @@
             <tbody>
                 <tr>
                     <td><input type="hidden" name="id[]" value=""></td>
-                    <td><input type="text" name="name[]" value=""></td>
-                    <td><input type="text" name="age[]" value=""></td>
+                    <td><input type="text" name="title[]" value=""></td>
+                    <td><input type="text" name="data[]" value=""></td>
+                    <td><button type="button" class="edit-button">Delete</button></td>
                     <!-- Add more data rows as needed -->
                 </tr>
                 <!-- Data From the Database -->
@@ -39,8 +41,8 @@
                     while ($row = $result->fetch()) {
                         echo '<tr>';
                         echo '<td><input type="text" name="id[]" value="' . $row['id'] . '"></td>';
-                        echo '<td><input type="text" name="name[]" value="' . $row['name'] . '"></td>';
-                        echo '<td><input type="text" name="age[]" value="' . $row['age'] . '"></td>';
+                        echo '<td><input type="text" name="title[]" value="' . $row['title'] . '"></td>';
+                        echo '<td><input type="text" name="data[]" value="' . $row['data'] . '"></td>';
                         echo '</tr>';
                     }
                 ?>

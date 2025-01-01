@@ -10,8 +10,8 @@ if (!file_exists($db_file)) {
     $sql = "
         CREATE TABLE IF NOT EXISTS your_table (
             id INTEGER PRIMARY KEY,
-            name TEXT,
-            age INTEGER
+            title TEXT,
+            data TEXT
         );
     ";
     $pdo->exec($sql);
@@ -28,8 +28,8 @@ if (!file_exists($db_file)) {
         $sql = "
             CREATE TABLE your_table (
                 id INTEGER PRIMARY KEY,
-                name TEXT,
-                age INTEGER
+                title TEXT,
+                data TEXT
             );
         ";
         $pdo->exec($sql);

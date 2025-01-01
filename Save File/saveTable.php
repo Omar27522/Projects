@@ -1,22 +1,29 @@
 <?php
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     try {
-        $pdo = new PDO('sqlite:saveFile.sqlite');
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
+        require_once 'database_setup.php';
+        $pdo->beginTransaction();
+        
         for ($i = 0; $i < count($_POST['id']); $i++) {
+            // Skip if both title and data are empty
+            if (empty($_POST['title'][$i]) && empty($_POST['data'][$i])) {
+                continue;
+            }
+            
             if (empty($_POST['id'][$i])) {
                 // Insert new record
-                $stmt = $pdo->prepare("INSERT INTO your_table (name, age) VALUES (?, ?)");
-                $stmt->execute([$_POST['name'][$i], $_POST['age'][$i]]);
+                $stmt = $pdo->prepare("INSERT INTO your_table (title, data) VALUES (?, ?)");
+                $stmt->execute([$_POST['title'][$i], $_POST['data'][$i]]);
             } else {
                 // Update existing record
-                $stmt = $pdo->prepare("UPDATE your_table SET name = ?, age = ? WHERE id = ?");
-                $stmt->execute([$_POST['name'][$i], $_POST['age'][$i], $_POST['id'][$i]]);
+                $stmt = $pdo->prepare("UPDATE your_table SET title = ?, data = ? WHERE id = ?");
+                $stmt->execute([$_POST['title'][$i], $_POST['data'][$i], $_POST['id'][$i]]);
             }
         }
+        $pdo->commit();
         header("Location: index.php");
-    } catch (PDOException $e) {
+    } catch (Exception $e) {
+        $pdo->rollBack();
         echo "Error: " . $e->getMessage();
     }
 }

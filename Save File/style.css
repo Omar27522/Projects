@@ -17,6 +17,18 @@ th, td {
 
 th {
     background-color: #f2f2f2;
+    width: fit-content;
+}
+
+tr{
+    width: fit-content;
+}
+
+/* Make first column shrink to content */
+td:first-child,
+th:first-child {
+    width: 5%;
+    white-space: nowrap;
 }
 
 input[type="text"] {
