@@ -1,0 +1,32 @@
+h6 {
+    background-color: aquamarine;
+    display: inline-block;
+}
+nav{
+    display: inline;
+    padding-right:2%;
+    width: fit-content;
+}
+button{
+    width:10%;
+    margin: 3%;
+    font-size: larger;
+    transition: transform 0.3s;
+}
+button:hover{
+    background-color: rgb(185, 38, 38);
+}
+button:active{
+    text-shadow: 3px 3px 3px black;
+    box-shadow: 1px 1px  5px red;
+transform: scale(0.95);
+
+}
+
+footer{
+    position: absolute;
+    bottom:0;
+    width: 90%;
+    padding-bottom: 10%;
+    padding-left: 5%;
+}
