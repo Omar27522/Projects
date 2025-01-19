@@ -31,7 +31,7 @@
             border-radius: 15px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
         }
-        
+
         summary {
             background: linear-gradient(to bottom, #333, #000);
             color: white;
@@ -45,7 +45,7 @@
             transition: transform 0.2s ease; /* Smooth transition effect */
             animation: pulse 2s infinite alternate; /* Added pulse animation */
         }
-        
+
         @keyframes pulse {
             from {
                 transform: scale(1);
@@ -54,11 +54,11 @@
                 transform: scale(1.05); /* Slightly larger scale for pulse effect */
             }
         }
-        
+
         summary:hover {
             transform: translateY(-3px);
         }
-        
+
         summary:active {
             color: lightblue;
         }
@@ -73,7 +73,6 @@
     href="https://www.php.net/manual/en/control-structures.alternative-syntax.php">
     <h6>https://www.php.net/manual/en/control-structures.alternative-syntax.php</h6></a>
     </details>
-   
     </header>
     <article>
     <section>
