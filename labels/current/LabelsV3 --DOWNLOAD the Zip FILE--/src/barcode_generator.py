@@ -66,18 +66,16 @@ class BarcodeGenerator:
             barcode_class = barcode.get_barcode_class('upc')
             barcode_writer = ImageWriter()
             
-            # Set specific options for better barcode appearance
+            # Use settings from config
             barcode_writer.set_options({
-                'module_height': 120.0,    # Taller bars for better visibility
-                'module_width': 2.5,      # Wider individual bars with better spacing
-                'quiet_zone': 6.5,        # Increased quiet zone for better scanning
-                'font_size': 12,          # Size of UPC text
-                'text_distance': 6.0,     # Distance of UPC text from bars
+                'module_height': self.settings.BARCODE_MODULE_HEIGHT,
+                'module_width': self.settings.BARCODE_MODULE_WIDTH,
+                'quiet_zone': self.settings.BARCODE_QUIET_ZONE,
+                'font_size': self.settings.BARCODE_FONT_SIZE,
+                'text_distance': self.settings.BARCODE_TEXT_DISTANCE,
                 'write_text': True,       # Show the UPC number
                 'background': 'white',    # White background
-                'foreground': 'black',    # Black bars
-                'center_text': True,      # Center the UPC number
-                'dpi': 600                # Higher DPI for much better print quality
+                'foreground': 'black'     # Black bars
             })
             
             # Generate barcode

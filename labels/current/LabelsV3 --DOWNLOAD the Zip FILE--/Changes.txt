@@ -1,0 +1,10 @@
+Label Maker
+
+
+* The naming logic should be improved.
+
+* While manually creating a label, the text field should have a character limit, like the int limit for the UPC
+    - Maybe shift automatically to the second line, when The user pastes the name into the product name field.
+
+* I was thinking of hosting the CSV file somewhere. And releasing new updates on a regular basis.
+        as more more items are added. I would need to think hard about this.

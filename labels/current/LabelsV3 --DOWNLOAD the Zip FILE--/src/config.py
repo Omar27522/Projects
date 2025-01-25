@@ -19,6 +19,12 @@ class LabelSettings:
     LABEL_WIDTH: int = DPI * 2
     LABEL_HEIGHT: int = DPI * 2
 
+    BARCODE_MODULE_HEIGHT: float = 120.0  # Taller bars for better visibility
+    BARCODE_MODULE_WIDTH: float = 2.5     # Wider individual bars with better spacing
+    BARCODE_QUIET_ZONE: float = 6.5       # Increased quiet zone for better scanning
+    BARCODE_FONT_SIZE: int = 12           # Size of UPC text
+    BARCODE_TEXT_DISTANCE: float = 6.0    # Distance of UPC text from bars
+
 class ConfigManager:
     def __init__(self):
         # Get the directory where the script is located
