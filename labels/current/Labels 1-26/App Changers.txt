@@ -1,0 +1,42 @@
+I want a welcome Screen.
+
+that promts the user to type in teir name
+
+I think I will use Google API or some other way to interact with the montly logless sheet.
+
+perhaps we can add the sheet's link once a month on the settings
+
+Basically I want to make the Work data input automatic, and to display the tally, for users to see.
+
+maybe show all the returns from the month. Make it fun and interactive, so that they will find teh motivation to improve.
+
+
+---------------------------------------------------------------------------------------
+Next Update I woul dalso like to include some more info about each label, like measurements, color, and other descriptors 
+in order to narrow down the search for the correct label that matches the product they are seeing.
+
+I want to use photos, but IDK how to, and or where to store them.
+ 
+Also I was thiking about. having all this info on the CSV to import.
+
+
+
+This idea came to me yesterday while at church.
+	Make the software scan the tracking #.
+
+
+	Ok here it is: the software has an admin user, and a regular user version.
+
+	The admin, is powerful. while the regular user version has all the guard rails in place to minimize logistical errors from the returns department.
+	The thing is is that because we have too much freedom, and lots of work, its easy to overlook where items go after processing, and to promptly fix errors.
+
+	++++++REG USER ACC+++++++
+	The program starts, and it promts the user to sign their name. make it fun, maybe allow lowres userpic. and make the display name something fun that they might like.
+	
+In the background, user warehouse accounts must be linked to the software accounts. in order for everyone to see what we've done!
+
+	The first window asks for the tracking number, and the SKU. (users must have these two pieces of data in order to move forward. If not, Physically move package to the advance user location)
+	The user gets a label. And the software records the transaction. with this information, we can figure out by SKU the possible tracking numbers, and also who processed the item. Metadata plays an important role here. 
+ 		The info I would like to record is. date/time userACC, SKU, Tracking#. [with tracking, we can compare the total inbound against a "extra-lost-misplaced" item. and we can put it away in its proper location.]
+	
+	The advanced user, has the current ver. of software|| The difference will be that they have a toggle button, just for printing out labels with no Traking number, these labels do not get recorded. on teh main dataset, only on an advance user dataset, just to have a count of how many labeslwere created by advanced users, just for the fun of it? IDK, DATA VISUALITATION IS FUN RIGHT?
