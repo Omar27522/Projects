@@ -25,7 +25,8 @@ The application requires Python with the following packages:
 - python-barcode (Barcode generation)
 - pyautogui (Screen interaction)
 - pandas (CSV processing)
-Note: User environments are typically pre-configured with these dependencies.
+
+Note: User environments are typically pre-configured with these dependencies. For exact version requirements, see `assets/dependencies/requirements.txt`.
 
 ## File Structure
 

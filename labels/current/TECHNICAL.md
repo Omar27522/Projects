@@ -221,6 +221,8 @@ black           # Code formatting
 pylint          # Code analysis
 ```
 
+For exact version requirements and compatibility information, refer to `assets/dependencies/requirements.txt`.
+
 ### Required Assets
 1. **Fonts**
    - Location: `/fonts/`
