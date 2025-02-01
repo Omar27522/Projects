@@ -239,7 +239,7 @@ For exact version requirements and compatibility information, refer to `assets/d
 
 ### Installation Steps
 1. Clone repository
-2. Install dependencies: `pip install -r requirements.txt`
+2. Install dependencies: `pip install -r assets/dependencies/requirements.txt`
 3. Verify font files in `/fonts`
 4. Verify icons in `/assets`
 5. Run `main.pyw`

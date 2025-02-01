@@ -15,7 +15,8 @@ This application facilitates efficient label printing in a warehouse environment
 1. Download the latest version (.zip file) from the GitHub repository
 2. Delete any existing local version
 3. Extract the new version to the same directory on your machine
-4. Run `main.pyw` to start the application
+4. Install dependencies: `pip install -r assets/dependencies/requirements.txt`
+5. Run `main.pyw` to start the application
 
 ## Dependencies
 
