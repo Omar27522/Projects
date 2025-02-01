@@ -258,6 +258,15 @@ For exact version requirements and compatibility information, refer to `assets/d
    │   └── csv_processor.py
    ├── barcode_generator.py
    └── config.py
+
+   assets/
+   ├── icons/        # Application icons
+   └── dependencies/ # Project dependencies
+       └── requirements.txt
+
+   fonts/           # Required font files
+   ├── arial.ttf
+   └── arialbd.ttf
    ```
 
 2. **Module Responsibilities**
