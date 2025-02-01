@@ -1,4 +1,4 @@
-# Label Maker Version 1.0.1 LabelsV3
+# Label Maker Version 1.0.1.1 LabelsV3
 
 A streamlined label printing application designed for warehouse returns department operations.
 
