@@ -15,19 +15,33 @@ This application facilitates efficient label printing in a warehouse environment
 1. Download the latest version (.zip file) from the GitHub repository
 2. Delete any existing local version
 3. Extract the new version to the same directory on your machine
-4. Install dependencies: `pip install -r assets/dependencies/requirements.txt`
-5. Run `main.pyw` to start the application
+4. Open Command Prompt (cmd) or PowerShell:
+   - Press Windows + R
+   - Type `cmd` and press Enter
+5. Navigate to the application directory:
+   ```
+   cd path\to\your\application\LabelsV3\src
+   ```
+6. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+   If you get permissions errors, try:
+   ```
+   pip install --user -r requirements.txt
+   ```
+7. Run `main.pyw` to start the application
 
 ## Dependencies
 
 The application requires Python with the following packages:
-- tkinter (GUI framework)
 - Pillow (Image processing)
-- python-barcode (Barcode generation)
-- pyautogui (Screen interaction)
+- pywin32 (Windows integration)
 - pandas (CSV processing)
+- pyautogui (Screen interaction)
+- tkinter (GUI framework, comes with Python)
 
-Note: User environments are typically pre-configured with these dependencies. For exact version requirements, see `assets/dependencies/requirements.txt`.
+Note: All required package versions are specified in `requirements.txt`.
 
 ## File Structure
 
