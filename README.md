@@ -20,8 +20,8 @@ I'm currently learning PHP, HTML, and CSS, and this projects page serves as a sh
                                  Enhanced user experience is achieved through an intuitive interface that includes progress indicators for batch processing and detailed label history with timestamps.
                                     The system successfully handles SKU integration and includes support for products with no-name/SKU through additional descriptors and image management.
                                         The result is a comprehensive labeling solution that effectively balances high-volume operations with precise individual label creation capabilities.
-  - **Technologies Used**: PHP, HTML, CSS
-  - **Main File**: Release Version 1.0
+  - **Technologies Used**: Python
+  - **Main File**: Release Version 1.0.1
   - **Planned Updates**: Exciting enhancements on the horizon!
                            Looking forward to introducing a seamless user management system with guest, associate, and administrative access levels.
                               A personal productivity dashboard will help track daily achievements and celebrate milestones.
