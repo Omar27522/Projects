@@ -34,14 +34,65 @@ This application facilitates efficient label printing in a warehouse environment
 
 ## Dependencies
 
-The application requires Python with the following packages:
-- Pillow (Image processing)
-- pywin32 (Windows integration)
-- pandas (CSV processing)
-- pyautogui (Screen interaction)
-- tkinter (GUI framework, comes with Python)
+The application requires Python 3.7+ with the following packages:
 
-Note: All required package versions are specified in `requirements.txt`.
+### Core Dependencies
+- **Pillow (>=10.0.0)**: Image processing library used for:
+  - Label image generation
+  - Image resizing and manipulation
+  - Loading and saving image files
+
+- **pywin32 (>=306)**: Windows integration library for:
+  - System-level window management
+  - Windows-specific UI features
+  - File system operations
+
+- **pandas (>=2.0.0)**: Data manipulation library used for:
+  - CSV file processing
+  - Batch label data handling
+  - Data validation and cleaning
+
+- **pyautogui (>=0.9.54)**: GUI automation library for:
+  - Screen interaction
+  - Window positioning
+  - Automated UI testing
+
+- **python-barcode (>=0.14.0)**: Barcode generation library for:
+  - Creating product barcodes
+  - Supporting multiple barcode formats
+  - Barcode validation
+
+### Utility Dependencies
+- **dataclasses (>=0.6)**: Data structure library for:
+  - Type-safe data containers
+  - Configuration settings
+  - Label data models
+
+- **typing (>=3.7.4)**: Type hinting support for:
+  - Code documentation
+  - Type checking
+  - IDE support
+
+- **json5 (>=0.9.14)**: JSON parsing library for:
+  - Configuration file handling
+  - Settings management
+  - Data serialization
+
+### Built-in Dependencies
+- **tkinter**: GUI framework (comes with Python) used for:
+  - Main application interface
+  - Window management
+  - User input handling
+
+All required package versions are specified in `requirements.txt`. Install them using:
+```bash
+pip install -r requirements.txt
+```
+
+For permission-restricted environments, use:
+```bash
+pip install --user -r requirements.txt
+```
 
 ## File Structure
 
