@@ -1,0 +1,75 @@
+2025-02-18 09:57:53,751 - LabelMaker - INFO - Application shutting down
+2025-02-18 09:58:17,353 - LabelMaker - ERROR - Failed to setup window: unknown option "-undo"
+2025-02-18 09:58:17,353 - LabelMaker - ERROR - Fatal error: unknown option "-undo"
+2025-02-18 09:58:19,595 - LabelMaker - INFO - Application shutting down
+2025-02-18 10:05:06,825 - LabelMaker - ERROR - Failed to setup window: unknown option "-undo"
+2025-02-18 10:05:06,825 - LabelMaker - ERROR - Fatal error: unknown option "-undo"
+2025-02-18 10:05:09,513 - LabelMaker - INFO - Application shutting down
+2025-02-18 10:09:48,535 - LabelMaker - INFO - Application shutting down
+2025-02-18 10:10:43,204 - LabelMaker - INFO - Application shutting down
+2025-02-18 10:11:35,958 - LabelMaker - INFO - Application shutting down
+2025-02-18 10:19:11,890 - LabelMaker - INFO - Application shutting down
+2025-02-18 10:32:28,513 - LabelMaker - ERROR - Failed to setup window: unknown option "-undo"
+2025-02-18 10:32:28,514 - LabelMaker - ERROR - Fatal error: unknown option "-undo"
+2025-02-18 10:32:30,213 - LabelMaker - INFO - Application shutting down
+2025-02-18 10:40:02,647 - LabelMaker - ERROR - Failed to setup window: '_tkinter.tkapp' object has no attribute '_create_top_control_frame'
+2025-02-18 10:40:02,647 - LabelMaker - ERROR - Fatal error: '_tkinter.tkapp' object has no attribute '_create_top_control_frame'
+2025-02-18 10:40:04,436 - LabelMaker - INFO - Application shutting down
+2025-02-18 10:44:37,683 - LabelMaker - ERROR - Failed to setup window: 'name_line1'
+2025-02-18 10:44:37,684 - LabelMaker - ERROR - Fatal error: 'name_line1'
+2025-02-18 10:44:39,475 - LabelMaker - INFO - Application shutting down
+2025-02-18 10:51:50,172 - LabelMaker - INFO - Application shutting down
+2025-02-18 11:05:26,876 - LabelMaker - INFO - Application shutting down
+2025-02-18 11:09:38,860 - LabelMaker - INFO - Application shutting down
+2025-02-18 11:24:49,978 - LabelMaker - INFO - Application shutting down
+2025-02-18 11:29:48,322 - LabelMaker - INFO - Application shutting down
+2025-02-18 11:30:20,961 - LabelMaker - INFO - Application shutting down
+2025-02-18 11:33:24,546 - LabelMaker - INFO - Application shutting down
+2025-02-18 11:38:46,630 - LabelMaker - INFO - Application shutting down
+2025-02-18 12:43:44,155 - LabelMaker - INFO - Application shutting down
+2025-02-18 12:46:35,795 - LabelMaker - INFO - Application shutting down
+2025-02-18 12:50:04,916 - LabelMaker - INFO - Application shutting down
+2025-02-18 12:55:04,130 - LabelMaker - INFO - Application shutting down
+2025-02-18 12:55:49,786 - LabelMaker - INFO - Application shutting down
+2025-02-18 12:55:52,530 - LabelMaker - INFO - Application shutting down
+2025-02-18 12:56:06,145 - LabelMaker - INFO - Application shutting down
+2025-02-18 13:46:12,564 - LabelMaker - INFO - Application shutting down
+2025-02-18 13:48:09,445 - LabelMaker - INFO - Application shutting down
+2025-02-18 13:50:00,659 - LabelMaker - INFO - Application shutting down
+2025-02-18 13:51:52,869 - LabelMaker - INFO - Application shutting down
+2025-02-18 13:52:00,984 - LabelMaker - INFO - Application shutting down
+2025-02-18 13:52:11,114 - LabelMaker - INFO - Application shutting down
+2025-02-18 13:54:07,400 - LabelMaker - INFO - Application shutting down
+2025-02-18 15:51:31,512 - LabelMaker - INFO - Application shutting down
+2025-02-18 16:10:18,622 - LabelMaker - INFO - Application shutting down
+2025-02-18 16:12:37,559 - LabelMaker - INFO - Application shutting down
+2025-02-18 16:12:55,604 - LabelMaker - INFO - Application shutting down
+2025-02-18 16:16:16,119 - LabelMaker - INFO - Application shutting down
+2025-02-18 16:18:39,772 - LabelMaker - INFO - Application shutting down
+2025-02-18 16:23:03,100 - LabelMaker - INFO - Application shutting down
+2025-02-18 16:24:34,403 - LabelMaker - INFO - Application shutting down
+2025-02-18 16:24:54,827 - LabelMaker - INFO - Application shutting down
+2025-02-18 16:25:10,788 - LabelMaker - INFO - Application shutting down
+2025-02-19 10:17:10,059 - LabelMaker - INFO - Application shutting down
+2025-02-19 10:18:22,057 - LabelMaker - INFO - Application shutting down
+2025-02-19 10:20:56,088 - LabelMaker - INFO - Application shutting down
+2025-02-19 10:21:06,674 - LabelMaker - INFO - Application shutting down
+2025-02-19 10:33:25,865 - LabelMaker - INFO - Application shutting down
+2025-02-19 10:33:54,537 - LabelMaker - INFO - Application shutting down
+2025-02-19 10:35:12,594 - LabelMaker - INFO - Application shutting down
+2025-02-19 10:57:59,269 - LabelMaker - INFO - Application shutting down
+2025-02-19 11:01:48,892 - LabelMaker - INFO - Application shutting down
+2025-02-19 11:01:50,585 - LabelMaker - ERROR - Failed to setup window: '_tkinter.tkapp' object has no attribute '_set_window_icon'
+2025-02-19 11:01:50,585 - LabelMaker - ERROR - Fatal error: '_tkinter.tkapp' object has no attribute '_set_window_icon'
+2025-02-19 11:01:52,178 - LabelMaker - INFO - Application shutting down
+2025-02-19 11:01:55,933 - LabelMaker - ERROR - Failed to setup window: '_tkinter.tkapp' object has no attribute '_set_window_icon'
+2025-02-19 11:01:55,933 - LabelMaker - ERROR - Fatal error: '_tkinter.tkapp' object has no attribute '_set_window_icon'
+2025-02-19 11:01:57,960 - LabelMaker - INFO - Application shutting down
+2025-02-19 11:05:29,595 - LabelMaker - INFO - Application shutting down
+2025-02-19 11:11:57,075 - LabelMaker - INFO - Application shutting down
+2025-02-19 11:14:16,386 - LabelMaker - INFO - Application shutting down
+2025-02-19 11:17:52,642 - LabelMaker - INFO - Application shutting down
+2025-02-19 11:18:11,474 - LabelMaker - INFO - Application shutting down
+2025-02-19 11:23:58,698 - LabelMaker - INFO - Application shutting down
+2025-02-19 11:42:41,190 - LabelMaker - INFO - Application shutting down
+2025-02-19 12:53:00,202 - LabelMaker - INFO - Application shutting down
