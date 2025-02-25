@@ -1,0 +1,9 @@
+Last Label Printed
+pin and buttons persistant settings
+make label maker active when creating a label
+tooltips for icon buttons
+lightinght bolt dual functionality
+setttings close when directory settings is successful.
+
+
+add the .windsurf and src/Context to the project

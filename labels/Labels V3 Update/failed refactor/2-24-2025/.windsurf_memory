@@ -1,0 +1,29 @@
+{
+    "active_tasks": {},
+    "progress_tracking": {
+        "current_feature": null,
+        "last_action": null,
+        "next_steps": [],
+        "blockers": [],
+        "completion_criteria": []
+    },
+    "context_retention": {
+        "codebase_knowledge": {
+            "key_files": [],
+            "important_functions": [],
+            "design_decisions": []
+        },
+        "user_preferences": {
+            "coding_style": {},
+            "communication_preferences": {},
+            "project_priorities": [],
+            "window_state": {
+                "position": [
+                    735,
+                    440
+                ],
+                "is_transparent": true
+            }
+        }
+    }
+}

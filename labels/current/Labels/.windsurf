@@ -1,0 +1,141 @@
+{
+    "project": {
+        "name": "Label Maker V3",
+        "version": "1.0.1",
+        "type": "desktop-application",
+        "language": "python"
+    },
+    "design_patterns": {
+        "primary": [
+            {
+                "pattern": "MVC (Model-View-Controller)",
+                "description": "Separates the application into Model (data/logic), View (UI), and Controller (user input handling)",
+                "implementation": {
+                    "model": "src/data_models/",
+                    "view": "src/ui/",
+                    "controller": "src/controllers/"
+                }
+            },
+            {
+                "pattern": "Singleton",
+                "description": "Used for configuration and settings management",
+                "implementation": "src/config.py"
+            }
+        ],
+        "secondary": [
+            {
+                "pattern": "Factory",
+                "description": "For creating different types of labels and barcode generators",
+                "implementation": "src/barcode_generator.py"
+            },
+            {
+                "pattern": "Optimized Context Space",
+                "description": "Manages resource allocation and context lifecycle for efficient memory usage and performance",
+                "implementation": {
+                    "label_context": "src/context/label_context.py",
+                    "resource_manager": "src/context/resource_manager.py",
+                    "context_scope": "src/context/context_scope.py"
+                },
+                "use_cases": [
+                    "Template resource management",
+                    "Batch processing optimization",
+                    "Memory-efficient CSV handling",
+                    "UI state management"
+                ],
+                "principles": [
+                    "Load resources only when needed",
+                    "Unload resources when context changes",
+                    "Maintain minimal active memory footprint",
+                    "Structured cleanup of unused resources"
+                ]
+            }
+        ]
+    },
+    "coding_rules": {
+        "style": {
+            "python": {
+                "indentation": "4 spaces",
+                "max_line_length": 100,
+                "naming_conventions": {
+                    "classes": "PascalCase",
+                    "functions": "snake_case",
+                    "variables": "snake_case",
+                    "constants": "UPPER_SNAKE_CASE"
+                }
+            }
+        },
+        "documentation": {
+            "required_docstrings": true,
+            "docstring_style": "Google",
+            "comments": "Only for complex logic explanations"
+        },
+        "testing": {
+            "framework": "pytest",
+            "coverage_target": 80,
+            "required_for": ["new features", "bug fixes"]
+        }
+    },
+    "ai_directives": {
+        "code_generation": {
+            "must_follow": [
+                "Maintain existing design patterns",
+                "Follow project naming conventions",
+                "Include type hints for function parameters",
+                "Add docstrings for new functions/classes",
+                "Consider error handling and edge cases"
+            ],
+            "must_avoid": [
+                "Breaking existing interfaces",
+                "Introducing new dependencies without discussion",
+                "Mixing different design patterns unnecessarily"
+            ]
+        },
+        "refactoring": {
+            "priorities": [
+                "Maintain backward compatibility",
+                "Improve code readability",
+                "Reduce code duplication",
+                "Optimize performance where critical"
+            ]
+        }
+    },
+    
+    "persistent_memory": {
+        "active_tasks": {
+            "format": {
+                "task_id": "string",
+                "status": ["not_started", "in_progress", "blocked", "completed"],
+                "priority": ["high", "medium", "low"],
+                "context": "JSON object containing relevant task details",
+                "last_updated": "ISO timestamp"
+            }
+        },
+        "progress_tracking": {
+            "current_feature": null,
+            "last_action": null,
+            "next_steps": [],
+            "blockers": [],
+            "completion_criteria": []
+        },
+        "context_retention": {
+            "codebase_knowledge": {
+                "key_files": [],
+                "important_functions": [],
+                "design_decisions": []
+            },
+            "user_preferences": {
+                "coding_style": {},
+                "communication_preferences": {},
+                "project_priorities": []
+            }
+        }
+    },
+    
+    "project_structure": {
+        "src/": "Source code directory",
+        "docs/": "Documentation files",
+        "tests/": "Test files",
+        "assets/": "Static resources",
+        "logs/": "Application logs"
+    }
+}

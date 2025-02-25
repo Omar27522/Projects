@@ -1,0 +1,6 @@
+Last Label Printed
+pin and buttons persistant settings
+make label maker active when creating a label
+tooltips for icon buttons
+lightinght bolt dual functionality
+setttings window bring forth when active.
