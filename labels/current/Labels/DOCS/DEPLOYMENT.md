@@ -7,7 +7,7 @@
 2. Required packages:
    ```
    pip install pyinstaller
-   pip install -r assets/dependencies/requirements.txt
+   pip install -r src/requirements.txt
    ```
 
 ### Building the Application
@@ -70,21 +70,18 @@
 
 ## Installation
 
-### Standard Installation
-1. Run `LabelMakerV3_Setup.exe`
-2. Follow installation wizard
-3. Complete printer setup
-4. Verify file associations
+### Simple Installation
+1. Download the latest version from GitHub:
+   - Repository: [https://github.com/current/LabelsV3.zip](https://github.com/Omar27522/Projects/tree/main/labels/current)
+   - Download the ZIP file using the "Code" button and select "Download ZIP"
+2. Extract the ZIP file to your preferred location
+3. Run `main.pyw` to start the application
+4. Configure printer settings and verify operation
 
-### Silent Installation
-```bash
-LabelMakerV3_Setup.exe /VERYSILENT /SUPPRESSMSGBOXES
-```
-
-### Network Deployment
-1. Share installer on network
-2. Use Group Policy for deployment
-3. Configure automatic updates
+### Requirements
+- Python 3.7 or higher must be installed on your system
+- Required packages will be included in the ZIP file
+- Windows 10 or higher recommended
 
 ## Configuration
 
@@ -94,30 +91,14 @@ LabelMakerV3_Setup.exe /VERYSILENT /SUPPRESSMSGBOXES
 3. Configure auto-switch behavior
 4. Set preview preferences
 
-### Network Settings
-```json
-{
-    "network": {
-        "shared_directory": "\\\\server\\labels",
-        "backup_location": "\\\\backup\\labels",
-        "update_server": "\\\\updates\\labelmaker"
-    }
-}
-```
-
 ## Updates
 
-### Auto-Update Process
-1. Check for updates on startup
-2. Download updates in background
-3. Install on application close
-4. Maintain backup of previous version
-
-### Manual Update
-1. Download latest version
-2. Run installer
-3. Preserve user settings
-4. Verify functionality
+### Manual Updates
+- No automatic update feature is currently available
+- To update, download the latest ZIP file from GitHub
+- Extract to a new location
+- Copy any custom configurations from your previous installation
+- Start using the new version
 
 ## Troubleshooting
 
@@ -128,14 +109,14 @@ LabelMakerV3_Setup.exe /VERYSILENT /SUPPRESSMSGBOXES
    - Verify user rights
 
 2. **Missing Dependencies**
-   - Install Visual C++ Redistributable
-   - Update .NET Framework
-   - Check Python runtime
-
-3. **Network Issues**
-   - Verify network access
-   - Check proxy settings
-   - Test file shares
+   - Ensure Python 3.7+ is installed
+   - Required Python packages:
+     - Pillow (PIL): For image processing
+     - pywin32: For Windows-specific functionality
+     - pandas: For data handling
+     - pyautogui: For automation features
+     - python-barcode: For barcode generation
+   - Run `pip install -r src/requirements.txt` to install all dependencies
 
 ## Maintenance
 
@@ -151,28 +132,12 @@ LabelMakerV3_Setup.exe /VERYSILENT /SUPPRESSMSGBOXES
 3. Save printer configurations
 4. Archive log files
 
-## Security
-
-### File Permissions
-- Restrict write access
-- Secure configuration files
-- Protect templates directory
-
-### Network Security
-- Use secure file shares
-- Implement access control
-- Enable audit logging
-
 ## Uninstallation
 
-### Clean Uninstall
-1. Run uninstaller
-2. Remove user data
-3. Delete registry entries
-4. Clean temporary files
+### Removing the Application
+1. Delete the application directory
+2. No formal uninstaller is required as the application is portable
 
-### Data Preservation
-1. Backup user settings
-2. Export templates
-3. Save printer configs
-4. Archive logs
+### Preserving Data (Optional)
+1. Before deleting, back up any custom configurations or templates you wish to keep
+2. Save any important generated labels or data files

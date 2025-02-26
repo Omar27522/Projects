@@ -1,5 +1,21 @@
 # Technical Documentation
 
+## Table of Contents
+
+- [Architecture Overview](#architecture-overview)
+  - [Core Components](#core-components)
+  - [UI Components](#ui-components)
+  - [Utilities](#utilities)
+- [Component Interaction Diagram](#component-interaction-diagram)
+- [Data Flow and State Management](#data-flow-and-state-management)
+- [Settings Management](#settings-management)
+- [Image Processing Pipeline](#image-processing-pipeline)
+- [Error Handling and Recovery](#error-handling-and-recovery)
+- [Performance Optimization](#performance-optimization)
+- [Testing and Quality Assurance](#testing-and-quality-assurance)
+- [Security Considerations](#security-considerations)
+- [Future Improvements](#future-improvements)
+
 ## Architecture Overview
 
 The application follows a modular architecture with clear separation of concerns:
@@ -116,6 +132,90 @@ The application follows a modular architecture with clear separation of concerns
    - Batch label processing
    - Data validation and cleaning
    - Progress tracking
+
+## Component Interaction Diagram
+
+The Label Maker application follows a modular design where components interact through well-defined interfaces. Below is a high-level overview of how the components interact:
+
+```
+┌─────────────────┐      ┌───────────────────┐      ┌───────────────────┐
+│                 │      │                   │      │                   │
+│   main.pyw      │◄────►│   MainWindow      │◄────►│  ViewFilesWindow  │
+│   (Entry Point) │      │   (Primary UI)    │      │  (File Management)│
+│                 │      │                   │      │                   │
+└────────┬────────┘      └─────────┬─────────┘      └─────────┬─────────┘
+         │                         │                          │
+         │                         │                          │
+         │                         ▼                          │
+         │               ┌───────────────────┐                │
+         └──────────────►│  WindowManager    │◄───────────────┘
+                         │  (Window Control) │
+                         └─────────┬─────────┘
+                                   │
+                                   │
+         ┌─────────────────────────┼─────────────────────────┐
+         │                         │                         │
+         ▼                         ▼                         ▼
+┌─────────────────┐      ┌───────────────────┐      ┌───────────────────┐
+│                 │      │                   │      │                   │
+│ ConfigManager   │◄────►│ BarcodeGenerator  │      │ Event System      │
+│ (Settings)      │      │ (Label Creation)  │      │ (Communication)   │
+│                 │      │                   │      │                   │
+└─────────────────┘      └───────────────────┘      └───────────────────┘
+         ▲                         ▲                          ▲
+         │                         │                          │
+         └─────────────────────────┼──────────────────────────┘
+                                   │
+                                   ▼
+                         ┌───────────────────┐
+                         │                   │
+                         │ Utility Functions │
+                         │ (Helpers)         │
+                         │                   │
+                         └───────────────────┘
+```
+
+### Key Interactions
+
+1. **Main Script to Windows**
+   - `main.pyw` initializes the `MainWindow` class
+   - Handles single instance enforcement
+   - Sets up global exception handling
+
+2. **MainWindow to ViewFilesWindow**
+   - `MainWindow` creates and manages the `ViewFilesWindow`
+   - Passes label data and settings between windows
+   - Coordinates focus management based on auto-switch settings
+
+3. **Windows to WindowManager**
+   - Both window classes use `WindowManager` for:
+     - Window positioning
+     - Focus management
+     - Drag functionality
+     - State persistence
+
+4. **Windows to BarcodeGenerator**
+   - `MainWindow` uses `BarcodeGenerator` to:
+     - Create label previews
+     - Generate final label images
+     - Validate barcode input
+
+5. **All Components to ConfigManager**
+   - Components access settings through `ConfigManager`
+   - Settings are loaded at startup and saved when changed
+   - Default values are provided when settings are missing
+
+6. **Inter-Component Communication via Events**
+   - Custom events allow loose coupling between components
+   - Events include:
+     - Preview updates
+     - Save completion
+     - Print operations
+     - Window state changes
+
+7. **Utility Functions**
+   - Shared helper functions used by multiple components
+   - Include file operations, validation, and data processing
 
 ## Data Flow and State Management
 

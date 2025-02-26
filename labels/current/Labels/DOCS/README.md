@@ -2,6 +2,47 @@
 
 A streamlined label printing application designed for warehouse returns department operations, featuring an intuitive interface with advanced window management and printing controls.
 
+## Documentation Navigation
+
+- [API Documentation](API.md) - Classes and methods reference
+- [Command-Line Guide](COMMAND_LINE.md) - Command-line arguments and automation
+- [CSV Import Guide](CSV_GUIDE.md) - How to format CSV files for batch imports
+- [Deployment Guide](DEPLOYMENT.md) - Installation and distribution
+- [Developer Guide](DEVELOPER.md) - Guide for developers extending the application
+- [Future Improvements](FUTURE_IMPROVEMENTS.md) - Ideas for future enhancements and integrations
+- [Integration Guide](INTEGRATION.md) - Integrating with warehouse systems and workflows
+- [Logging Guide](LOGGING.md) - Logging system and error handling
+- [Printing Guide](PRINTING.md) - Printer configuration and label settings
+- [Technical Documentation](TECHNICAL.md) - Architecture and implementation details
+- [Troubleshooting Guide](TROUBLESHOOTING.md) - Common issues and solutions
+- [UI Guide](UI_GUIDE.md) - Visual guide to the user interface
+- [Welcome Screen Guide](WELCOME_SCREEN.md) - New welcome screen design and functionality
+- [Changelog](CHANGELOG.md) - Version history and updates
+- [Contributing Guidelines](CONTRIBUTING.md) - How to contribute to the project
+- [Main Script Documentation](docs/main.md) - Entry point script details
+- [Main Window Documentation](docs/main_window.md) - Main window implementation
+
+## Documentation Structure
+
+- **README.md** (this file): Overview, features, and quick start guide
+- **API.md**: Detailed reference of all classes, methods, and functions
+- **COMMAND_LINE.md**: Guide to command-line arguments and automation options
+- **CSV_GUIDE.md**: Instructions for formatting CSV files for batch imports
+- **DEPLOYMENT.md**: Instructions for building, distributing, and installing
+- **DEVELOPER.md**: Guide for developers who want to extend or modify the application
+- **FUTURE_IMPROVEMENTS.md**: Collection of ideas for future enhancements and integrations
+- **INTEGRATION.md**: Guide for integrating with warehouse systems and workflows
+- **LOGGING.md**: Comprehensive guide to the logging system and error handling
+- **PRINTING.md**: Detailed guide for printer configuration and label settings
+- **TECHNICAL.md**: Technical architecture, data flow, and implementation details
+- **TROUBLESHOOTING.md**: Common issues and their solutions
+- **UI_GUIDE.md**: Visual guide to the user interface and features
+- **WELCOME_SCREEN.md**: Detailed specifications for the new welcome screen design
+- **CHANGELOG.md**: Version history and detailed changes
+- **CONTRIBUTING.md**: Guidelines for contributing to the project
+- **main.md**: Documentation for the main application script
+- **main_window.md**: Documentation for the main window implementation
+
 ## Overview
 
 This application facilitates efficient label printing in a warehouse environment with the following key features:
@@ -32,12 +73,12 @@ This application facilitates efficient label printing in a warehouse environment
   - SKU/UPC smart search
   - Auto-focus management
 - **Toggle Controls**:
-  - 🔄 Mirror Print: Flips label output horizontally
-  - ⚡ Auto Switch: Smart window management
+  - Mirror Print: Flips label output horizontally
+  - Auto Switch: Smart window management
     - Closes window when no SKU/UPC match found
     - Switches focus to main window on match
     - Selects next item after printing
-  - 📄 Print Minimize: Minimizes window after printing
+  - Print Minimize: Minimizes window after printing
 - **Preview Features**:
   - Zoomable preview
   - Multiple size options
@@ -146,7 +187,8 @@ Labels V3/
 ├── docs/           # Documentation files
 │   ├── README.md   # This file
 │   ├── main.md     # Main script documentation
-│   └── main_window.md  # Window class documentation
+│   ├── main_window.md  # Window class documentation
+│   └── UI_GUIDE.md  # Visual guide to the user interface
 ├── fonts/          # Required font files
 │   ├── arial.ttf
 │   └── arialbd.ttf
@@ -184,19 +226,6 @@ The application uses `label_maker_settings.json` for user preferences:
 - Toggle states
 - Window positions
 - Last used directory
-
-## Required Assets
-
-### Fonts
-Required font files in `/fonts`:
-- arial.ttf: Regular text
-- arialbd.ttf: Bold text
-
-### Icons
-UI elements in `/assets`:
-- Application icons
-- Button icons
-- Status indicators
 
 ## Code Style
 

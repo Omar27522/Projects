@@ -1,11 +1,38 @@
 # Troubleshooting Guide
 
+## Table of Contents
+
+- [Quick Reference](#quick-reference)
+- [Common Issues and Solutions](#common-issues-and-solutions)
+  - [Print Issues](#print-issues)
+  - [Window Management](#window-management)
+  - [Preview Issues](#preview-issues)
+  - [File Management](#file-management)
+  - [Performance Issues](#performance-issues)
+- [Error Messages](#error-messages)
+- [System Requirements](#system-requirements)
+- [Logging and Diagnostics](#logging-and-diagnostics)
+- [Contact Support](#contact-support)
+
+## Quick Reference
+
+| Issue | Quick Solution |
+|-------|---------------|
+| Print preview not showing | Check default printer, restart application |
+| Auto-switch not working | Verify auto-switch is enabled in settings |
+| Preview not updating | Reduce preview size, clear preview cache |
+| CSV import failures | Verify CSV format and required columns |
+| Application freezing | Check system resources, reduce batch size |
+| "Invalid barcode format" error | Ensure UPC is exactly 12 digits |
+| Window position reset | Check write permissions in app directory |
+
 ## Common Issues and Solutions
 
 ### Print Issues
 
 #### Print Preview Not Showing
 **Problem**: Print preview window doesn't appear when clicking print.
+
 **Solution**: 
 1. Check if a default printer is set
 2. Verify print spooler service is running
@@ -13,6 +40,7 @@
 
 #### Print Quality Issues
 **Problem**: Labels print with poor quality or scaling issues.
+
 **Solution**:
 1. Verify DPI settings in configuration
 2. Check printer resolution settings
@@ -22,6 +50,7 @@
 
 #### Auto-Switch Not Working
 **Problem**: Windows don't automatically switch as expected.
+
 **Solution**:
 1. Verify auto-switch is enabled in settings
 2. Check if any windows are pinned
@@ -29,6 +58,7 @@
 
 #### Window Position Reset
 **Problem**: Windows don't remember their positions.
+
 **Solution**:
 1. Check write permissions in app directory
 2. Clear window position cache
@@ -38,6 +68,7 @@
 
 #### Preview Not Updating
 **Problem**: Label preview doesn't update with changes.
+
 **Solution**:
 1. Check available memory
 2. Reduce preview size
@@ -45,6 +76,7 @@
 
 #### Preview Size Issues
 **Problem**: Preview appears too large or small.
+
 **Solution**:
 1. Cycle through preview sizes (3->4->5)
 2. Check display scaling settings
@@ -54,6 +86,7 @@
 
 #### CSV Import Failures
 **Problem**: CSV files fail to import.
+
 **Solution**:
 1. Verify CSV format
 2. Check for special characters
@@ -61,6 +94,7 @@
 
 #### File Access Errors
 **Problem**: Cannot access or save files.
+
 **Solution**:
 1. Check file permissions
 2. Verify path exists
@@ -70,6 +104,7 @@
 
 #### Slow Preview Generation
 **Problem**: Label previews generate slowly.
+
 **Solution**:
 1. Reduce preview quality
 2. Clear temporary files
@@ -77,6 +112,7 @@
 
 #### Application Freezing
 **Problem**: Application becomes unresponsive.
+
 **Solution**:
 1. Check system resources
 2. Reduce batch size
@@ -88,6 +124,7 @@
 
 #### "Failed to initialize printer"
 **Cause**: Printer configuration or access issues
+
 **Resolution**:
 1. Check printer connection
 2. Verify printer drivers
@@ -95,6 +132,7 @@
 
 #### "Invalid barcode format"
 **Cause**: Incorrect barcode input
+
 **Resolution**:
 1. Verify barcode format
 2. Check input length
@@ -102,6 +140,7 @@
 
 #### "Configuration file corrupted"
 **Cause**: Settings file issues
+
 **Resolution**:
 1. Restore from backup
 2. Reset to defaults
@@ -121,6 +160,37 @@
 - 8GB RAM
 - 2GB free disk space
 - SSD storage
+
+## Logging and Diagnostics
+
+The Label Maker application includes a comprehensive logging system that can help diagnose issues. For detailed information about the logging system, error codes, and how to use logs for troubleshooting, please refer to the [Logging and Error Handling Guide](LOGGING.md).
+
+### Finding Log Files
+
+Log files are stored in the `logs` directory within the application's installation folder:
+
+```
+[Installation Directory]/logs/label_maker_YYYYMM.log
+```
+
+Where `YYYYMM` represents the year and month (e.g., `label_maker_202502.log` for February 2025).
+
+### Using Logs for Troubleshooting
+
+When encountering an error:
+
+1. Note the exact error message shown in the application
+2. Check the log file for more detailed information about the error
+3. Use the error details to identify the specific solution in this guide or the [Logging and Error Handling Guide](LOGGING.md)
+
+### Submitting Logs for Support
+
+When contacting support, it's helpful to provide:
+
+1. A copy of the relevant log file
+2. A description of the steps that led to the error
+3. Screenshots of any error messages
+4. Your system information (Windows version, available memory, etc.)
 
 ## Contact Support
 

@@ -19,7 +19,17 @@
     "documentation": {
         "technical": "docs/TECHNICAL.md",
         "user_guide": "docs/README.md",
-        "main_window": "docs/main_window.md"
+        "main_window": "docs/main_window.md",
+        "csv_guide": "DOCS/CSV_GUIDE.md",
+        "command_line": "DOCS/COMMAND_LINE.md",
+        "developer_guide": "DOCS/DEVELOPER.md",
+        "future_improvements": "DOCS/FUTURE_IMPROVEMENTS.md",
+        "integration_guide": "DOCS/INTEGRATION.md",
+        "logging_guide": "DOCS/LOGGING.md",
+        "printing_guide": "DOCS/PRINTING.md",
+        "troubleshooting": "DOCS/TROUBLESHOOTING.md",
+        "ui_guide": "DOCS/UI_GUIDE.md",
+        "welcome_screen": "DOCS/WELCOME_SCREEN.md"
     },
     "dependencies": {
         "file": "assets/dependencies/requirements.txt",

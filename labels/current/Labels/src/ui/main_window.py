@@ -399,7 +399,7 @@ class MainWindow(tk.Tk):
                     
                 if len(matched_files) == 0:
                     # If it's a UPC search with no matches, switch to main window
-                    if is_upc_search:
+                    if is_upc_search and self.is_auto_switch.get():
                         self.listbox.insert(tk.END, "No matching files found")
                         self.listbox.selection_clear(0, tk.END)
                         self.listbox.select_set(0)
@@ -407,20 +407,16 @@ class MainWindow(tk.Tk):
                         label_count_label.config(text="No Labels", fg='#e74c3c')  # Red text for no labels
                         preview_label.config(image='')  # Clear the preview label
                         
-                        # Only auto-switch if enabled
-                        if self.is_auto_switch.get():
-                            # Add a delay before switching to main window
-                            self.file_window.after(375, lambda: [
-                                self.deiconify(),
-                                self.state('normal'),  # Ensure window is not minimized
-                                self.lift(),
-                                self.focus_force(),
-                                self.input_vars['upc_code'].set(search_text),
-                                self.inputs["upc_code"].focus_set(),
-                                self.inputs["upc_code"].select_range(0, tk.END)
-                            ])
-                            # Only close the window if no match is found
-                            self.file_window.after(2000, lambda: self.file_window.destroy() if self.listbox.get(0) == "No matching files found" else None)
+                        # Add a delay before switching to main window
+                        self.file_window.after(375, lambda: [
+                            self.deiconify(),
+                            self.state('normal'),  # Ensure window is not minimized
+                            self.lift(),
+                            self.focus_force(),
+                            self.input_vars['upc_code'].set(search_text),
+                            self.inputs["upc_code"].focus_set(),
+                            self.inputs["upc_code"].select_range(0, tk.END)
+                        ])
                         return
                     
                     self.listbox.insert(tk.END, "No matching files found")
@@ -431,26 +427,18 @@ class MainWindow(tk.Tk):
                     preview_label.config(image='')  # Clear the preview label
                 else:
                     self.listbox.selection_clear(0, tk.END)
-                    # If it's a UPC search and we found exactly one match, select it and switch to main window if auto-switch is enabled
-                    if is_upc_search and len(matched_files) == 1 and self.is_auto_switch.get():
+                    
+                    # For UPC searches with matches, just select the first match but don't auto-switch
+                    if is_upc_search:
                         self.listbox.select_set(0)
                         self.listbox.see(0)
                         # Show preview of the selected file
                         show_preview(None)
-                        # Add a short delay before switching to main window
-                        self.file_window.after(375, lambda: [
-                            self.deiconify(),
-                            self.state('normal'),  # Ensure window is not minimized
-                            self.lift(),
-                            self.focus_force(),
-                            self.input_vars['upc_code'].set(search_text),
-                            self.inputs["upc_code"].focus_set(),
-                            self.inputs["upc_code"].select_range(0, tk.END)
-                        ])
                     else:
                         # Select the first item by default
                         self.listbox.select_set(0)
                         self.listbox.see(0)
+                    
                     label_count_label.config(text=f"Labels: {len(matched_files)}", fg='#2ecc71')  # Green text for label count
                     # Show preview of first item
                     show_preview(None)
@@ -507,6 +495,7 @@ class MainWindow(tk.Tk):
                 preview_label.config(image='')
                 print(f"Failed to preview image: {str(e)}")
 
+        # Connect the search variable to the update function
         search_var.trace('w', update_file_list)
         self.listbox.bind('<<ListboxSelect>>', show_preview)
 
