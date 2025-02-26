@@ -14,7 +14,11 @@ class LabelSettings:
     transparency_level: float = 0.9
     last_directory: Optional[str] = None
     label_counter: int = 0
-    mirror_print: bool = False
+    # View files window preferences
+    view_files_mirror_print: bool = False
+    view_files_pin_window: bool = False
+    view_files_auto_switch: bool = True
+    view_files_print_minimize: bool = False  # Print minimize feature
 
     DPI: int = 300
     LABEL_WIDTH: int = DPI * 2
@@ -24,12 +28,12 @@ class ConfigManager:
     def __init__(self):
         # Get the directory where the script is located
         if getattr(sys, 'frozen', False):
-            app_root = os.path.dirname(sys.executable)
+            script_dir = os.path.dirname(sys.executable)
         else:
-            app_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
             
-        # Save settings in the app root directory
-        self.settings_file = os.path.join(app_root, 'settings.json')
+        # Save settings in the program directory
+        self.settings_file = os.path.join(script_dir, 'label_maker_settings.json')
         self.settings = LabelSettings()
         self.load_settings()
 
@@ -53,24 +57,14 @@ class ConfigManager:
                         transparency_level=data.get('transparency_level', self.settings.transparency_level),
                         last_directory=last_dir,
                         label_counter=data.get('label_counter', 0),
-                        mirror_print=data.get('mirror_print', False)
+                        # Load view files window preferences
+                        view_files_mirror_print=data.get('view_files_mirror_print', False),
+                        view_files_pin_window=data.get('view_files_pin_window', False),
+                        view_files_auto_switch=data.get('view_files_auto_switch', True),
+                        view_files_print_minimize=data.get('view_files_new_feature', False)
                     )
         except Exception as e:
             print(f"Error loading settings: {e}")
-
-    def update_label_counter(self) -> None:
-        """Update label counter by counting existing label files"""
-        try:
-            if not self.settings.last_directory:
-                return
-                
-            # Count all PNG files in the directory
-            count = len([f for f in os.listdir(self.settings.last_directory)
-                        if f.lower().endswith('.png')])
-            self.settings.label_counter = count
-            self.save_settings()
-        except Exception as e:
-            print(f"Error updating label counter: {e}")
 
     def save_settings(self) -> None:
         """Save settings to JSON file"""
@@ -84,7 +78,11 @@ class ConfigManager:
                 'transparency_level': self.settings.transparency_level,
                 'last_directory': self.settings.last_directory if self.settings.last_directory else "",
                 'label_counter': self.settings.label_counter,
-                'mirror_print': self.settings.mirror_print
+                # Save view files window preferences
+                'view_files_mirror_print': self.settings.view_files_mirror_print,
+                'view_files_pin_window': self.settings.view_files_pin_window,
+                'view_files_auto_switch': self.settings.view_files_auto_switch,
+                'view_files_new_feature': self.settings.view_files_print_minimize
             }
             with open(self.settings_file, 'w') as f:
                 json.dump(settings_dict, f)
