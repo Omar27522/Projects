@@ -10,6 +10,20 @@
    pip install -r src/requirements.txt
    ```
 
+### Application Execution Methods
+
+Label Maker can be used in two ways:
+
+1. **Python Script (Development/Simple Deployment)**
+   - Run the `main.pyw` file directly with Python
+   - Requires Python 3.7+ and all dependencies installed
+   - Ideal for development or simple deployments
+
+2. **Compiled Executable (Production Deployment)**
+   - Create a standalone `.exe` file using PyInstaller
+   - Does not require Python or dependencies to be installed on the target system
+   - Recommended for production environments and end-user distribution
+
 ### Building the Application
 
 1. **Using PyInstaller**
@@ -27,7 +41,7 @@
    ```
    dist/
    └── Label Maker V3/
-       ├── Label Maker V3.exe
+       ├── Label Maker V3.exe    # Standalone executable that doesn't require Python
        ├── assets/
        │   ├── icons/
        │   └── dependencies/
@@ -70,7 +84,7 @@
 
 ## Installation
 
-### Simple Installation
+### Simple Installation (Python Script)
 1. Download the latest version from GitHub:
    - Repository: [https://github.com/current/LabelsV3.zip](https://github.com/Omar27522/Projects/tree/main/labels/current)
    - Download the ZIP file using the "Code" button and select "Download ZIP"
@@ -78,10 +92,16 @@
 3. Run `main.pyw` to start the application
 4. Configure printer settings and verify operation
 
-### Requirements
+### Requirements for Python Script Method
 - Python 3.7 or higher must be installed on your system
 - Required packages will be included in the ZIP file
 - Windows 10 or higher recommended
+
+### Executable Installation
+If you have built the application using PyInstaller or have downloaded a pre-built executable:
+1. Run the installer if available, or extract the distribution folder
+2. Launch "Label Maker V3.exe" to start the application
+3. No Python installation is required
 
 ## Configuration
 

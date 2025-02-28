@@ -224,7 +224,13 @@ def generate_circular_label(self, data):
 ### Running in Development Mode
 
 ```
-python src/main.py
+python src/main.pyw
+```
+
+For debugging purposes, you can also run the application with console output:
+
+```
+python -m src.main
 ```
 
 ## Testing
@@ -275,17 +281,25 @@ def test_barcode_generation():
 Label Maker uses PyInstaller for creating standalone executables:
 
 ```
-pyinstaller --onefile --windowed --icon=resources/icon.ico src/main.py
+pyinstaller --name="Label Maker V3" ^
+            --windowed ^
+            --icon=resources/icon.ico ^
+            --add-data="resources;resources" ^
+            src/main.pyw
 ```
+
+This creates a standalone executable ("Label Maker V3.exe") that doesn't require Python to be installed on the target system.
 
 ### Packaging for Distribution
 
-1. Build the executable
+1. Build the executable using PyInstaller
 2. Include necessary resources:
    - fonts/
    - images/
    - config.ini (template)
 3. Create an installer using Inno Setup or similar
+
+For more detailed instructions on building and packaging, see the [Deployment Guide](DEPLOYMENT.md).
 
 ## Contributing
 

@@ -28,11 +28,19 @@ The simplest integration method is through file-based data exchange:
 2. **Batch Processing**
    - Create batch files (.bat) to automate Label Maker operations
    - Schedule batch files using Windows Task Scheduler
-   - Example batch file:
+   - Example batch files:
      ```batch
      @echo off
+     REM Using Python script method (requires Python installed)
      cd C:\Path\To\LabelMaker
      pythonw main.pyw --import C:\Path\To\Data\returns.csv --print-all --silent
+     ```
+     
+     ```batch
+     @echo off
+     REM Using executable method (no Python required)
+     cd C:\Path\To\LabelMaker
+     "Label Maker V3.exe" --import C:\Path\To\Data\returns.csv --print-all --silent
      ```
 
 ### Shared Database Access
@@ -247,6 +255,8 @@ For more complex data structures, JSON support is planned:
    - Check Windows Task Scheduler logs for batch file execution issues
    - Verify file paths in batch files are correct and accessible
    - Ensure Label Maker is installed correctly on the automation server
+   - When using the Python script method, verify Python is installed and in PATH
+   - When using the executable method, ensure "Label Maker V3.exe" is in the specified directory
 
 ### Logging and Diagnostics
 

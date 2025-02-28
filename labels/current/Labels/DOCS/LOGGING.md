@@ -21,13 +21,25 @@ Label Maker uses a comprehensive logging system to track application activity, e
 
 ## Log File Location
 
-Log files are stored in the `logs` directory within the application's installation folder:
+Log files are stored in the `logs` directory, but the exact location depends on how you're running the application:
+
+### Python Script Method
+
+When running the application using the Python script (`main.pyw`), log files are stored in:
+
+```
+[Application Directory]/logs/label_maker_YYYYMM.log
+```
+
+### Executable Method
+
+When running the application using the compiled executable ("Label Maker V3.exe"), log files are stored in:
 
 ```
 [Installation Directory]/logs/label_maker_YYYYMM.log
 ```
 
-Where `YYYYMM` represents the year and month (e.g., `label_maker_202502.log` for February 2025).
+In both cases, `YYYYMM` represents the year and month (e.g., `label_maker_202502.log` for February 2025).
 
 The application uses a rotating file system with the following characteristics:
 - Monthly log files (new file each month)

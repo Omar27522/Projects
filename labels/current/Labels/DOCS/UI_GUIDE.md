@@ -22,7 +22,7 @@
 
 The Main Window is the primary interface for creating new labels.
 
-```
+```text
 ┌───────────────────────────────────────────────────────────────────────┐
 │ Label Maker                                                 _ □ X     │
 ├───────────────────────────────────────────────────────────────────────┤
@@ -105,7 +105,7 @@ The Main Window is the primary interface for creating new labels.
 
 The View Files window allows you to search, view, and manage existing labels.
 
-```
+```text
 ┌───────────────────────────────────────────────────────────────────────────────────┐
 │ View Files                                                           _ □ X        │
 ├───────────────────────────────────────────────────────────────────────────────────┤
@@ -183,7 +183,7 @@ The View Files window allows you to search, view, and manage existing labels.
 
 The Settings window allows you to customize various aspects of the application.
 
-```
+```text
 ┌─────────────────────────────────────────────────┐
 │ Settings                             _ □ X      │
 ├─────────────────────────────────────────────────┤
@@ -258,7 +258,7 @@ The Settings window allows you to customize various aspects of the application.
 
 The Label Preview window shows how the label will look when printed.
 
-```
+```text
 ┌─────────────────────────────────────────────────┐
 │ Label Preview                        _ □ X      │
 ├─────────────────────────────────────────────────┤

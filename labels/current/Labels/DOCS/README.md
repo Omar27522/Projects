@@ -103,6 +103,8 @@ This application facilitates efficient label printing in a warehouse environment
 
 ## Quick Start
 
+### Using the Python Script (Development/Simple Deployment)
+
 1. Download the latest version (.zip file) from the GitHub repository
 2. Delete any existing local version
 3. Extract the new version to the same directory on your machine
@@ -123,11 +125,19 @@ This application facilitates efficient label printing in a warehouse environment
    ```
 7. Run `main.pyw` to start the application
 
+### Using the Executable (Production Deployment)
+
+1. Download the latest installer or executable package
+2. Run the installer or extract the package to your desired location
+3. Launch "Label Maker V3.exe" to start the application
+4. No Python installation or dependencies are required
+
 ## Usage Guide
 
 ### Basic Operations
 1. **Starting the Application**:
-   - Double-click `main.pyw`
+   - Python Script Method: Double-click `main.pyw` or run `python main.pyw` in a terminal
+   - Executable Method: Double-click "Label Maker V3.exe"
    - Only one instance can run at a time
 
 2. **Creating Labels**:

@@ -3,6 +3,7 @@
 ## Table of Contents
 
 - [Overview](#overview)
+- [Execution Methods](#execution-methods)
 - [Available Arguments](#available-arguments)
 - [Usage Examples](#usage-examples)
 - [Automation Scenarios](#automation-scenarios)
@@ -13,53 +14,77 @@
 
 Label Maker supports command-line arguments that allow you to automate various tasks and integrate the application with other systems. This guide explains the available command-line options and provides examples of how to use them effectively.
 
+## Execution Methods
+
+The Label Maker application can be executed in two ways:
+
+1. **Python Script**: Run the `main.pyw` file directly with Python:
+   ```
+   python main.pyw [arguments]
+   ```
+   This requires Python 3.7+ and all dependencies installed.
+
+2. **Executable File**: If the application has been compiled using PyInstaller (as described in [Deployment Guide](DEPLOYMENT.md)), you can run the generated `.exe` file:
+   ```
+   "Label Maker V3.exe" [arguments]
+   ```
+   The executable contains all dependencies and doesn't require a separate Python installation.
+
+All examples in this document will show both methods.
+
 ## Available Arguments
 
 ### Basic Arguments
 
 | Argument | Description | Example |
 |----------|-------------|---------|
-| `--help` or `-h` | Display help information | `label_maker.exe --help` |
-| `--version` or `-v` | Display application version | `label_maker.exe --version` |
+| `--help` or `-h` | Display help information | `python main.pyw --help`<br>`"Label Maker V3.exe" --help` |
+| `--version` or `-v` | Display application version | `python main.pyw --version`<br>`"Label Maker V3.exe" --version` |
 
 ### File and Directory Operations
 
 | Argument | Description | Example |
 |----------|-------------|---------|
-| `--csv-file=PATH` or `-c PATH` | Process a CSV file on startup | `label_maker.exe --csv-file="C:\path\to\file.csv"` |
-| `--output-dir=PATH` or `-o PATH` | Specify output directory for labels | `label_maker.exe --output-dir="C:\Labels\Output"` |
-| `--open-dir=PATH` | Open a specific directory in View Files window | `label_maker.exe --open-dir="C:\Labels\Output"` |
+| `--csv-file=PATH` or `-c PATH` | Process a CSV file on startup | `python main.pyw --csv-file="C:\path\to\file.csv"`<br>`"Label Maker V3.exe" --csv-file="C:\path\to\file.csv"` |
+| `--output-dir=PATH` or `-o PATH` | Specify output directory for labels | `python main.pyw --output-dir="C:\Labels\Output"`<br>`"Label Maker V3.exe" --output-dir="C:\Labels\Output"` |
+| `--open-dir=PATH` | Open a specific directory in View Files window | `python main.pyw --open-dir="C:\Labels\Output"`<br>`"Label Maker V3.exe" --open-dir="C:\Labels\Output"` |
 
 ### Label Generation
 
 | Argument | Description | Example |
 |----------|-------------|---------|
-| `--product-name=NAME` | Set product name for single label | `label_maker.exe --product-name="Widget Pro - Blue"` |
-| `--upc=CODE` | Set UPC code for single label | `label_maker.exe --upc=123456789012` |
-| `--save-label=PATH` | Generate and save a single label | `label_maker.exe --product-name="Widget" --upc=123456789012 --save-label="C:\output.png"` |
+| `--product-name=NAME` | Set product name for single label | `python main.pyw --product-name="Widget Pro - Blue"`<br>`"Label Maker V3.exe" --product-name="Widget Pro - Blue"` |
+| `--upc=CODE` | Set UPC code for single label | `python main.pyw --upc=123456789012`<br>`"Label Maker V3.exe" --upc=123456789012` |
+| `--save-label=PATH` | Generate and save a single label | `python main.pyw --product-name="Widget" --upc=123456789012 --save-label="C:\output.png"`<br>`"Label Maker V3.exe" --product-name="Widget" --upc=123456789012 --save-label="C:\output.png"` |
 
 ### Print Options
 
 | Argument | Description | Example |
 |----------|-------------|---------|
-| `--print` | Print generated label(s) immediately | `label_maker.exe --csv-file="products.csv" --print` |
-| `--mirror-print` | Enable mirror printing | `label_maker.exe --csv-file="products.csv" --print --mirror-print` |
-| `--printer=NAME` | Specify printer to use | `label_maker.exe --printer="DYMO LabelWriter 450"` |
+| `--print` | Print generated label(s) immediately | `python main.pyw --csv-file="products.csv" --print`<br>`"Label Maker V3.exe" --csv-file="products.csv" --print` |
+| `--mirror-print` | Enable mirror printing | `python main.pyw --csv-file="products.csv" --print --mirror-print`<br>`"Label Maker V3.exe" --csv-file="products.csv" --print --mirror-print` |
+| `--printer=NAME` | Specify printer to use | `python main.pyw --printer="DYMO LabelWriter 450"`<br>`"Label Maker V3.exe" --printer="DYMO LabelWriter 450"` |
 
 ### Application Behavior
 
 | Argument | Description | Example |
 |----------|-------------|---------|
-| `--silent` | Run in silent mode (no UI) | `label_maker.exe --csv-file="products.csv" --silent` |
-| `--log-level=LEVEL` | Set logging level (DEBUG, INFO, WARNING, ERROR) | `label_maker.exe --log-level=DEBUG` |
-| `--config=PATH` | Use alternative config file | `label_maker.exe --config="C:\custom_config.json"` |
+| `--silent` | Run in silent mode (no UI) | `python main.pyw --csv-file="products.csv" --silent`<br>`"Label Maker V3.exe" --csv-file="products.csv" --silent` |
+| `--log-level=LEVEL` | Set logging level (DEBUG, INFO, WARNING, ERROR) | `python main.pyw --log-level=DEBUG`<br>`"Label Maker V3.exe" --log-level=DEBUG` |
+| `--config=PATH` | Use alternative config file | `python main.pyw --config="C:\custom_config.json"`<br>`"Label Maker V3.exe" --config="C:\custom_config.json"` |
 
 ## Usage Examples
 
 ### Process a CSV File
 
+Using Python script:
 ```
-label_maker.exe --csv-file="C:\Inventory\products.csv" --output-dir="C:\Labels\Output"
+python main.pyw --csv-file="C:\Inventory\products.csv" --output-dir="C:\Labels\Output"
+```
+
+Using executable:
+```
+"Label Maker V3.exe" --csv-file="C:\Inventory\products.csv" --output-dir="C:\Labels\Output"
 ```
 
 This command:
@@ -70,8 +95,14 @@ This command:
 
 ### Generate and Print a Single Label
 
+Using Python script:
 ```
-label_maker.exe --product-name="Widget Pro - Blue" --upc=123456789012 --print
+python main.pyw --product-name="Widget Pro - Blue" --upc=123456789012 --print
+```
+
+Using executable:
+```
+"Label Maker V3.exe" --product-name="Widget Pro - Blue" --upc=123456789012 --print
 ```
 
 This command:
@@ -82,8 +113,14 @@ This command:
 
 ### Batch Processing in Silent Mode
 
+Using Python script:
 ```
-label_maker.exe --csv-file="C:\Inventory\products.csv" --output-dir="C:\Labels\Output" --print --silent
+python main.pyw --csv-file="C:\Inventory\products.csv" --output-dir="C:\Labels\Output" --print --silent
+```
+
+Using executable:
+```
+"Label Maker V3.exe" --csv-file="C:\Inventory\products.csv" --output-dir="C:\Labels\Output" --print --silent
 ```
 
 This command:
@@ -95,8 +132,14 @@ This command:
 
 ### Open View Files Window with Specific Directory
 
+Using Python script:
 ```
-label_maker.exe --open-dir="C:\Labels\Output"
+python main.pyw --open-dir="C:\Labels\Output"
+```
+
+Using executable:
+```
+"Label Maker V3.exe" --open-dir="C:\Labels\Output"
 ```
 
 This command:
@@ -110,8 +153,14 @@ This command:
 
 You can integrate Label Maker with inventory management systems by having the inventory system export a CSV file and then call Label Maker with the appropriate command-line arguments:
 
+Using Python script:
+```bash
+python main.pyw --csv-file="%EXPORT_PATH%" --output-dir="%LABEL_DIR%" --print --silent
 ```
-label_maker.exe --csv-file="%EXPORT_PATH%" --output-dir="%LABEL_DIR%" --print --silent
+
+Using executable:
+```bash
+"Label Maker V3.exe" --csv-file="%EXPORT_PATH%" --output-dir="%LABEL_DIR%" --print --silent
 ```
 
 ### Scheduled Batch Processing
@@ -119,7 +168,7 @@ label_maker.exe --csv-file="%EXPORT_PATH%" --output-dir="%LABEL_DIR%" --print --
 Use Windows Task Scheduler to automate label generation at specific times:
 
 1. Create a new task in Task Scheduler
-2. Set the program/script to the path of `label_maker.exe`
+2. Set the program/script to the path of `main.pyw` or `Label Maker V3.exe`
 3. Add arguments like `--csv-file="C:\daily_export.csv" --print --silent`
 4. Set the schedule as needed
 
@@ -127,8 +176,14 @@ Use Windows Task Scheduler to automate label generation at specific times:
 
 For workstations with barcode scanners, you can create shortcuts that launch Label Maker with pre-filled UPC codes:
 
+Using Python script:
 ```
-label_maker.exe --upc=%SCANNED_CODE%
+python main.pyw --upc=%SCANNED_CODE%
+```
+
+Using executable:
+```
+"Label Maker V3.exe" --upc=%SCANNED_CODE%
 ```
 
 The `%SCANNED_CODE%` would be replaced by the barcode scanner input.
@@ -160,8 +215,14 @@ Label Maker returns the following exit codes that can be used in scripts to dete
 
 When using command-line arguments, especially in silent mode, it's helpful to enable detailed logging:
 
+Using Python script:
 ```
-label_maker.exe --csv-file="products.csv" --silent --log-level=DEBUG
+python main.pyw --csv-file="products.csv" --silent --log-level=DEBUG
+```
+
+Using executable:
+```
+"Label Maker V3.exe" --csv-file="products.csv" --silent --log-level=DEBUG
 ```
 
 This will write detailed information to the log file, which can be helpful for troubleshooting.
@@ -172,8 +233,14 @@ This will write detailed information to the log file, which can be helpful for t
 
 You can combine multiple arguments to perform complex operations:
 
+Using Python script:
+```bash
+python main.pyw --csv-file="weekly.csv" --output-dir="C:\Labels\Weekly" --printer="DYMO LabelWriter" --mirror-print --log-level=INFO --silent
 ```
-label_maker.exe --csv-file="weekly.csv" --output-dir="C:\Labels\Weekly" --printer="DYMO LabelWriter" --mirror-print --log-level=INFO --silent
+
+Using executable:
+```bash
+"Label Maker V3.exe" --csv-file="weekly.csv" --output-dir="C:\Labels\Weekly" --printer="DYMO LabelWriter" --mirror-print --log-level=INFO --silent
 ```
 
 ### Using Environment Variables
@@ -183,7 +250,15 @@ In batch scripts, you can use environment variables with Label Maker:
 ```batch
 @echo off
 set TODAY=%date:~10,4%%date:~4,2%%date:~7,2%
-label_maker.exe --csv-file="daily_%TODAY%.csv" --output-dir="C:\Labels\%TODAY%"
+python main.pyw --csv-file="daily_%TODAY%.csv" --output-dir="C:\Labels\%TODAY%"
+```
+
+Or using executable:
+
+```batch
+@echo off
+set TODAY=%date:~10,4%%date:~4,2%%date:~7,2%
+"Label Maker V3.exe" --csv-file="daily_%TODAY%.csv" --output-dir="C:\Labels\%TODAY%"
 ```
 
 ### Creating Desktop Shortcuts
@@ -191,12 +266,17 @@ label_maker.exe --csv-file="daily_%TODAY%.csv" --output-dir="C:\Labels\%TODAY%"
 Create desktop shortcuts with different command-line arguments for quick access to common tasks:
 
 1. Right-click on the desktop and select New > Shortcut
-2. Enter the path to `label_maker.exe` followed by the desired arguments
+2. Enter the path to `main.pyw` or `Label Maker V3.exe` followed by the desired arguments
 3. Name the shortcut appropriately
 
 For example:
 ```
-"C:\Program Files\Label Maker\label_maker.exe" --open-dir="C:\Labels\Output"
+"C:\Program Files\Label Maker\main.pyw" --open-dir="C:\Labels\Output"
+```
+
+Or using executable:
+```
+"C:\Program Files\Label Maker\Label Maker V3.exe" --open-dir="C:\Labels\Output"
 ```
 
 This creates a shortcut that opens Label Maker with the View Files window showing a specific directory.

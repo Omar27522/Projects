@@ -1,5 +1,21 @@
 # API Documentation
 
+## Application Execution
+
+The Label Maker application can be executed in two ways:
+
+1. **Python Script**: Run the `main.pyw` file directly with Python:
+   ```
+   python main.pyw
+   ```
+   This requires Python 3.7+ and all dependencies installed.
+
+2. **Executable File**: If the application has been compiled using PyInstaller (as described in [Deployment Guide](DEPLOYMENT.md)), you can run the generated `.exe` file:
+   ```
+   "Label Maker V3.exe"
+   ```
+   The executable contains all dependencies and doesn't require a separate Python installation.
+
 ## Table of Contents
 
 - [Core Modules](#core-modules)

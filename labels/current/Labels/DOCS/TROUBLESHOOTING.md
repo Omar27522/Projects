@@ -148,18 +148,54 @@
 
 ## System Requirements
 
-### Minimum Requirements
+### For Python Script Method
 - Windows 10 or later
 - Python 3.7+
 - 4GB RAM
 - 1GB free disk space
+- Required Python packages (see requirements.txt)
+
+### For Executable Method
+- Windows 10 or later
+- 4GB RAM
+- 1GB free disk space
+- No Python installation required
 
 ### Recommended Requirements
 - Windows 11
-- Python 3.9+
 - 8GB RAM
 - 2GB free disk space
 - SSD storage
+
+### Application Startup Issues
+
+#### Application Fails to Start
+**Problem**: Application doesn't start when clicking the Python script or executable.
+
+**Solution for Python Script Method**:
+1. Verify Python 3.7+ is installed and in PATH
+2. Check that all dependencies are installed:
+   ```
+   pip install -r requirements.txt
+   ```
+3. Try running from command line to see error messages:
+   ```
+   python main.pyw
+   ```
+
+**Solution for Executable Method**:
+1. Verify "Label Maker V3.exe" exists in the installation directory
+2. Check for missing DLL errors in Event Viewer
+3. Try reinstalling the application
+4. Ensure Windows is up to date with latest updates
+
+#### Multiple Instances Error
+**Problem**: Error message about another instance already running.
+
+**Solution**:
+1. Check Task Manager for existing instances
+2. Restart your computer if no instances are visible
+3. Delete any temporary lock files in the application directory
 
 ## Logging and Diagnostics
 
