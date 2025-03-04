@@ -1,0 +1,44 @@
+#!/bin/sh
+#
+# Pre-commit hook for Label Maker Management Application
+#
+# This script runs linting and tests before allowing a commit
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+NC='\033[0m' # No Color
+
+echo "${YELLOW}Running pre-commit checks...${NC}"
+
+# Get staged Python files
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.py$')
+
+if [ -z "$STAGED_FILES" ]; then
+    echo "${GREEN}No Python files to check.${NC}"
+    exit 0
+fi
+
+# Run pylint on staged files
+echo "${YELLOW}Running pylint...${NC}"
+pylint $STAGED_FILES
+PYLINT_EXIT=$?
+
+if [ $PYLINT_EXIT -ne 0 ]; then
+    echo "${RED}Pylint found issues. Please fix them before committing.${NC}"
+    exit 1
+fi
+
+# Run tests
+echo "${YELLOW}Running tests...${NC}"
+pytest tests
+PYTEST_EXIT=$?
+
+if [ $PYTEST_EXIT -ne 0 ]; then
+    echo "${RED}Tests failed. Please fix them before committing.${NC}"
+    exit 1
+fi
+
+echo "${GREEN}All checks passed!${NC}"
+exit 0

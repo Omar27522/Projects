@@ -1,0 +1,10 @@
+# Core Dependencies
+Pillow>=9.0.0        # Image processing
+python-barcode>=0.13.1   # Barcode generation
+pyautogui>=0.9.53    # Screen interaction
+pandas>=1.3.0        # CSV processing
+
+# Development Dependencies
+pytest>=7.0.0        # Testing framework
+black>=22.0.0        # Code formatting
+pylint>=2.12.0       # Code analysis
