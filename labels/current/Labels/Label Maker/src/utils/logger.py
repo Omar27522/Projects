@@ -4,24 +4,13 @@ import sys
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
 
-def setup_logger(name="LabelMaker"):
-    """
-    Set up and configure a logger with rotating file handler
-    
-    Args:
-        name (str): Name of the logger
-        
-    Returns:
-        logging.Logger: Configured logger instance
-    """
-    # Get the root directory
-    root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    
+def setup_logger(name='LabelMaker'):
+    """Setup application logger with rotating file handler and console output"""
     # Create logs directory if it doesn't exist
-    logs_dir = os.path.join(root_dir, "logs")
+    logs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'logs')
     os.makedirs(logs_dir, exist_ok=True)
     
-    # Setup logger
+    # Create logger
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
     
@@ -37,8 +26,7 @@ def setup_logger(name="LabelMaker"):
     )
     
     # File handler (rotating, max 5MB per file, keep 5 backup files)
-    # Use monthly log files instead of creating a new one each time
-    log_file = os.path.join(logs_dir, f'welcome_window_{datetime.now().strftime("%Y%m")}.log')
+    log_file = os.path.join(logs_dir, f'label_maker_{datetime.now().strftime("%Y%m")}.log')
     file_handler = RotatingFileHandler(
         log_file,
         maxBytes=5*1024*1024,  # 5MB
