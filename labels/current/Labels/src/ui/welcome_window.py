@@ -79,6 +79,9 @@ class WelcomeWindow(tk.Tk):
         
         # Add version label
         self._create_version_label()
+        
+        # Initialize the Google Sheets status display
+        self._update_sheets_status_display()
     
     def _create_title_section(self):
         """Create the title section of the window"""
@@ -227,245 +230,6 @@ class WelcomeWindow(tk.Tk):
     
     def create_label_action(self):
         """Handler for Create Label button click"""
-        # Create dialog
-        dialog = tk.Toplevel(self)
-        dialog.title("Create Label")
-        dialog.geometry("500x300")
-        dialog.resizable(False, False)
-        dialog.configure(bg='white')
-        dialog.transient(self)
-        dialog.grab_set()
-        
-        # Create a frame for the content
-        content_frame = tk.Frame(dialog, bg='white', padx=20, pady=20)
-        content_frame.pack(fill='both', expand=True)
-        
-        # Title
-        title_label = tk.Label(
-            content_frame, 
-            text="Create Label", 
-            font=("Arial", 14, "bold"), 
-            bg='white'
-        )
-        title_label.pack(pady=(0, 20))
-        
-        # Form
-        form_frame = tk.Frame(content_frame, bg='white')
-        form_frame.pack(fill='x', pady=(0, 20))
-        
-        # Tracking Number
-        tracking_label = tk.Label(
-            form_frame, 
-            text="Tracking Number:", 
-            font=("Arial", 10), 
-            bg='white'
-        )
-        tracking_label.grid(row=0, column=0, sticky='w', pady=(0, 10))
-        
-        tracking_var = tk.StringVar()
-        tracking_entry = tk.Entry(
-            form_frame, 
-            textvariable=tracking_var, 
-            font=("Arial", 10), 
-            width=30
-        )
-        tracking_entry.grid(row=0, column=1, sticky='w', pady=(0, 10))
-        tracking_entry.focus_set()  # Set focus to tracking number field
-        
-        # SKU
-        sku_label = tk.Label(
-            form_frame, 
-            text="SKU (optional):", 
-            font=("Arial", 10), 
-            bg='white'
-        )
-        sku_label.grid(row=1, column=0, sticky='w')
-        
-        sku_var = tk.StringVar()
-        sku_entry = tk.Entry(
-            form_frame, 
-            textvariable=sku_var, 
-            font=("Arial", 10), 
-            width=30
-        )
-        sku_entry.grid(row=1, column=1, sticky='w')
-        
-        # Status
-        status_frame = tk.Frame(content_frame, bg='white')
-        status_frame.pack(fill='x', pady=(10, 0))
-        
-        status_label = tk.Label(
-            status_frame, 
-            text="", 
-            font=("Arial", 10), 
-            bg='white',
-            fg='red'
-        )
-        status_label.pack(anchor='w')
-        
-        # Button Frame
-        button_frame = tk.Frame(content_frame, bg='white')
-        button_frame.pack(fill='x', pady=(10, 0))
-        
-        def print_label():
-            # Get tracking number and SKU
-            tracking_number = tracking_var.get().strip()
-            sku = sku_var.get().strip()
-            
-            # Validate input
-            if not tracking_number:
-                status_label.config(text="Please enter a tracking number")
-                return
-            
-            # Create label file
-            try:
-                # Create a unique filename based on tracking number and date
-                date_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-                filename = f"{tracking_number}_{date_str}.txt"
-                filepath = os.path.join(self.config_manager.settings.last_directory, filename)
-                
-                # Write to file
-                with open(filepath, 'w') as f:
-                    f.write(f"Tracking Number: {tracking_number}\n")
-                    if sku:
-                        f.write(f"SKU: {sku}\n")
-                    f.write(f"Date: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-                
-                # Log the label creation
-                log_file = os.path.join(self.config_manager.settings.last_directory, "label_log.txt")
-                with open(log_file, 'a') as f:
-                    f.write(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | {tracking_number} | {sku} | {filename}\n")
-                
-                # Write to Google Sheets if configured
-                if (self.config_manager.settings.google_sheet_url and 
-                    self.config_manager.settings.google_sheet_name):
-                    try:
-                        # Import required libraries
-                        import gspread
-                        from oauth2client.service_account import ServiceAccountCredentials
-                        
-                        # Check for credentials file
-                        creds_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'credentials.json')
-                        if not os.path.exists(creds_file):
-                            status_label.config(text="Google Sheets credentials file not found", fg='red')
-                            dialog.update()
-                        else:
-                            # Define the scope
-                            scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-                            
-                            # Add credentials to the account
-                            creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file, scope)
-                            
-                            # Authorize the clientsheet
-                            client = gspread.authorize(creds)
-                            
-                            # Extract sheet ID from URL
-                            import re
-                            match = re.match(r'https://docs\.google\.com/spreadsheets/d/([a-zA-Z0-9-_]+)', self.config_manager.settings.google_sheet_url)
-                            if match:
-                                sheet_id = match.group(1)
-                                
-                                # Open the spreadsheet
-                                spreadsheet = client.open_by_key(sheet_id)
-                                
-                                # Get the worksheet
-                                worksheet = spreadsheet.worksheet(self.config_manager.settings.google_sheet_name)
-                                
-                                # Get the next empty row or use the configured row
-                                tracking_col = self.config_manager.settings.google_sheet_tracking_column
-                                tracking_row = self.config_manager.settings.google_sheet_tracking_row
-                                sku_col = self.config_manager.settings.google_sheet_sku_column
-                                sku_row = self.config_manager.settings.google_sheet_sku_row
-                                
-                                # Write tracking number
-                                worksheet.update_acell(f"{tracking_col}{tracking_row}", tracking_number)
-                                
-                                # Write SKU
-                                worksheet.update_acell(f"{sku_col}{sku_row}", sku)
-                                
-                                # Increment row numbers for next entry
-                                self.config_manager.settings.google_sheet_tracking_row += 1
-                                self.config_manager.settings.google_sheet_sku_row += 1
-                                self.config_manager.save_settings()
-                                
-                                status_label.config(text="Data written to Google Sheets", fg='green')
-                                dialog.update()
-                            else:
-                                status_label.config(text="Invalid Google Sheet URL format", fg='red')
-                                dialog.update()
-                    except ImportError:
-                        status_label.config(text="Google Sheets libraries not installed", fg='red')
-                        dialog.update()
-                    except Exception as e:
-                        status_label.config(text=f"Error writing to Google Sheets: {str(e)}", fg='red')
-                        dialog.update()
-                
-                # Create and show the label window
-                try:
-                    # Close the current dialog
-                    dialog.destroy()
-                    
-                    # Open the label window
-                    label_window = LabelWindow(
-                        self, 
-                        tracking_number, 
-                        sku, 
-                        self.config_manager.settings.barcode_width,
-                        self.config_manager.settings.barcode_height,
-                        self.config_manager.settings.font_size_large,
-                        self.config_manager.settings.font_size_medium,
-                        self.config_manager.settings.mirror_print,
-                        self.config_manager.settings.default_print_quality
-                    )
-                    
-                    # Update the label count
-                    self.update_label_count()
-                except Exception as e:
-                    messagebox.showerror("Error", f"Error creating label window: {str(e)}")
-            
-            except Exception as e:
-                status_label.config(text=f"Error: {str(e)}")
-        
-        # Print Button
-        print_button = tk.Button(
-            button_frame, 
-            text="Print Label", 
-            font=("Arial", 10), 
-            bg='#4CAF50', 
-            fg='white',
-            activebackground='#45a049',
-            activeforeground='white',
-            relief=tk.FLAT,
-            padx=15,
-            pady=5,
-            command=print_label
-        )
-        print_button.pack(side='right', padx=(10, 0))
-        
-        # Cancel Button
-        cancel_button = tk.Button(
-            button_frame, 
-            text="Cancel", 
-            font=("Arial", 10), 
-            bg='#f44336', 
-            fg='white',
-            activebackground='#d32f2f',
-            activeforeground='white',
-            relief=tk.FLAT,
-            padx=15,
-            pady=5,
-            command=dialog.destroy
-        )
-        cancel_button.pack(side='right')
-        
-        # Center the dialog
-        self.center_window(dialog)
-        
-        # Bind Enter key to print_label function
-        dialog.bind('<Return>', lambda event: print_label())
-    
-    def user_action(self):
-        """Handler for User button click"""
         # Check if labels directory is set
         if not self.config_manager.settings.last_directory:
             messagebox.showerror("Error", "Please set the labels directory in Settings first.")
@@ -474,7 +238,7 @@ class WelcomeWindow(tk.Tk):
         # Create a dialog for user input
         dialog = tk.Toplevel(self)
         dialog.title("Create Label")
-        dialog.geometry("400x300")
+        dialog.geometry("400x400")
         dialog.resizable(False, False)
         dialog.configure(bg='white')
         dialog.transient(self)  # Make dialog modal
@@ -549,9 +313,40 @@ class WelcomeWindow(tk.Tk):
         )
         status_label.pack(anchor='w')
         
+        # Options frame
+        options_frame = tk.Frame(content_frame, bg='white')
+        options_frame.pack(fill='x', pady=10)
+        
+        # Mirror print toggle
+        mirror_print_var = tk.BooleanVar(value=self.config_manager.settings.mirror_print)
+        
+        def toggle_mirror_print():
+            current_state = mirror_print_var.get()
+            mirror_btn.config(
+                bg='#90EE90' if current_state else '#C71585',
+                relief='sunken' if current_state else 'raised'
+            )
+            # Save the mirror print state
+            self.config_manager.settings.mirror_print = current_state
+            self.config_manager.save_settings()
+        
+        # Set initial button state based on saved setting
+        initial_color = '#90EE90' if self.config_manager.settings.mirror_print else '#C71585'
+        initial_relief = 'sunken' if self.config_manager.settings.mirror_print else 'raised'
+        
+        mirror_btn = tk.Button(options_frame, text=" 🖨️ ", bg=initial_color, 
+                               relief=initial_relief, width=3,
+                               font=('TkDefaultFont', 14), anchor='center')
+        
+        mirror_btn.config(
+            command=lambda: [mirror_print_var.set(not mirror_print_var.get()),
+                           toggle_mirror_print()]
+        )
+        mirror_btn.pack(side=tk.LEFT, padx=2)
+        
         # Button Frame
         button_frame = tk.Frame(content_frame, bg='white')
-        button_frame.pack(fill='x', pady=(10, 0))
+        button_frame.pack(fill='x', pady=(20, 0))
         
         def print_label():
             # Get tracking number and SKU
@@ -560,7 +355,7 @@ class WelcomeWindow(tk.Tk):
             
             # Validate input
             if not tracking_number:
-                status_label.config(text="Please enter a tracking number")
+                status_label.config(text="Please enter a tracking number", fg='red')
                 return
             
             # Create label file
@@ -646,27 +441,102 @@ class WelcomeWindow(tk.Tk):
                         status_label.config(text=f"Error writing to Google Sheets: {str(e)}", fg='red')
                         dialog.update()
                 
-                # Open the label window
-                label_window = LabelWindow(
-                    self, 
-                    tracking_number, 
-                    sku, 
-                    self.config_manager.settings.barcode_width,
-                    self.config_manager.settings.barcode_height,
-                    self.config_manager.settings.font_size_large,
-                    self.config_manager.settings.font_size_medium,
-                    self.config_manager.settings.mirror_print,
-                    self.config_manager.settings.default_print_quality
-                )
-                
-                # Close the dialog
-                dialog.destroy()
-                
-                # Update the label count
-                self.update_label_count()
+                # Generate and print the barcode directly without showing preview window
+                try:
+                    # Check if the directory exists
+                    if not os.path.exists(self.config_manager.settings.last_directory):
+                        status_label.config(text=f"Error: Directory not found: {self.config_manager.settings.last_directory}", fg='red')
+                        dialog.update()
+                        return
+                    
+                    # Check if a file with this SKU already exists
+                    existing_file = None
+                    if sku:
+                        # Search for files containing the SKU in the filename
+                        for filename in os.listdir(self.config_manager.settings.last_directory):
+                            if sku in filename and filename.endswith('.png'):
+                                existing_file = os.path.join(self.config_manager.settings.last_directory, filename)
+                                status_label.config(text=f"Found existing label file for SKU: {sku}", fg='blue')
+                                dialog.update()
+                                print(f"Using existing label file: {existing_file}")
+                                break
+                    
+                    barcode_path = None
+                    
+                    # If an existing file was found, use it
+                    if existing_file:
+                        barcode_path = existing_file
+                    else:
+                        # Create barcode if no existing file was found
+                        import barcode
+                        from barcode.writer import ImageWriter
+                        
+                        code128 = barcode.get_barcode_class('code128')
+                        barcode_image = code128(tracking_number, writer=ImageWriter())
+                        
+                        # Save barcode to the configured labels directory
+                        # Use a simple filename without special characters
+                        barcode_filename = f'barcode_{tracking_number.replace("/", "_").replace("\\", "_").replace(":", "_")}.png'
+                        barcode_path = os.path.join(self.config_manager.settings.last_directory, barcode_filename)
+                        
+                        # Log the path for debugging
+                        print(f"Saving barcode to: {barcode_path}")
+                        
+                        barcode_image.save(barcode_path)
+                        
+                        # Verify the file was created
+                        if not os.path.exists(barcode_path):
+                            status_label.config(text=f"Error: Failed to create barcode file at {barcode_path}", fg='red')
+                            dialog.update()
+                            return
+                    
+                    # Print the barcode directly
+                    try:
+                        # Use the default Windows print pictures functionality
+                        os.startfile(barcode_path, "print")
+                        
+                        # Use pyautogui to automatically press Enter after a short delay
+                        try:
+                            import pyautogui
+                            # Wait a moment for the print dialog to appear
+                            dialog.after(1000, lambda: pyautogui.press('enter'))
+                        except ImportError:
+                            print("pyautogui not installed, cannot auto-press Enter")
+                        
+                        # Show success message
+                        status_label.config(text="Label sent to printer. Ready for next label.", fg='green')
+                        dialog.update()
+                        
+                        # Clear input fields for next label
+                        tracking_var.set("")
+                        sku_var.set("")
+                        tracking_entry.focus_set()
+                        
+                    except Exception as e:
+                        error_msg = str(e)
+                        status_label.config(text=f"Error printing barcode: {error_msg}", fg='red')
+                        dialog.update()
+                        print(f"Error printing barcode: {error_msg}")
+                        
+                        # Fallback to opening the file if printing fails
+                        try:
+                            os.startfile(barcode_path)
+                            status_label.config(text="Printing failed. Opened image for manual printing.", fg='orange')
+                            dialog.update()
+                        except Exception as e2:
+                            status_label.config(text=f"Error opening barcode: {str(e2)}", fg='red')
+                            dialog.update()
+                    
+                    # Update the label count
+                    self.update_label_count()
+                    
+                except Exception as e:
+                    error_msg = str(e)
+                    status_label.config(text=f"Error creating barcode: {error_msg}", fg='red')
+                    print(f"Error creating barcode: {error_msg}")
             
             except Exception as e:
-                status_label.config(text=f"Error: {str(e)}")
+                status_label.config(text=f"Error: {str(e)}", fg='red')
         
         # Print Button
         print_button = tk.Button(
@@ -702,6 +572,375 @@ class WelcomeWindow(tk.Tk):
         
         # Center the dialog
         self.center_window(dialog)
+    
+    def user_action(self):
+        """Handler for User button click"""
+        # Check if labels directory is set
+        if not self.config_manager.settings.last_directory:
+            messagebox.showerror("Error", "Please set the labels directory in Settings first.")
+            return
+        
+        # Create a dialog for user input
+        dialog = tk.Toplevel(self)
+        dialog.title("Create Label")
+        dialog.geometry("400x400")
+        dialog.resizable(False, False)
+        dialog.configure(bg='white')
+        dialog.transient(self)  # Make dialog modal
+        dialog.grab_set()  # Make dialog modal
+        
+        # Create a frame for the content
+        content_frame = tk.Frame(dialog, bg='white', padx=20, pady=20)
+        content_frame.pack(fill='both', expand=True)
+        
+        # Title
+        title_label = tk.Label(
+            content_frame, 
+            text="Create New Label", 
+            font=("Arial", 14, "bold"), 
+            bg='white'
+        )
+        title_label.pack(pady=(0, 20))
+        
+        # Tracking Number
+        tracking_frame = tk.Frame(content_frame, bg='white')
+        tracking_frame.pack(fill='x', pady=(0, 10))
+        
+        tracking_label = tk.Label(
+            tracking_frame, 
+            text="Tracking Number:", 
+            font=("Arial", 10), 
+            bg='white'
+        )
+        tracking_label.pack(anchor='w')
+        
+        tracking_var = tk.StringVar()
+        tracking_entry = tk.Entry(
+            tracking_frame, 
+            textvariable=tracking_var, 
+            font=("Arial", 10), 
+            width=30
+        )
+        tracking_entry.pack(fill='x', pady=(5, 0))
+        tracking_entry.focus()  # Set focus to this field
+        
+        # SKU
+        sku_frame = tk.Frame(content_frame, bg='white')
+        sku_frame.pack(fill='x', pady=(0, 10))
+        
+        sku_label = tk.Label(
+            sku_frame, 
+            text="SKU:", 
+            font=("Arial", 10), 
+            bg='white'
+        )
+        sku_label.pack(anchor='w')
+        
+        sku_var = tk.StringVar()
+        sku_entry = tk.Entry(
+            sku_frame, 
+            textvariable=sku_var, 
+            font=("Arial", 10), 
+            width=30
+        )
+        sku_entry.pack(fill='x', pady=(5, 0))
+        
+        # Status
+        status_frame = tk.Frame(content_frame, bg='white')
+        status_frame.pack(fill='x', pady=(10, 0))
+        
+        status_label = tk.Label(
+            status_frame, 
+            text="", 
+            font=("Arial", 10), 
+            bg='white',
+            fg='red'
+        )
+        status_label.pack(anchor='w')
+        
+        # Options frame
+        options_frame = tk.Frame(content_frame, bg='white')
+        options_frame.pack(fill='x', pady=10)
+        
+        # Mirror print toggle
+        mirror_print_var = tk.BooleanVar(value=self.config_manager.settings.mirror_print)
+        
+        def toggle_mirror_print():
+            current_state = mirror_print_var.get()
+            mirror_btn.config(
+                bg='#90EE90' if current_state else '#C71585',
+                relief='sunken' if current_state else 'raised'
+            )
+            # Save the mirror print state
+            self.config_manager.settings.mirror_print = current_state
+            self.config_manager.save_settings()
+        
+        # Set initial button state based on saved setting
+        initial_color = '#90EE90' if self.config_manager.settings.mirror_print else '#C71585'
+        initial_relief = 'sunken' if self.config_manager.settings.mirror_print else 'raised'
+        
+        mirror_btn = tk.Button(options_frame, text=" 🖨️ ", bg=initial_color, 
+                               relief=initial_relief, width=3,
+                               font=('TkDefaultFont', 14), anchor='center')
+        
+        mirror_btn.config(
+            command=lambda: [mirror_print_var.set(not mirror_print_var.get()),
+                           toggle_mirror_print()]
+        )
+        mirror_btn.pack(side=tk.LEFT, padx=2)
+        
+        # Button Frame
+        button_frame = tk.Frame(content_frame, bg='white')
+        button_frame.pack(fill='x', pady=(20, 0))
+        
+        def print_label():
+            # Get tracking number and SKU
+            tracking_number = tracking_var.get().strip()
+            sku = sku_var.get().strip()
+            
+            # Validate input
+            if not tracking_number:
+                status_label.config(text="Please enter a tracking number", fg='red')
+                return
+            
+            if not sku:
+                status_label.config(text="Please enter a SKU", fg='red')
+                return
+            
+            # Create label file
+            try:
+                # Create a unique filename based on tracking number and date
+                date_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                filename = f"{tracking_number}_{date_str}.txt"
+                filepath = os.path.join(self.config_manager.settings.last_directory, filename)
+                
+                # Write to file
+                with open(filepath, 'w') as f:
+                    f.write(f"Tracking Number: {tracking_number}\n")
+                    if sku:
+                        f.write(f"SKU: {sku}\n")
+                    f.write(f"Date: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+                
+                # Log the label creation
+                log_file = os.path.join(self.config_manager.settings.last_directory, "label_log.txt")
+                with open(log_file, 'a') as f:
+                    f.write(f"{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Created label for tracking number: {tracking_number}, SKU: {sku}\n")
+                
+                # Write to Google Sheets if configured
+                if (self.config_manager.settings.google_sheet_url and 
+                    self.config_manager.settings.google_sheet_name):
+                    try:
+                        # Import required libraries
+                        import gspread
+                        from oauth2client.service_account import ServiceAccountCredentials
+                        
+                        # Check for credentials file
+                        creds_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'credentials.json')
+                        if not os.path.exists(creds_file):
+                            status_label.config(text="Google Sheets credentials file not found", fg='red')
+                            dialog.update()
+                        else:
+                            # Define the scope
+                            scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+                            
+                            # Add credentials to the account
+                            creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file, scope)
+                            
+                            # Authorize the clientsheet
+                            client = gspread.authorize(creds)
+                            
+                            # Extract sheet ID from URL
+                            import re
+                            match = re.match(r'https://docs\.google\.com/spreadsheets/d/([a-zA-Z0-9-_]+)', self.config_manager.settings.google_sheet_url)
+                            if match:
+                                sheet_id = match.group(1)
+                                
+                                # Open the spreadsheet
+                                spreadsheet = client.open_by_key(sheet_id)
+                                
+                                # Get the worksheet
+                                worksheet = spreadsheet.worksheet(self.config_manager.settings.google_sheet_name)
+                                
+                                # Get the next empty row or use the configured row
+                                tracking_col = self.config_manager.settings.google_sheet_tracking_column
+                                tracking_row = self.config_manager.settings.google_sheet_tracking_row
+                                sku_col = self.config_manager.settings.google_sheet_sku_column
+                                sku_row = self.config_manager.settings.google_sheet_sku_row
+                                
+                                # Write tracking number
+                                worksheet.update_acell(f"{tracking_col}{tracking_row}", tracking_number)
+                                
+                                # Write SKU
+                                worksheet.update_acell(f"{sku_col}{sku_row}", sku)
+                                
+                                # Increment row numbers for next entry
+                                self.config_manager.settings.google_sheet_tracking_row += 1
+                                self.config_manager.settings.google_sheet_sku_row += 1
+                                self.config_manager.save_settings()
+                                
+                                status_label.config(text="Data written to Google Sheets", fg='green')
+                                dialog.update()
+                            else:
+                                status_label.config(text="Invalid Google Sheet URL format", fg='red')
+                                dialog.update()
+                    except ImportError:
+                        status_label.config(text="Google Sheets libraries not installed", fg='red')
+                        dialog.update()
+                    except Exception as e:
+                        status_label.config(text=f"Error writing to Google Sheets: {str(e)}", fg='red')
+                        dialog.update()
+                
+                # Generate and print the barcode directly without showing preview window
+                try:
+                    # Check if the directory exists
+                    if not os.path.exists(self.config_manager.settings.last_directory):
+                        status_label.config(text=f"Error: Directory not found: {self.config_manager.settings.last_directory}", fg='red')
+                        dialog.update()
+                        return
+                    
+                    # Check if a file with this SKU already exists
+                    existing_file = None
+                    if sku:
+                        # Search for files containing the SKU in the filename
+                        for filename in os.listdir(self.config_manager.settings.last_directory):
+                            if sku in filename and filename.endswith('.png'):
+                                existing_file = os.path.join(self.config_manager.settings.last_directory, filename)
+                                status_label.config(text=f"Found existing label file for SKU: {sku}", fg='blue')
+                                dialog.update()
+                                print(f"Using existing label file: {existing_file}")
+                                break
+                    
+                    barcode_path = None
+                    
+                    # If an existing file was found, use it
+                    if existing_file:
+                        barcode_path = existing_file
+                    else:
+                        # Create barcode if no existing file was found
+                        import barcode
+                        from barcode.writer import ImageWriter
+                        
+                        code128 = barcode.get_barcode_class('code128')
+                        barcode_image = code128(tracking_number, writer=ImageWriter())
+                        
+                        # Save barcode to the configured labels directory
+                        # Use a simple filename without special characters
+                        barcode_filename = f'barcode_{tracking_number.replace("/", "_").replace("\\", "_").replace(":", "_")}.png'
+                        barcode_path = os.path.join(self.config_manager.settings.last_directory, barcode_filename)
+                        
+                        # Log the path for debugging
+                        print(f"Saving barcode to: {barcode_path}")
+                        
+                        barcode_image.save(barcode_path)
+                        
+                        # Verify the file was created
+                        if not os.path.exists(barcode_path):
+                            status_label.config(text=f"Error: Failed to create barcode file at {barcode_path}", fg='red')
+                            dialog.update()
+                            return
+                    
+                    # Print the barcode directly
+                    try:
+                        # If mirror print is enabled, create a mirrored temporary copy
+                        print_path = barcode_path
+                        if self.config_manager.settings.mirror_print:
+                            from PIL import Image
+                            img = Image.open(barcode_path)
+                            mirrored_img = img.transpose(Image.FLIP_LEFT_RIGHT)
+                            temp_dir = os.path.join(os.environ.get('TEMP', os.getcwd()), 'labelmaker_temp')
+                            os.makedirs(temp_dir, exist_ok=True)
+                            temp_path = os.path.join(temp_dir, f'mirror_{os.path.basename(barcode_path)}')
+                            mirrored_img.save(temp_path)
+                            print_path = temp_path
+                            status_label.config(text="Created mirrored label for printing", fg='blue')
+                            dialog.update()
+                        
+                        # Use the default Windows print pictures functionality
+                        os.startfile(print_path, "print")
+                        
+                        # Use pyautogui to automatically press Enter after a short delay
+                        try:
+                            import pyautogui
+                            # Wait a moment for the print dialog to appear
+                            dialog.after(1000, lambda: pyautogui.press('enter'))
+                        except ImportError:
+                            print("pyautogui not installed, cannot auto-press Enter")
+                        
+                        # Show success message
+                        status_label.config(text="Label sent to printer. Ready for next label.", fg='green')
+                        dialog.update()
+                        
+                        # Clear input fields for next label
+                        tracking_var.set("")
+                        sku_var.set("")
+                        tracking_entry.focus_set()
+                        
+                    except Exception as e:
+                        error_msg = str(e)
+                        status_label.config(text=f"Error printing barcode: {error_msg}", fg='red')
+                        dialog.update()
+                        print(f"Error printing barcode: {error_msg}")
+                        
+                        # Fallback to opening the file if printing fails
+                        try:
+                            os.startfile(barcode_path)
+                            status_label.config(text="Printing failed. Opened image for manual printing.", fg='orange')
+                            dialog.update()
+                        except Exception as e2:
+                            status_label.config(text=f"Error opening barcode: {str(e2)}", fg='red')
+                            dialog.update()
+                    
+                    # Update the label count
+                    self.update_label_count()
+                    
+                except Exception as e:
+                    error_msg = str(e)
+                    status_label.config(text=f"Error creating barcode: {error_msg}", fg='red')
+                    print(f"Error creating barcode: {error_msg}")
+            
+            except Exception as e:
+                status_label.config(text=f"Error: {str(e)}", fg='red')
+        
+        # Print Button
+        print_button = tk.Button(
+            button_frame, 
+            text="Print Label", 
+            font=("Arial", 10), 
+            bg='#4CAF50', 
+            fg='white',
+            activebackground='#45a049',
+            activeforeground='white',
+            relief=tk.FLAT,
+            padx=15,
+            pady=5,
+            command=print_label
+        )
+        print_button.pack(side='right', padx=(10, 0))
+        
+        # Cancel Button
+        cancel_button = tk.Button(
+            button_frame, 
+            text="Cancel", 
+            font=("Arial", 10), 
+            bg='#f44336', 
+            fg='white',
+            activebackground='#d32f2f',
+            activeforeground='white',
+            relief=tk.FLAT,
+            padx=15,
+            pady=5,
+            command=dialog.destroy
+        )
+        cancel_button.pack(side='right')
+        
+        # Bind Enter key to print_label function
+        dialog.bind('<Return>', lambda event: print_label())
+        
+        # Center the dialog
+        self.center_window(dialog)
+        
+        # Set dialog to be always on top
+        dialog.attributes('-topmost', True)
     
     def management_action(self):
         """Handler for Management button click"""
@@ -1271,7 +1510,7 @@ finally:
         # Check if Google Sheets is configured
         if (self.config_manager.settings.google_sheet_url and 
             self.config_manager.settings.google_sheet_name):
-            status_text = "Configured"
+            status_text = "Connected"
             status_color = 'green'
 
         status_frame = tk.Frame(sheets_section, bg='white')
@@ -1286,7 +1525,13 @@ finally:
             bg='white'
         )
         self.sheets_status_label.pack(side='left', padx=(5, 0))
-
+        
+        # Add sheet info if connected
+        if status_text == "Connected":
+            sheet_info = f"{self.config_manager.settings.google_sheet_name}"
+            tk.Label(status_frame, text=" | Sheet:", font=("Arial", 10), bg='white').pack(side='left', padx=(10, 0))
+            tk.Label(status_frame, text=sheet_info, font=("Arial", 10, "italic"), bg='white').pack(side='left', padx=(5, 0))
+        
         # Configure button
         configure_button = tk.Button(
             sheets_section,
@@ -1354,18 +1599,39 @@ finally:
         self.config_manager = ConfigManager()
         
         # Update the Google Sheets status display
+        self._update_sheets_status_display()
+    
+    def _update_sheets_status_display(self):
+        """Update the Google Sheets status display in the welcome window"""
+        # Update the Google Sheets status display
         status_text = "Not Connected"
         status_color = 'red'
         
         # Check if Google Sheets is configured
         if (self.config_manager.settings.google_sheet_url and 
             self.config_manager.settings.google_sheet_name):
-            status_text = "Configured"
+            status_text = "Connected"
             status_color = 'green'
         
         # Update the status label
         if hasattr(self, 'sheets_status_label'):
             self.sheets_status_label.config(text=status_text, fg=status_color)
+            
+            # Clear any existing sheet info widgets
+            status_frame = self.sheets_status_label.master
+            for widget in status_frame.winfo_children():
+                if widget != self.sheets_status_label and widget.winfo_class() != "Label" or \
+                   (widget.winfo_class() == "Label" and widget.cget("text") not in ["Status:"]):
+                    widget.destroy()
+            
+            # Add sheet info if connected
+            if status_text == "Connected":
+                sheet_info = f"{self.config_manager.settings.google_sheet_name}"
+                tk.Label(status_frame, text=" | Sheet:", font=("Arial", 10), bg='white').pack(side='left', padx=(10, 0))
+                tk.Label(status_frame, text=sheet_info, font=("Arial", 10, "italic"), bg='white').pack(side='left', padx=(5, 0))
+            
+            # Force a refresh of the main window to update the UI
+            self.update_idletasks()
     
     def update_label_count(self, directory=None):
         """Update the label count display based on the current directory"""
