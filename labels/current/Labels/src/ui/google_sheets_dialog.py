@@ -8,6 +8,10 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from src.config.config_manager import ConfigManager
+from src.utils.sheets_utils import validate_sheet_url, get_sheet_names, test_sheet_connection
+from src.utils.file_utils import get_credentials_file_path, file_exists
+from src.utils.ui_utils import center_window, create_button, make_window_modal
+from src.utils.config_utils import save_config
 
 class GoogleSheetsDialog(tk.Toplevel):
     """Dialog for configuring Google Sheets integration"""
@@ -135,18 +139,14 @@ class GoogleSheetsDialog(tk.Toplevel):
         self.sheet_dropdown.pack(side='left', fill='x', expand=True)
         
         # Add a refresh button to fetch sheet names
-        refresh_button = tk.Button(
+        refresh_button = create_button(
             sheet_selection_frame,
             text="⟳",
-            font=("Arial", 10),
+            command=self._fetch_sheet_names,
             bg='#2196F3',
-            fg='white',
-            activebackground='#1976D2',
-            activeforeground='white',
-            relief=tk.FLAT,
             padx=8,
             pady=2,
-            command=self._fetch_sheet_names
+            font=("Arial", 10)
         )
         refresh_button.pack(side='left', padx=(5, 0))
         
@@ -265,53 +265,50 @@ class GoogleSheetsDialog(tk.Toplevel):
         button_frame = tk.Frame(content_frame, bg='white')
         button_frame.pack(fill='x', pady=(0, 0), padx=20)  # Added horizontal padding
         
-        # Test Connection Button
-        test_button = tk.Button(
-            button_frame, 
-            text="Test Connection", 
-            font=("Arial", 10), 
-            bg='#2196F3', 
-            fg='white',
-            activebackground='#1976D2',
-            activeforeground='white',
-            relief=tk.FLAT,
-            padx=20,  # Increased horizontal padding
-            pady=10,  # Increased vertical padding
-            command=self._test_connection
+        # Fetch Sheets Button
+        fetch_button = create_button(
+            button_frame,
+            text="Fetch Sheets",
+            command=self._fetch_sheet_names,
+            bg='#2196F3',
+            padx=20,
+            pady=10
         )
-        test_button.pack(side='left', padx=(10, 0))  # Added left padding
+        fetch_button.pack(side='left', padx=(10, 5))
+        
+        # Test Connection Button
+        test_button = create_button(
+            button_frame,
+            text="Test Connection",
+            command=self._test_connection,
+            bg='#FF9800',
+            padx=20,
+            pady=10
+        )
+        test_button.pack(side='left', padx=5)
         
         # Save Button
-        save_button = tk.Button(
-            button_frame, 
-            text="Save & Connect", 
-            font=("Arial", 10, "bold"), 
-            bg='#4CAF50', 
-            fg='white',
-            activebackground='#45a049',
-            activeforeground='white',
-            relief=tk.FLAT,
-            padx=25,  # Increased horizontal padding
-            pady=10,  # Increased vertical padding
-            command=self._save_settings
+        save_button = create_button(
+            button_frame,
+            text="Save",
+            command=self._save_settings,
+            bg='#4CAF50',
+            padx=25,
+            pady=10,
+            font=("Arial", 10, "bold")
         )
-        save_button.pack(side='right', padx=(15, 10))  # Added right padding
+        save_button.pack(side='right', padx=(15, 10))
         
         # Cancel Button
-        cancel_button = tk.Button(
-            button_frame, 
-            text="Cancel", 
-            font=("Arial", 10), 
-            bg='#f44336', 
-            fg='white',
-            activebackground='#d32f2f',
-            activeforeground='white',
-            relief=tk.FLAT,
-            padx=20,  # Increased horizontal padding
-            pady=10,  # Increased vertical padding
-            command=self.destroy
+        cancel_button = create_button(
+            button_frame,
+            text="Cancel",
+            command=self.destroy,
+            bg='#f44336',
+            padx=20,
+            pady=10
         )
-        cancel_button.pack(side='right', padx=(0, 10))  # Added right padding
+        cancel_button.pack(side='right', padx=(0, 10))
         
         # Initialize status
         self._update_status()
@@ -330,30 +327,28 @@ class GoogleSheetsDialog(tk.Toplevel):
     def _test_connection(self):
         """Test the connection to the Google Sheet"""
         try:
-            # Get the URL and sheet name
+            # Get values from UI
             url = self.url_var.get().strip()
             sheet_name = self.sheet_var.get().strip()
             
-            # Validate URL
+            # Validate inputs
             if not url:
                 messagebox.showerror("Error", "Please enter a Google Sheet URL")
                 return
-            
-            # Check if URL is valid
-            sheet_id_pattern = r'https://docs\.google\.com/spreadsheets/d/([a-zA-Z0-9-_]+)'
-            match = re.match(sheet_id_pattern, url)
-            if not match:
-                messagebox.showerror("Error", "Invalid Google Sheet URL format.\n\nURL should be in the format:\nhttps://docs.google.com/spreadsheets/d/YOUR_SHEET_ID")
-                return
-            
-            # Validate sheet name
+                
             if not sheet_name:
-                messagebox.showerror("Error", "Please enter a sheet name")
+                messagebox.showerror("Error", "Please select a sheet name")
                 return
             
-            # Here we would normally test the actual connection
-            # For now, we'll simulate a successful connection
-            # In a real implementation, you would use gspread to connect to the sheet
+            # Validate URL
+            is_valid, result = validate_sheet_url(url)
+            if not is_valid:
+                messagebox.showerror("Error", result)
+                self.connection_status = "Invalid URL"
+                self._update_status()
+                return
+            
+            sheet_id = result
             
             # Import required libraries
             try:
@@ -361,54 +356,22 @@ class GoogleSheetsDialog(tk.Toplevel):
                 from oauth2client.service_account import ServiceAccountCredentials
             except ImportError:
                 messagebox.showerror("Error", "Required libraries not installed.\n\nPlease install gspread and oauth2client:\npip install gspread oauth2client")
+                self.connection_status = "Libraries Missing"
+                self._update_status()
                 return
             
-            # Check for credentials file
-            creds_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'credentials.json')
-            if not os.path.exists(creds_file):
-                messagebox.showerror("Error", f"Credentials file not found at:\n{creds_file}\n\nPlease create a service account and download the credentials file.")
-                return
+            # Test connection
+            from src.utils.sheets_utils import test_sheet_connection
+            success, message = test_sheet_connection(sheet_id, sheet_name)
             
-            # Attempt to connect
-            try:
-                # Define the scope
-                scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-                
-                # Add credentials to the account
-                creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file, scope)
-                
-                # Authorize the clientsheet
-                client = gspread.authorize(creds)
-                
-                # Get the sheet
-                sheet_id = match.group(1)
-                spreadsheet = client.open_by_key(sheet_id)
-                
-                # Try to access the specified worksheet
-                try:
-                    worksheet = spreadsheet.worksheet(sheet_name)
-                    
-                    # If we get here, the connection was successful
-                    self.connection_status = "Connected"
-                    self._update_status()
-                    messagebox.showinfo("Success", f"Successfully connected to sheet '{sheet_name}'")
-                    
-                except gspread.exceptions.WorksheetNotFound:
-                    # Sheet not found, show available sheets
-                    all_sheets = [sheet.title for sheet in spreadsheet.worksheets()]
-                    sheet_list = "\n".join(all_sheets)
-                    
-                    # Update the dropdown with the available sheet names
-                    self.sheet_dropdown['values'] = all_sheets
-                    
-                    self.connection_status = "Sheet Not Found"
-                    self._update_status()
-                    messagebox.showerror("Error", f"Sheet '{sheet_name}' not found.\n\nAvailable sheets:\n{sheet_list}")
-                
-            except Exception as e:
+            if success:
+                self.connection_status = "Connected"
+                self._update_status()
+                messagebox.showinfo("Success", "Successfully connected to Google Sheet!")
+            else:
                 self.connection_status = "Connection Failed"
                 self._update_status()
-                messagebox.showerror("Connection Error", f"Failed to connect to Google Sheet:\n\n{str(e)}")
+                messagebox.showerror("Error", message)
         
         except Exception as e:
             self.connection_status = "Error"
@@ -422,16 +385,12 @@ class GoogleSheetsDialog(tk.Toplevel):
             url = self.url_var.get().strip()
             
             # Validate URL
-            if not url:
-                messagebox.showerror("Error", "Please enter a Google Sheet URL")
+            is_valid, result = validate_sheet_url(url)
+            if not is_valid:
+                messagebox.showerror("Error", result)
                 return
             
-            # Check if URL is valid
-            sheet_id_pattern = r'https://docs\.google\.com/spreadsheets/d/([a-zA-Z0-9-_]+)'
-            match = re.match(sheet_id_pattern, url)
-            if not match:
-                messagebox.showerror("Error", "Invalid Google Sheet URL format.\n\nURL should be in the format:\nhttps://docs.google.com/spreadsheets/d/YOUR_SHEET_ID")
-                return
+            sheet_id = result
             
             # Import required libraries
             try:
@@ -442,38 +401,25 @@ class GoogleSheetsDialog(tk.Toplevel):
                 return
             
             # Check for credentials file
-            creds_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'credentials.json')
-            if not os.path.exists(creds_file):
+            creds_file = get_credentials_file_path()
+            if not file_exists(creds_file):
                 messagebox.showerror("Error", f"Credentials file not found at:\n{creds_file}\n\nPlease create a service account and download the credentials file.")
                 return
             
-            # Attempt to connect
-            try:
-                # Define the scope
-                scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-                
-                # Add credentials to the account
-                creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file, scope)
-                
-                # Authorize the clientsheet
-                client = gspread.authorize(creds)
-                
-                # Get the sheet
-                sheet_id = match.group(1)
-                spreadsheet = client.open_by_key(sheet_id)
-                
-                # Get the available sheet names
-                sheet_names = [sheet.title for sheet in spreadsheet.worksheets()]
-                
-                # Update the dropdown with the available sheet names
-                self.sheet_dropdown['values'] = sheet_names
-                
-                # Select the first sheet by default
-                self.sheet_var.set(sheet_names[0] if sheet_names else "")
-                
-            except Exception as e:
-                messagebox.showerror("Error", f"Failed to fetch sheet names:\n\n{str(e)}")
-        
+            # Get sheet names
+            success, result = get_sheet_names(sheet_id)
+            if not success:
+                messagebox.showerror("Error", result)
+                return
+            
+            sheet_names = result
+            
+            # Update the dropdown with the available sheet names
+            self.sheet_dropdown['values'] = sheet_names
+            
+            # Select the first sheet by default
+            self.sheet_var.set(sheet_names[0] if sheet_names else "")
+            
         except Exception as e:
             messagebox.showerror("Error", f"An unexpected error occurred:\n\n{str(e)}")
     
@@ -497,8 +443,10 @@ class GoogleSheetsDialog(tk.Toplevel):
                 messagebox.showerror("Error", "Please select a sheet name")
                 return
                 
-            if url and not re.match(r'https://docs\.google\.com/spreadsheets/d/([a-zA-Z0-9-_]+)', url):
-                messagebox.showerror("Error", "Invalid Google Sheet URL format.\n\nURL should be in the format:\nhttps://docs.google.com/spreadsheets/d/YOUR_SHEET_ID")
+            # Validate URL format
+            is_valid, result = validate_sheet_url(url)
+            if not is_valid:
+                messagebox.showerror("Error", result)
                 return
             
             if tracking_col and not re.match(r'^[A-Z]+$', tracking_col):
@@ -518,83 +466,43 @@ class GoogleSheetsDialog(tk.Toplevel):
             self.config_manager.settings.google_sheet_sku_row = sku_row
             
             # Save settings
-            if self.config_manager.save_settings():
+            if save_config(self.config_manager.settings):
                 # Test connection before closing
                 try:
-                    # Import required libraries
-                    try:
-                        import gspread
-                        from oauth2client.service_account import ServiceAccountCredentials
-                    except ImportError:
-                        messagebox.showinfo("Settings Saved", "Settings saved successfully, but required libraries not installed.\n\nPlease install gspread and oauth2client to connect to Google Sheets.")
-                        self.destroy()
-                        return
-                    
                     # Check for credentials file
-                    creds_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'credentials.json')
-                    if not os.path.exists(creds_file):
+                    creds_file = get_credentials_file_path()
+                    if not file_exists(creds_file):
                         messagebox.showinfo("Settings Saved", "Settings saved successfully, but credentials file not found.\n\nPlease create a service account and download the credentials file.")
                         self.destroy()
                         return
                     
-                    # Check if URL is valid
-                    sheet_id_pattern = r'https://docs\.google\.com/spreadsheets/d/([a-zA-Z0-9-_]+)'
-                    match = re.match(sheet_id_pattern, url)
-                    if not match:
-                        messagebox.showinfo("Settings Saved", "Settings saved successfully, but the URL format is invalid.")
-                        self.destroy()
-                        return
-                        
-                    # Define the scope
-                    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+                    # Test connection
+                    success, message = test_sheet_connection(result, sheet_name)
                     
-                    # Add credentials to the account
-                    creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file, scope)
-                    
-                    # Authorize the clientsheet
-                    client = gspread.authorize(creds)
-                    
-                    # Get the sheet
-                    sheet_id = match.group(1)
-                    spreadsheet = client.open_by_key(sheet_id)
-                    
-                    # Try to access the specified worksheet
-                    try:
-                        worksheet = spreadsheet.worksheet(sheet_name)
-                        
-                        # If we get here, the connection was successful
+                    if success:
                         self.connection_status = "Connected"
                         self._update_status()
-                        messagebox.showinfo("Success", f"Settings saved and successfully connected to sheet '{sheet_name}'")
+                        messagebox.showinfo("Success", "Settings saved and connected to Google Sheet successfully!")
+                        self.destroy()
+                    else:
+                        self.connection_status = "Settings Saved, Connection Failed"
+                        self._update_status()
+                        messagebox.showinfo("Settings Saved", f"Settings saved successfully, but could not connect to Google Sheet.\n\nError: {message}")
                         self.destroy()
                         
-                    except gspread.exceptions.WorksheetNotFound:
-                        # Sheet not found, show available sheets
-                        all_sheets = [sheet.title for sheet in spreadsheet.worksheets()]
-                        sheet_list = "\n".join(all_sheets)
-                        
-                        # Update the dropdown with the available sheet names
-                        self.sheet_dropdown['values'] = all_sheets
-                        
-                        self.connection_status = "Sheet Not Found"
-                        self._update_status()
-                        messagebox.showerror("Error", f"Settings saved, but sheet '{sheet_name}' not found.\n\nAvailable sheets:\n{sheet_list}")
-                    
+                except ImportError:
+                    messagebox.showinfo("Settings Saved", "Settings saved successfully, but required libraries not installed.\n\nPlease install gspread and oauth2client to connect to Google Sheets.")
+                    self.destroy()
                 except Exception as e:
-                    # Connection failed but settings were saved
-                    messagebox.showinfo("Settings Saved", f"Settings saved successfully, but could not connect to Google Sheet.\n\nError: {str(e)}")
+                    messagebox.showinfo("Settings Saved", f"Settings saved successfully, but an error occurred while testing the connection:\n\n{str(e)}")
                     self.destroy()
             else:
-                messagebox.showerror("Error", "Failed to save settings")
-        
+                messagebox.showerror("Error", "Failed to save settings.")
+        except ValueError:
+            messagebox.showerror("Error", "Invalid row number. Please enter a valid integer.")
         except Exception as e:
-            messagebox.showerror("Error", f"An error occurred while saving settings:\n\n{str(e)}")
+            messagebox.showerror("Error", f"An unexpected error occurred:\n\n{str(e)}")
     
     def center_window(self):
         """Center the window on the screen"""
-        self.update_idletasks()
-        width = self.winfo_width()
-        height = self.winfo_height()
-        x = (self.winfo_screenwidth() // 2) - (width // 2)
-        y = (self.winfo_screenheight() // 2) - (height // 2)
-        self.geometry('{}x{}+{}+{}'.format(width, height, x, y))
+        center_window(self)

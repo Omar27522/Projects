@@ -1,13 +1,14 @@
-import tkinter as tk
 from tkinter import messagebox
 import os
 import sys
-import barcode
-from barcode.writer import ImageWriter
-from PIL import Image, ImageTk, ImageOps
+import tkinter as tk
+from PIL import Image, ImageTk
 
 # Add the project root directory to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
+from src.utils.barcode_utils import generate_barcode, print_barcode, get_barcode_path
+from src.utils.ui_utils import center_window, create_button, make_window_modal
 
 class LabelWindow(tk.Toplevel):
     """Window for displaying and printing labels"""
@@ -32,20 +33,15 @@ class LabelWindow(tk.Toplevel):
         self.geometry("600x400")
         self.resizable(False, False)
         self.configure(bg='white')
-        self.transient(parent)  # Make dialog modal
-        self.grab_set()  # Make dialog modal
+        
+        # Make window modal
+        make_window_modal(self, parent)
         
         # Create UI
         self._create_ui()
         
         # Center the window
-        self.center_window()
-        
-        # Make sure window appears on top
-        self.lift()
-        self.focus_force()
-        self.attributes('-topmost', True)
-        self.after_idle(self.attributes, '-topmost', False)
+        center_window(self)
     
     def _create_ui(self):
         """Create the user interface elements"""
@@ -67,24 +63,17 @@ class LabelWindow(tk.Toplevel):
         preview_frame.pack(fill='both', expand=True, pady=(0, 20))
         
         # Generate barcode
-        try:
-            # Create barcode
-            code128 = barcode.get_barcode_class('code128')
-            barcode_image = code128(self.tracking_number, writer=ImageWriter())
-            
-            # Save barcode to temporary file
-            temp_dir = os.path.join(os.environ.get('TEMP', os.getcwd()), 'labelmaker_temp')
-            os.makedirs(temp_dir, exist_ok=True)
-            barcode_path = os.path.join(temp_dir, f'barcode_{self.tracking_number}.png')
-            barcode_image.save(barcode_path)
-            
-            # Load and resize barcode image
+        success, result = generate_barcode(
+            self.tracking_number, 
+            self.barcode_width, 
+            self.barcode_height, 
+            self.mirror_print
+        )
+        
+        if success:
+            # Load the barcode image
+            barcode_path = result
             img = Image.open(barcode_path)
-            img = img.resize((self.barcode_width, self.barcode_height), Image.LANCZOS)
-            
-            # Mirror image if needed
-            if self.mirror_print:
-                img = ImageOps.mirror(img)
             
             # Convert to PhotoImage
             self.barcode_img = ImageTk.PhotoImage(img)
@@ -111,11 +100,11 @@ class LabelWindow(tk.Toplevel):
                     bg='white'
                 )
                 sku_label.pack(pady=(0, 5))
-            
-        except Exception as e:
+        else:
+            # Display error message
             error_label = tk.Label(
                 preview_frame, 
-                text=f"Error generating barcode: {str(e)}", 
+                text=result, 
                 font=("Arial", self.font_size_medium), 
                 bg='white', 
                 fg='red'
@@ -127,76 +116,29 @@ class LabelWindow(tk.Toplevel):
         button_frame.pack(fill='x', pady=(10, 0))
         
         # Print Button
-        print_button = tk.Button(
+        print_button = create_button(
             button_frame, 
             text="Print Label", 
-            font=("Arial", 10), 
-            bg='#4CAF50', 
-            fg='white',
-            activebackground='#45a049',
-            activeforeground='white',
-            relief=tk.FLAT,
-            padx=15,
-            pady=5,
+            bg='#4CAF50',
             command=self._print_label
         )
         print_button.pack(side='right', padx=(10, 0))
         
         # Close Button
-        close_button = tk.Button(
+        close_button = create_button(
             button_frame, 
             text="Close", 
-            font=("Arial", 10), 
-            bg='#f44336', 
-            fg='white',
-            activebackground='#d32f2f',
-            activeforeground='white',
-            relief=tk.FLAT,
-            padx=15,
-            pady=5,
+            bg='#f44336',
             command=self.destroy
         )
         close_button.pack(side='right')
     
     def _print_label(self):
         """Print the label"""
-        try:
-            # Get the barcode image path
-            temp_dir = os.path.join(os.environ.get('TEMP', os.getcwd()), 'labelmaker_temp')
-            barcode_path = os.path.join(temp_dir, f'barcode_{self.tracking_number}.png')
-            
-            # Check if the file exists
-            if not os.path.exists(barcode_path):
-                messagebox.showerror("Error", "Barcode image not found")
-                return
-            
-            # Use ShellExecute to open the print dialog
-            try:
-                import win32api
-                win32api.ShellExecute(
-                    0,          # Handle to parent window
-                    "print",    # Operation to perform
-                    barcode_path, # File to print
-                    None,       # Parameters
-                    ".",        # Working directory
-                    0           # Show command
-                )
-                
-                # Show success message
-                messagebox.showinfo("Success", "Label sent to printer")
-            except ImportError:
-                # Fallback to os.startfile for printing if win32api is not available
-                os.startfile(barcode_path, "print")
-                messagebox.showinfo("Success", "Label sent to printer")
-            
-        except Exception as e:
-            messagebox.showerror("Error", f"Error printing label: {str(e)}")
-    
-    def center_window(self):
-        """Center the window on the screen"""
-        self.update_idletasks()
-        width = self.winfo_width()
-        height = self.winfo_height()
-        x = (self.winfo_screenwidth() // 2) - (width // 2)
-        y = (self.winfo_screenheight() // 2) - (height // 2)
-        self.geometry('{}x{}+{}+{}'.format(width, height, x, y))
+        barcode_path = get_barcode_path(self.tracking_number)
+        success, message = print_barcode(barcode_path)
+        
+        if success:
+            messagebox.showinfo("Success", message)
+        else:
+            messagebox.showerror("Error", message)
