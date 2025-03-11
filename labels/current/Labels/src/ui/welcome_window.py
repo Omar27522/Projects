@@ -11,7 +11,7 @@ from src.utils.ui_utils import center_window, create_button, make_window_modal
 from src.utils.window_utils import open_file_explorer, view_files_in_directory, restart_application
 from src.utils.config_utils import get_config_directory, get_config_file_path, load_config, save_config, update_config
 from src.utils.sheets_operations import write_to_google_sheet
-from src.utils.barcode_operations import find_or_create_barcode, print_barcode
+from src.utils.barcode_operations import find_or_create_barcode, print_barcode, process_barcode
 import pyautogui
 import barcode
 from barcode.writer import ImageWriter
@@ -445,116 +445,36 @@ class WelcomeWindow(tk.Tk):
                     dialog.update()
             
             # Generate and print the barcode directly without showing preview window
-            try:
-                # Check if the directory exists
-                if not directory_exists(self.config_manager.settings.last_directory):
-                    status_label.config(text=f"Error: Directory not found: {self.config_manager.settings.last_directory}", fg='red')
-                    dialog.update()
-                    return
-                
-                # Check if a file with this SKU already exists
-                existing_file = None
-                if sku:
-                    # Search for files containing the SKU in the filename
-                    matching_files = find_files_by_sku(self.config_manager.settings.last_directory, sku)
-                    if matching_files:
-                        existing_file = matching_files[0]  # Use the first matching file
-                        status_label.config(text=f"Found existing label file for SKU: {sku}", fg='blue')
-                        dialog.update()
-                        print(f"Using existing label file: {existing_file}")
-                
-                barcode_path = None
-                barcode_filename = None
-                
-                # If an existing file was found, use it
-                if existing_file:
-                    barcode_path = existing_file
-                    barcode_filename = os.path.basename(existing_file)
-                else:
-                    # Create barcode if no existing file was found
-                    import barcode
-                    from barcode.writer import ImageWriter
-                    
-                    code128 = barcode.get_barcode_class('code128')
-                    barcode_image = code128(tracking_number, writer=ImageWriter())
-                    
-                    # Save barcode to the configured labels directory
-                    # Use a simple filename without special characters
-                    barcode_filename = f'barcode_{tracking_number.replace("/", "_").replace("\\", "_").replace(":", "_")}.png'
-                    barcode_path = os.path.join(self.config_manager.settings.last_directory, barcode_filename)
-                    
-                    # Log the path for debugging
-                    print(f"Saving barcode to: {barcode_path}")
-                    
-                    barcode_image.save(barcode_path)
-                    
-                    # Verify the file was created
-                    if not file_exists(barcode_path):
-                        status_label.config(text=f"Error: Failed to create barcode file at {barcode_path}", fg='red')
-                        dialog.update()
-                        return
-                
-                # Now that we have the actual barcode filename, log it to the central file
-                log_shipping_record(tracking_number, sku, barcode_path)
-                
-                # Print the barcode directly
-                try:
-                    # If mirror print is enabled, create a mirrored temporary copy
-                    print_path = barcode_path
-                    if self.config_manager.settings.mirror_print:
-                        from PIL import Image
-                        img = Image.open(barcode_path)
-                        mirrored_img = img.transpose(Image.FLIP_LEFT_RIGHT)
-                        temp_dir = os.path.join(os.environ.get('TEMP', os.getcwd()), 'labelmaker_temp')
-                        ensure_directory_exists(temp_dir)
-                        temp_path = os.path.join(temp_dir, f'mirror_{os.path.basename(barcode_path)}')
-                        mirrored_img.save(temp_path)
-                        print_path = temp_path
-                        status_label.config(text="Created mirrored label for printing", fg='blue')
-                        dialog.update()
-                    
-                    # Use the default Windows print pictures functionality
-                    os.startfile(print_path, "print")
-                    
-                    # Use pyautogui to automatically press Enter after a short delay
-                    try:
-                        import pyautogui
-                        # Wait a moment for the print dialog to appear
-                        dialog.after(1000, lambda: pyautogui.press('enter'))
-                    except ImportError:
-                        print("pyautogui not installed, cannot auto-press Enter")
-                    
-                    # Show success message
-                    status_label.config(text="Label sent to printer. Ready for next label.", fg='green')
-                    dialog.update()
-                    
-                    # Clear input fields for next label
-                    tracking_var.set("")
-                    sku_var.set("")
-                    tracking_entry.focus_set()
-                    
-                except Exception as e:
-                    error_msg = str(e)
-                    status_label.config(text=f"Error printing barcode: {error_msg}", fg='red')
-                    dialog.update()
-                    print(f"Error printing barcode: {error_msg}")
-                    
-                    # Fallback to opening the file if printing fails
-                    try:
-                        os.startfile(barcode_path)
-                        status_label.config(text="Printing failed. Opened image for manual printing.", fg='orange')
-                        dialog.update()
-                    except Exception as e2:
-                        status_label.config(text=f"Error opening barcode: {str(e2)}", fg='red')
-                        dialog.update()
+            def after_print_success():
+                # Clear input fields for next label
+                tracking_var.set("")
+                sku_var.set("")
+                tracking_entry.focus_set()
                 
                 # Update the label count
                 self.update_label_count()
-                
-            except Exception as e:
-                error_msg = str(e)
-                status_label.config(text=f"Error creating barcode: {error_msg}", fg='red')
-                print(f"Error creating barcode: {error_msg}")
+            
+            # Use our utility function to process the barcode
+            success, message = process_barcode(
+                tracking_number,
+                sku,
+                self.config_manager.settings.last_directory,
+                self.config_manager.settings.mirror_print,
+                lambda msg, color: [status_label.config(text=msg, fg=color), dialog.update()],
+                after_print_success
+            )
+            
+            # If using pyautogui to auto-press Enter after printing
+            if success:
+                try:
+                    import pyautogui
+                    # Wait a moment for the print dialog to appear
+                    dialog.after(1000, lambda: pyautogui.press('enter'))
+                except ImportError:
+                    print("pyautogui not installed, cannot auto-press Enter")
+            
+            # Update the label count
+            self.update_label_count()
         
         # Print Button
         print_button = tk.Button(
@@ -747,46 +667,37 @@ class WelcomeWindow(tk.Tk):
             
             # Find or create barcode
             try:
-                # Find an existing barcode for this SKU or create a new one
-                success, barcode_path, is_new, message = find_or_create_barcode(
+                # Define a function to run after successful printing
+                def after_print_success():
+                    # Clear input fields for next label
+                    tracking_var.set("")
+                    sku_var.set("")
+                    tracking_entry.focus_set()
+                    
+                    # Update the label count
+                    self.update_label_count()
+                
+                # Use our utility function to process the barcode
+                success, message = process_barcode(
                     tracking_number,
                     sku,
                     self.config_manager.settings.last_directory,
                     self.config_manager.settings.mirror_print,
-                    update_status
-                )
-                
-                if not success:
-                    return
-                
-                # Log the shipping record
-                log_shipping_record(tracking_number, sku, barcode_path)
-                
-                # Print the barcode
-                success, message = print_barcode(
-                    barcode_path,
-                    self.config_manager.settings.mirror_print,
-                    update_status
+                    update_status,
+                    after_print_success
                 )
                 
                 # Use pyautogui to automatically press Enter after a short delay
-                try:
-                    # Wait a moment for the print dialog to appear
-                    dialog.after(1000, lambda: pyautogui.press('enter'))
-                except ImportError:
-                    print("pyautogui not installed, cannot auto-press Enter")
-                
-                # Clear input fields for next label
-                tracking_var.set("")
-                sku_var.set("")
-                tracking_entry.focus_set()
-                
-                # Update the label count
-                self.update_label_count()
+                if success:
+                    try:
+                        # Wait a moment for the print dialog to appear
+                        dialog.after(1000, lambda: pyautogui.press('enter'))
+                    except ImportError:
+                        print("pyautogui not installed, cannot auto-press Enter")
                 
             except Exception as e:
                 error_msg = str(e)
-                status_label.config(text=f"Error creating barcode: {error_msg}", fg='red')
+                status_label.config(text=f"Error processing barcode: {error_msg}", fg='red')
                 dialog.update()
         
         # Print Button
@@ -983,7 +894,10 @@ class WelcomeWindow(tk.Tk):
     
     def open_sheets_dialog(self):
         """Open the Google Sheets configuration dialog"""
-        sheets_dialog = GoogleSheetsDialog(self)
+        # Use our utility function to create the dialog
+        sheets_dialog = create_google_sheets_dialog(self, self.config_manager)
+        
+        # Wait for the dialog to be closed
         self.wait_window(sheets_dialog)
         
         # Reload config manager to get updated settings

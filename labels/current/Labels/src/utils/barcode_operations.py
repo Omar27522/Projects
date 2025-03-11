@@ -143,3 +143,51 @@ def find_or_create_barcode(tracking_number, sku, directory, mirror_print=False, 
     # Create a new barcode if no existing file was found
     success, barcode_path, message = create_barcode_for_tracking(tracking_number, directory, mirror_print, status_callback)
     return success, barcode_path, True, message
+
+def process_barcode(tracking_number, sku, directory, mirror_print=False, status_callback=None, after_print_callback=None):
+    """
+    Complete process for handling a barcode - find or create, log, and print.
+    
+    Args:
+        tracking_number: The tracking number to encode in the barcode
+        sku: The SKU to search for existing barcodes
+        directory: The directory to save the barcode image to
+        mirror_print: Whether to create a mirrored version of the barcode
+        status_callback: Optional callback function to update status messages
+        after_print_callback: Optional callback function to execute after successful printing
+        
+    Returns:
+        tuple: (success, message)
+    """
+    try:
+        # Check if the directory exists
+        if not directory_exists(directory):
+            if status_callback:
+                status_callback(f"Error: Directory not found: {directory}", 'red')
+            return False, f"Error: Directory not found: {directory}"
+        
+        # Find or create the barcode
+        success, barcode_path, is_new, message = find_or_create_barcode(
+            tracking_number, sku, directory, mirror_print, status_callback
+        )
+        
+        if not success:
+            return False, message
+        
+        # Log the shipping record
+        log_shipping_record(tracking_number, sku, barcode_path)
+        
+        # Print the barcode
+        print_success, print_message = print_barcode(barcode_path, mirror_print, status_callback)
+        
+        # Execute the callback if printing was successful and a callback was provided
+        if print_success and after_print_callback:
+            after_print_callback()
+        
+        return print_success, print_message
+        
+    except Exception as e:
+        error_msg = str(e)
+        if status_callback:
+            status_callback(f"Error processing barcode: {error_msg}", 'red')
+        return False, f"Error processing barcode: {error_msg}"
