@@ -1,0 +1,30 @@
+WELCOME WINDOW
+Maybe give some metadata? like Name: Variant, SKU times stamp? 
+
+Once the Create Label window is opened, close the Welcome window.
+Also make a setting for an alert reminder to scan it as reverse inbound
+ 	Perhaps copy it so we can paste for now?
+
+Inside the Create Label window
+	Make it possible to Ctrl and shortcuts
+	Add another button that will search for a label if one is not found, make the search better than before????? I'M not sure about this one just yet.
+	Add another button that will bring the Labels forth. I want to edit, but not delete entries. 
+	Make the Window position itself where it last was. like, if I open it again, it opens on the left top corner of the screen.
+	Tab onto the SKU, when a Tracking number is scanned.
+	When no label is found, open the Management window to create one.
+
+LABEL MAKER
+
+Inside the View files window
+	Add an extra toggle button, that will make the software transparent, and non-transparent, add it to the transparency settings
+	Add an extra toggle button, that will make the software Auto print and manually print after the SKU has been inputted, add it to the  settings
+	
+Inside Label Maker
+	Add a small toggle button next to the reset button, that will enable or disable the transparency, add it to the transparency settings
+
+
+
+
+
+More features:
+Maybe a Variant Dictionary?

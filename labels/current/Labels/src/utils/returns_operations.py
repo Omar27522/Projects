@@ -7,6 +7,7 @@ from tkinter import ttk, messagebox
 
 from src.utils.file_utils import get_central_log_file_path, file_exists
 from src.utils.ui_utils import center_window, create_button, make_window_modal
+from src.utils.ui_components import create_title_section, create_colored_button, create_button_grid, create_form_field_group
 
 def load_returns_data(tree):
     """
@@ -125,14 +126,9 @@ def create_returns_dialog(parent):
     content_frame = tk.Frame(dialog, bg='white', padx=20, pady=20)
     content_frame.pack(fill='both', expand=True)
     
-    # Title
-    title_label = tk.Label(
-        content_frame, 
-        text="Returns Data", 
-        font=("Arial", 16, "bold"), 
-        bg='white'
-    )
-    title_label.pack(pady=(0, 20))
+    # Create title section
+    title_frame, _, _ = create_title_section(content_frame, "Returns Data")
+    title_frame.pack(pady=(0, 20))
     
     # Create a frame for the treeview with scrollbars
     tree_frame = tk.Frame(content_frame, bg='white')
@@ -207,16 +203,14 @@ def create_edit_dialog(parent, tree, selected_item):
     # Get the full label path from the hidden column
     full_label_path = item_values[4]
     
-    # Check if the file exists
-    if not file_exists(full_label_path):
-        messagebox.showerror("File Not Found", f"The label file could not be found at:\n{full_label_path}")
-        return False
+    # Skip the file existence check - allow editing regardless of whether the file exists
+    # This allows editing records even if the label files have been moved or renamed
     
     # Create edit dialog
     edit_dialog = tk.Toplevel(parent)
     edit_dialog.title("Edit Record")
-    edit_dialog.geometry("500x300")
-    edit_dialog.resizable(False, False)
+    edit_dialog.geometry("500x450")  
+    edit_dialog.resizable(True, True)  
     edit_dialog.configure(bg='white')
     edit_dialog.transient(parent)
     edit_dialog.grab_set()
@@ -224,56 +218,113 @@ def create_edit_dialog(parent, tree, selected_item):
     # Center the dialog
     center_window(edit_dialog)
     
-    # Create a frame for the content
-    edit_frame = tk.Frame(edit_dialog, bg='white', padx=20, pady=20)
-    edit_frame.pack(fill='both', expand=True)
+    # Create a main frame to hold everything
+    main_frame = tk.Frame(edit_dialog, bg='white')
+    main_frame.pack(fill='both', expand=True, padx=10, pady=10)
+    
+    # Create title section at the top (outside the scrollable area)
+    title_frame, _, _ = create_title_section(main_frame, "Edit Record")
+    title_frame.pack(pady=(0, 10))
+    
+    # Create a canvas for scrolling
+    canvas = tk.Canvas(main_frame, bg='white', highlightthickness=0)
+    canvas.pack(side='left', fill='both', expand=True)
+    
+    # Add a scrollbar to the canvas
+    scrollbar = tk.Scrollbar(main_frame, orient='vertical', command=canvas.yview)
+    scrollbar.pack(side='right', fill='y')
+    
+    # Configure the canvas
+    canvas.configure(yscrollcommand=scrollbar.set)
+    canvas.bind('<Configure>', lambda e: canvas.configure(scrollregion=canvas.bbox('all')))
+    
+    # Create a frame inside the canvas to hold the content
+    content_frame = tk.Frame(canvas, bg='white')
+    canvas.create_window((0, 0), window=content_frame, anchor='nw', width=canvas.winfo_reqwidth())
+    
+    # Define form fields
+    fields = [
+        {
+            'label': 'Timestamp:',
+            'var_type': 'string',
+            'default': item_values[3],
+            'width': 30,
+            'required': True
+        },
+        {
+            'label': 'Tracking Number:',
+            'var_type': 'string',
+            'default': item_values[0],
+            'width': 30,
+            'required': True
+        },
+        {
+            'label': 'SKU:',
+            'var_type': 'string',
+            'default': item_values[1],
+            'width': 30,
+            'required': True
+        },
+        {
+            'label': 'Label:',
+            'var_type': 'string',
+            'default': item_values[2],
+            'width': 30,
+            'required': False,
+            'readonly': True
+        }
+    ]
     
     # Create form fields
-    tk.Label(edit_frame, text="Timestamp:", font=("Arial", 10), bg='white').grid(row=0, column=0, sticky='w', pady=(0, 5))
-    timestamp_var = tk.StringVar(value=item_values[3])
-    timestamp_entry = tk.Entry(edit_frame, textvariable=timestamp_var, font=("Arial", 10), width=30)
-    timestamp_entry.grid(row=0, column=1, sticky='we', pady=(0, 5))
+    form_frame = tk.Frame(content_frame, bg='white', padx=10, pady=10)
+    form_frame.pack(fill='x', expand=True)
     
-    tk.Label(edit_frame, text="Tracking Number:", font=("Arial", 10), bg='white').grid(row=1, column=0, sticky='w', pady=(0, 5))
-    tracking_var = tk.StringVar(value=item_values[0])
-    tracking_entry = tk.Entry(edit_frame, textvariable=tracking_var, font=("Arial", 10), width=30)
-    tracking_entry.grid(row=1, column=1, sticky='we', pady=(0, 5))
-    
-    tk.Label(edit_frame, text="SKU:", font=("Arial", 10), bg='white').grid(row=2, column=0, sticky='w', pady=(0, 5))
-    sku_var = tk.StringVar(value=item_values[1])
-    sku_entry = tk.Entry(edit_frame, textvariable=sku_var, font=("Arial", 10), width=30)
-    sku_entry.grid(row=2, column=1, sticky='we', pady=(0, 5))
-    
-    tk.Label(edit_frame, text="Label:", font=("Arial", 10), bg='white').grid(row=3, column=0, sticky='w', pady=(0, 5))
-    label_var = tk.StringVar(value=item_values[2])
-    label_entry = tk.Entry(edit_frame, textvariable=label_var, font=("Arial", 10), width=30, state='readonly')
-    label_entry.grid(row=3, column=1, sticky='we', pady=(0, 5))
+    field_widgets = create_form_field_group(form_frame, fields)
     
     # Store the full label path
     full_label_path_var = tk.StringVar(value=full_label_path)
     
-    # Create a frame for the buttons
-    button_frame = tk.Frame(edit_frame, bg='white')
-    button_frame.grid(row=4, column=0, columnspan=2, sticky='e', pady=(20, 0))
+    # Add some padding at the bottom of the content frame
+    padding_frame = tk.Frame(content_frame, bg='white', height=20)
+    padding_frame.pack(fill='x')
+    
+    # Create a separate frame for buttons at the bottom of the dialog
+    button_container = tk.Frame(edit_dialog, bg='white', pady=10)
+    button_container.pack(side='bottom', fill='x', padx=20, pady=10)
+    
+    # Create a frame for the buttons inside the container
+    button_frame = tk.Frame(button_container, bg='white')
+    button_frame.pack(fill='x')
     
     # Function to save changes
     def save_changes():
         # Get updated values
-        new_timestamp = timestamp_var.get()
-        new_tracking = tracking_var.get()
-        new_sku = sku_var.get()
+        new_timestamp = field_widgets['Timestamp:']['var'].get()
+        new_tracking = field_widgets['Tracking Number:']['var'].get()
+        new_sku = field_widgets['SKU:']['var'].get()
+        label_name = field_widgets['Label:']['var'].get()
         
         # Get the full label path
         full_label_path = full_label_path_var.get()
         
+        # Validate required fields
+        if not new_timestamp or not new_tracking or not new_sku:
+            messagebox.showerror("Error", "Please fill in all required fields.")
+            return
+        
         # Update treeview with display values
-        tree.item(selected_item[0], values=(new_tracking, new_sku, item_values[2], new_timestamp, full_label_path))
+        tree.item(selected_item[0], values=(new_tracking, new_sku, label_name, new_timestamp, full_label_path))
         
         # Update log file
-        update_log_file(tree)
+        success = update_log_file(tree)
         
-        # Close dialog
-        edit_dialog.destroy()
+        if success:
+            messagebox.showinfo("Success", "Record updated successfully.")
+            # Close dialog
+            edit_dialog.destroy()
+        else:
+            messagebox.showerror("Error", "Failed to update record. Please try again.")
+            # Keep dialog open so user can try again
     
     # Function to delete record
     def delete_record():
@@ -289,37 +340,32 @@ def create_edit_dialog(parent, tree, selected_item):
             edit_dialog.destroy()
     
     # Save Button
-    save_button = create_button(
+    save_button = create_colored_button(
         button_frame,
-        text="Save",
-        command=save_changes,
-        bg='#4CAF50',
-        padx=15,
-        pady=5
+        "Save",
+        '#4CAF50',  # Green
+        '#A5D6A7',  # Light Green
+        save_changes
     )
-    save_button.pack(side='left', padx=(10, 0))
-    
-    # Delete Button
-    delete_button = create_button(
-        button_frame,
-        text="Delete",
-        command=delete_record,
-        bg='#f44336',
-        padx=15,
-        pady=5
-    )
-    delete_button.pack(side='left', padx=(10, 0))
+    save_button.config(height=5, font=('Arial', 12, 'bold'), width=12)
+    save_button.pack(side='left', padx=(0, 20))
     
     # Cancel Button
-    cancel_button = create_button(
+    cancel_button = create_colored_button(
         button_frame,
-        text="Cancel",
-        command=edit_dialog.destroy,
-        bg='#9E9E9E',
-        padx=15,
-        pady=5
+        "Cancel",
+        '#9E9E9E',  # Gray
+        '#E0E0E0',  # Light Gray
+        edit_dialog.destroy
     )
-    cancel_button.pack(side='left', padx=(10, 0))
+    cancel_button.config(height=5, font=('Arial', 12, 'bold'), width=12)
+    cancel_button.pack(side='left')
+    
+    # Add mouse wheel scrolling
+    def _on_mousewheel(event):
+        canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    
+    canvas.bind_all("<MouseWheel>", _on_mousewheel)
     
     # Wait for the dialog to be closed
     parent.wait_window(edit_dialog)
