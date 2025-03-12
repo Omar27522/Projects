@@ -1,7 +1,7 @@
 {
   "name": "Label Maker Management Application",
   "description": "A modular interface for managing the Label Maker application",
-  "version": "1.0.1.2",
+  "version": "1.0.1.3",
   "author": "Baby Manager",
   "language": "python",
   "entrypoint": "main.pyw",
@@ -9,14 +9,17 @@
     "python": ">=3.6",
     "pip": [
       "pywin32>=228",
-      "pyautogui>=0.9.53"
+      "pyautogui>=0.9.53",
+      "gspread>=5.0.0",
+      "oauth2client>=4.1.3",
+      "Pillow>=9.0.0"
     ]
   },
   "folders": {
     "source": ["src"],
     "assets": ["assets"],
     "logs": ["logs"],
-    "documentation": ["README.md"]
+    "documentation": ["README.md", "GOOGLE_SHEETS_SETUP.md"]
   },
   "tasks": {
     "run": {
@@ -187,6 +190,181 @@
           "name": "select_labels_directory",
           "line": 1016,
           "description": "Function to select and update the labels directory"
+        }
+      ]
+    },
+    "src/ui/edit_record_window.py": {
+      "sections": [
+        {
+          "name": "Imports and Documentation",
+          "startLine": 1,
+          "endLine": 10,
+          "description": "Module imports and documentation"
+        },
+        {
+          "name": "Edit Record Window Class",
+          "startLine": 11,
+          "endLine": 50,
+          "description": "Main window class definition"
+        },
+        {
+          "name": "Initialization",
+          "startLine": 51,
+          "endLine": 80,
+          "description": "Window initialization and setup"
+        },
+        {
+          "name": "UI Creation",
+          "startLine": 81,
+          "endLine": 120,
+          "description": "Main UI creation method"
+        },
+        {
+          "name": "Form Section",
+          "startLine": 121,
+          "endLine": 200,
+          "description": "Form section creation and layout"
+        },
+        {
+          "name": "Button Section",
+          "startLine": 201,
+          "endLine": 250,
+          "description": "Button section creation and layout"
+        },
+        {
+          "name": "Save Action",
+          "startLine": 251,
+          "endLine": 300,
+          "description": "Handler for Save button click"
+        },
+        {
+          "name": "Cancel Action",
+          "startLine": 301,
+          "endLine": 350,
+          "description": "Handler for Cancel button click"
+        }
+      ],
+      "bookmarks": [
+        {
+          "name": "create_edit_form",
+          "line": 122,
+          "description": "Function to create the edit form"
+        },
+        {
+          "name": "save_record",
+          "line": 252,
+          "description": "Function to save the edited record"
+        }
+      ]
+    },
+    "src/utils/returns_operations.py": {
+      "sections": [
+        {
+          "name": "Imports and Documentation",
+          "startLine": 1,
+          "endLine": 10,
+          "description": "Module imports and documentation"
+        },
+        {
+          "name": "Data Loading Functions",
+          "startLine": 11,
+          "endLine": 80,
+          "description": "Functions for loading and updating returns data"
+        },
+        {
+          "name": "Dialog Creation Functions",
+          "startLine": 81,
+          "endLine": 183,
+          "description": "Functions for creating returns data dialogs"
+        },
+        {
+          "name": "Edit Record Dialog",
+          "startLine": 184,
+          "endLine": 371,
+          "description": "Function for creating and managing the edit record dialog"
+        }
+      ],
+      "bookmarks": [
+        {
+          "name": "load_returns_data",
+          "line": 12,
+          "description": "Function to load returns data from log file"
+        },
+        {
+          "name": "update_log_file",
+          "line": 56,
+          "description": "Function to update the log file with treeview data"
+        },
+        {
+          "name": "create_returns_dialog",
+          "line": 81,
+          "description": "Function to create the returns data dialog"
+        },
+        {
+          "name": "create_edit_dialog",
+          "line": 185,
+          "description": "Function to create the scrollable edit record dialog"
+        }
+      ]
+    },
+    "src/utils/ui_components.py": {
+      "sections": [
+        {
+          "name": "Imports and Documentation",
+          "startLine": 1,
+          "endLine": 10,
+          "description": "Module imports and documentation"
+        },
+        {
+          "name": "Title Components",
+          "startLine": 11,
+          "endLine": 50,
+          "description": "Functions for creating title sections"
+        },
+        {
+          "name": "Button Components",
+          "startLine": 51,
+          "endLine": 150,
+          "description": "Functions for creating styled buttons and button grids"
+        },
+        {
+          "name": "Form Components",
+          "startLine": 151,
+          "endLine": 280,
+          "description": "Functions for creating form fields and groups"
+        },
+        {
+          "name": "Status Components",
+          "startLine": 281,
+          "endLine": 350,
+          "description": "Functions for creating status bars and displays"
+        }
+      ],
+      "bookmarks": [
+        {
+          "name": "create_title_section",
+          "line": 12,
+          "description": "Function to create standardized title sections"
+        },
+        {
+          "name": "create_colored_button",
+          "line": 51,
+          "description": "Function to create colored buttons with hover effects"
+        },
+        {
+          "name": "create_button_grid",
+          "line": 115,
+          "description": "Function to create a grid of buttons"
+        },
+        {
+          "name": "create_form_field_group",
+          "line": 198,
+          "description": "Function to create form field groups"
+        },
+        {
+          "name": "create_sheets_status_display",
+          "line": 310,
+          "description": "Function to create Google Sheets status display"
         }
       ]
     }
