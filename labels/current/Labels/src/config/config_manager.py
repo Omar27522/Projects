@@ -21,6 +21,7 @@ class Settings:
     google_sheet_tracking_row: int = 3
     google_sheet_sku_column: str = "F"
     google_sheet_sku_row: int = 3
+    google_sheets_connection_status: str = "Not Connected"
 
 class ConfigManager:
     """Manages application configuration and settings"""
@@ -64,7 +65,8 @@ class ConfigManager:
                     google_sheet_tracking_column=data.get('google_sheet_tracking_column', 'D'),
                     google_sheet_tracking_row=data.get('google_sheet_tracking_row', 3),
                     google_sheet_sku_column=data.get('google_sheet_sku_column', 'F'),
-                    google_sheet_sku_row=data.get('google_sheet_sku_row', 3)
+                    google_sheet_sku_row=data.get('google_sheet_sku_row', 3),
+                    google_sheets_connection_status=data.get('google_sheets_connection_status', "Not Connected")
                 )
                 return settings
             except Exception as e:

@@ -79,6 +79,21 @@ def create_label_dialog(parent, config_manager, update_label_count_callback):
     # Set focus to tracking entry
     tracking_entry.focus()
     
+    # Add handler for Enter key in tracking field to copy value to clipboard and move to SKU field
+    def on_tracking_enter(event):
+        # Get the tracking number
+        tracking_number = tracking_var.get().strip()
+        if tracking_number:
+            # Copy to clipboard
+            dialog.clipboard_clear()
+            dialog.clipboard_append(tracking_number)
+            # Move to SKU field
+            sku_entry.focus_set()
+            return "break"  # Prevent default Enter behavior
+    
+    # Bind Enter key to the tracking entry field
+    tracking_entry.bind('<Return>', on_tracking_enter)
+    
     # Status
     _, status_label = create_status_bar(content_frame, "", "red")
     
@@ -315,6 +330,21 @@ def create_user_dialog(parent, config_manager, update_label_count_callback):
     
     # Set focus to tracking entry
     tracking_entry.focus()
+    
+    # Add handler for Enter key in tracking field to copy value to clipboard and move to SKU field
+    def on_tracking_enter(event):
+        # Get the tracking number
+        tracking_number = tracking_var.get().strip()
+        if tracking_number:
+            # Copy to clipboard
+            dialog.clipboard_clear()
+            dialog.clipboard_append(tracking_number)
+            # Move to SKU field
+            sku_entry.focus_set()
+            return "break"  # Prevent default Enter behavior
+    
+    # Bind Enter key to the tracking entry field
+    tracking_entry.bind('<Return>', on_tracking_enter)
     
     # Status
     _, status_label = create_status_bar(content_frame, "", "red")
@@ -621,18 +651,19 @@ def create_settings_dialog_handler(parent, config_manager, update_label_count_ca
     
     return settings_dialog
 
-def create_google_sheets_dialog_handler(parent, config_manager):
+def create_google_sheets_dialog_handler(parent, config_manager, update_callback=None):
     """
     Handle the creation of the Google Sheets configuration dialog
     
     Args:
         parent: Parent window
         config_manager: Configuration manager instance
+        update_callback: Optional callback to update the status display after dialog closes
         
     Returns:
         The created Google Sheets dialog
     """
     # Create the Google Sheets dialog
-    sheets_dialog = create_google_sheets_dialog(parent, config_manager)
+    sheets_dialog = create_google_sheets_dialog(parent, config_manager, update_callback)
     
     return sheets_dialog

@@ -367,6 +367,63 @@
           "description": "Function to create Google Sheets status display"
         }
       ]
+    },
+    "src/utils/dialog_handlers.py": {
+      "sections": [
+        {
+          "name": "Imports and Documentation",
+          "startLine": 1,
+          "endLine": 20,
+          "description": "Module imports and documentation"
+        },
+        {
+          "name": "Create Label Dialog",
+          "startLine": 21,
+          "endLine": 256,
+          "description": "Dialog for creating and printing labels"
+        },
+        {
+          "name": "User Dialog",
+          "startLine": 258,
+          "endLine": 455,
+          "description": "Dialog for user input with SKU validation"
+        },
+        {
+          "name": "Labels Dialog",
+          "startLine": 457,
+          "endLine": 549,
+          "description": "Dialog for viewing and editing returns data"
+        },
+        {
+          "name": "Settings Dialog Handler",
+          "startLine": 551,
+          "endLine": 621,
+          "description": "Handler for settings dialog creation"
+        },
+        {
+          "name": "Google Sheets Dialog Handler",
+          "startLine": 623,
+          "endLine": 638,
+          "description": "Handler for Google Sheets configuration dialog"
+        }
+      ],
+      "bookmarks": [
+        {
+          "name": "create_label_dialog",
+          "line": 21,
+          "description": "Function to create the label dialog with auto-copy and tab functionality"
+        },
+        {
+          "name": "on_tracking_enter",
+          "line": 83,
+          "description": "Handler for Enter key in tracking field to copy value and move to SKU field"
+        },
+        {
+          "name": "print_label",
+          "line": 130,
+          "description": "Function to handle label printing"
+        }
+      ]
     }
   }
 }

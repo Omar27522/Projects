@@ -88,14 +88,14 @@ def write_to_google_sheet(config_manager, tracking_number, sku, status_callback=
             status_callback(f"Error writing to Google Sheets: {error_msg}", 'red')
         return False, f"Error writing to Google Sheets: {error_msg}"
 
-def create_google_sheets_dialog(parent, config_manager, update_status_callback=None):
+def create_google_sheets_dialog(parent, config_manager, update_callback=None):
     """
     Create a dialog for configuring Google Sheets integration.
     
     Args:
         parent: The parent window
         config_manager: The configuration manager
-        update_status_callback: Optional callback to update the status display after dialog closes
+        update_callback: Optional callback to update the status display after dialog closes
         
     Returns:
         GoogleSheetsDialog: The created dialog
@@ -103,7 +103,7 @@ def create_google_sheets_dialog(parent, config_manager, update_status_callback=N
     from src.ui.google_sheets_dialog import GoogleSheetsDialog
     
     # Create the dialog
-    sheets_dialog = GoogleSheetsDialog(parent)
+    sheets_dialog = GoogleSheetsDialog(parent, config_manager, update_callback)
     
     # Make the dialog modal
     sheets_dialog.transient(parent)

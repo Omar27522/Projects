@@ -197,7 +197,7 @@ status_label.pack(side='bottom', fill='x')
 ### Google Sheets Status Display
 
 ```python
-create_sheets_status_display(parent, status_text="Not Connected", status_color="red", sheet_name=None)
+create_sheets_status_display(parent, status_text="Caution", status_color="red", sheet_name=None)
 ```
 
 Creates a Google Sheets status display.

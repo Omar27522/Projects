@@ -303,7 +303,7 @@ class WelcomeWindow(tk.Tk):
     def open_sheets_dialog(self):
         """Open the Google Sheets configuration dialog"""
         # Call the create_google_sheets_dialog_handler function from our dialog_handlers module
-        sheets_dialog = create_google_sheets_dialog_handler(self, self.config_manager)
+        sheets_dialog = create_google_sheets_dialog_handler(self, self.config_manager, self._update_sheets_status_display)
         
         # Wait for the dialog to be closed
         self.wait_window(sheets_dialog)
@@ -317,24 +317,95 @@ class WelcomeWindow(tk.Tk):
     def _update_sheets_status_display(self):
         """Update the Google Sheets status display in the welcome window"""
         if hasattr(self, 'sheets_status_label'):
+            # Reload config manager to get the latest settings
+            self.config_manager = ConfigManager()
+            
             # Get Google Sheets configuration
             sheets_config = self.config_manager.settings
             
             # Default status
             status_text = "Not Connected"
             status_color = "red"
+            on_click = None
             
-            # Check if Google Sheets is configured
-            if (hasattr(sheets_config, 'google_sheet_url') and 
+            # Check if Google Sheets is configured and connected
+            if (hasattr(sheets_config, 'google_sheets_connection_status') and 
+                sheets_config.google_sheets_connection_status == "Connected"):
+                
+                status_text = "Connected"
+                status_color = "green"
+            # Fallback to checking if configuration exists
+            elif (hasattr(sheets_config, 'google_sheet_url') and 
                 sheets_config.google_sheet_url and 
                 hasattr(sheets_config, 'google_sheet_name') and 
                 sheets_config.google_sheet_name):
                 
-                status_text = "Connected"
-                status_color = "green"
+                status_text = "Configured (Not Tested)"
+                status_color = "orange"
+                on_click = self.test_sheets_connection
             
             # Update the status label
-            self.sheets_status_label.config(text=status_text, fg=status_color)
+            self.sheets_status_label.config(text=status_text, fg=status_color, font=("Arial", 8))
+            
+            # Make the label clickable if it's the orange "Configured (Not Tested)" status
+            if status_text == "Configured (Not Tested)" and on_click:
+                self.sheets_status_label.bind("<Button-1>", lambda e: on_click())
+                self.sheets_status_label.bind("<Enter>", lambda e: self.sheets_status_label.config(cursor="hand2", font=("Arial", 8, "underline")))
+                self.sheets_status_label.bind("<Leave>", lambda e: self.sheets_status_label.config(cursor="", font=("Arial", 8)))
+    
+    def test_sheets_connection(self):
+        """Test the connection to Google Sheets without opening the full dialog"""
+        from src.utils.sheets_utils import validate_sheet_url, test_sheet_connection
+        from src.utils.file_utils import get_credentials_file_path, file_exists
+        from tkinter import messagebox
+        
+        try:
+            # Get Google Sheets configuration
+            sheets_config = self.config_manager.settings
+            
+            # Check if Google Sheets is configured
+            if not (sheets_config.google_sheet_url and sheets_config.google_sheet_name):
+                messagebox.showerror("Error", "Google Sheets is not fully configured. Please open the settings to configure it.")
+                return
+            
+            # Check for credentials file
+            creds_file = get_credentials_file_path()
+            if not file_exists(creds_file):
+                messagebox.showerror("Error", f"Credentials file not found at:\n{creds_file}\n\nPlease create a service account and download the credentials file.")
+                return
+            
+            # Validate the sheet URL
+            is_valid, result = validate_sheet_url(sheets_config.google_sheet_url)
+            if not is_valid:
+                messagebox.showerror("Error", result)
+                return
+            
+            # Test connection
+            success, message = test_sheet_connection(result, sheets_config.google_sheet_name)
+            
+            if success:
+                # Update connection status
+                self.config_manager.settings.google_sheets_connection_status = "Connected"
+                self.config_manager.save_settings()
+                
+                # Update the display
+                self._update_sheets_status_display()
+                
+                messagebox.showinfo("Success", "Connected to Google Sheet successfully!")
+            else:
+                # Update connection status
+                self.config_manager.settings.google_sheets_connection_status = "Connection Failed"
+                self.config_manager.save_settings()
+                
+                # Update the display
+                self._update_sheets_status_display()
+                
+                messagebox.showerror("Error", f"Could not connect to Google Sheet.\n\nError: {message}")
+                
+        except ImportError:
+            messagebox.showerror("Error", "Required libraries not installed. Please install gspread and oauth2client to connect to Google Sheets.")
+        except Exception as e:
+            messagebox.showerror("Error", f"An unexpected error occurred:\n\n{str(e)}")
     
     def update_label_count(self, directory=None):
         """Update the label count display based on the current directory"""

@@ -24,6 +24,7 @@ This documentation provides detailed information about the Label Maker applicati
 - [Button Styling](button_styling.md): Details about the Material Design-inspired button styling
 - [Form Components](form_components.md): Documentation for form field creation and validation
 - [Edit Record Window](edit_record_window.md): Documentation for the scrollable edit record interface
+- [Create Label Window](create_label_window.md): Documentation for the label creation interface with auto-copy and tab functionality
 
 ### Features
 
@@ -32,7 +33,14 @@ This documentation provides detailed information about the Label Maker applicati
 - [Returns Data Management](returns_data.md): How shipping records are managed and edited
 - [Google Sheets Tracking](sheets_tracking.md): How tracking information is synchronized with Google Sheets
 
-## Development Guidelines
+## Development
+
+### Development Guidelines
+
+- [Project Structure](project_structure.md): Overview of the project's directory structure
+- [Code Style Guide](code_style.md): Coding standards and style guidelines
+- [Testing](testing.md): Testing procedures and guidelines
+- [Project Cleanup Standards](project_cleanup_standards.md): Standards and procedures for maintaining a clean project structure
 
 ### Adding New Features
 

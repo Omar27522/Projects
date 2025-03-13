@@ -3,6 +3,8 @@ from tkinter import ttk, messagebox
 import re
 import os
 import sys
+import json
+from dataclasses import asdict
 
 # Add the project root directory to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
@@ -16,7 +18,7 @@ from src.utils.config_utils import save_config
 class GoogleSheetsDialog(tk.Toplevel):
     """Dialog for configuring Google Sheets integration"""
     
-    def __init__(self, parent):
+    def __init__(self, parent, config_manager=None, update_callback=None):
         """Initialize the Google Sheets dialog"""
         super().__init__(parent)
         
@@ -29,10 +31,13 @@ class GoogleSheetsDialog(tk.Toplevel):
         self.grab_set()  # Make dialog modal
         
         # Initialize config manager
-        self.config_manager = ConfigManager()
+        self.config_manager = config_manager or ConfigManager()
+        
+        # Store the update callback
+        self.update_callback = update_callback
         
         # Initialize connection status
-        self.connection_status = "Not Connected"
+        self.connection_status = self.config_manager.settings.google_sheets_connection_status or "Not Connected"
         
         # Create UI
         self._create_ui()
@@ -46,51 +51,35 @@ class GoogleSheetsDialog(tk.Toplevel):
     
     def _create_ui(self):
         """Create the user interface elements"""
-        # Create a main frame
-        main_frame = tk.Frame(self, bg='white')
-        main_frame.pack(fill='both', expand=True)
-        
-        # Create a canvas with scrollbar
-        canvas = tk.Canvas(main_frame, bg='white', highlightthickness=0)
-        scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
-        
-        # Configure the canvas
-        canvas.configure(yscrollcommand=scrollbar.set)
-        canvas.pack(side='left', fill='both', expand=True)
-        scrollbar.pack(side='right', fill='y')
-        
-        # Create a frame inside the canvas for the content
-        content_frame = tk.Frame(canvas, bg='white', padx=30, pady=30)
-        
-        # Add the content frame to the canvas
-        canvas_frame = canvas.create_window((0, 0), window=content_frame, anchor='nw')
-        
-        # Configure canvas to resize with window
-        def configure_canvas(event):
-            canvas.configure(scrollregion=canvas.bbox("all"))
-            # Update the width of the canvas window
-            canvas.itemconfig(canvas_frame, width=event.width)
-        
-        # Bind events
-        canvas.bind('<Configure>', configure_canvas)
-        content_frame.bind('<Configure>', lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-        
-        # Enable mousewheel scrolling
-        def _on_mousewheel(event):
-            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-        
-        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        # Main content frame
+        content_frame = tk.Frame(self, bg='white')
+        content_frame.pack(fill='both', expand=True, padx=20, pady=20)
         
         # Title
         title_label = tk.Label(
             content_frame, 
-            text="Google Sheets Configuration", 
+            text="Google Sheets Integration", 
             font=("Arial", 14, "bold"), 
             bg='white'
         )
-        title_label.pack(pady=(0, 20))
+        title_label.pack(anchor='center', pady=(0, 20))
         
-        # Google Sheet URL
+        # Description
+        description_text = (
+            "Connect to Google Sheets to track your shipments and inventory.\n"
+            "Enter the Google Sheet URL and select the sheet name below."
+        )
+        description_label = tk.Label(
+            content_frame, 
+            text=description_text, 
+            font=("Arial", 10), 
+            bg='white', 
+            justify='left', 
+            wraplength=460
+        )
+        description_label.pack(fill='x', pady=(0, 20))
+        
+        # URL Frame
         url_frame = tk.Frame(content_frame, bg='white')
         url_frame.pack(fill='x', pady=(0, 10))
         
@@ -146,116 +135,130 @@ class GoogleSheetsDialog(tk.Toplevel):
             bg='#2196F3',
             padx=8,
             pady=2,
-            font=("Arial", 10)
+            font=("Arial", 10, "bold")
         )
         refresh_button.pack(side='left', padx=(5, 0))
         
-        # Column and Row Configuration
-        config_frame = tk.LabelFrame(content_frame, text="Data Configuration", font=("Arial", 10, "bold"), bg='white', padx=10, pady=10)
-        config_frame.pack(fill='x', pady=(10, 10))
+        # Tracking Column
+        tracking_frame = tk.Frame(content_frame, bg='white')
+        tracking_frame.pack(fill='x', pady=(0, 10))
         
-        # Tracking Number Column
-        tracking_col_label = tk.Label(
-            config_frame, 
+        tracking_label = tk.Label(
+            tracking_frame, 
             text="Tracking Number Column:", 
             font=("Arial", 10), 
             bg='white'
         )
-        tracking_col_label.grid(row=0, column=0, sticky='w', pady=(10, 5))
+        tracking_label.pack(anchor='w')
+        
+        tracking_input_frame = tk.Frame(tracking_frame, bg='white')
+        tracking_input_frame.pack(fill='x', pady=(5, 0))
         
         self.tracking_col_var = tk.StringVar(value=self.config_manager.settings.google_sheet_tracking_column or "D")
         tracking_col_entry = tk.Entry(
-            config_frame, 
+            tracking_input_frame, 
             textvariable=self.tracking_col_var, 
             font=("Arial", 10), 
             width=5
         )
-        tracking_col_entry.grid(row=0, column=1, sticky='w', pady=(10, 5))
+        tracking_col_entry.pack(side='left')
         
-        # Tracking Number Row
+        tracking_col_help = tk.Label(
+            tracking_input_frame, 
+            text="(e.g., A, B, C)", 
+            font=("Arial", 8), 
+            bg='white', 
+            fg='gray'
+        )
+        tracking_col_help.pack(side='left', padx=(5, 20))
+        
         tracking_row_label = tk.Label(
-            config_frame, 
-            text="Tracking Number Row:", 
+            tracking_input_frame, 
+            text="Starting Row:", 
             font=("Arial", 10), 
             bg='white'
         )
-        tracking_row_label.grid(row=1, column=0, sticky='w', pady=(0, 5))
+        tracking_row_label.pack(side='left')
         
         self.tracking_row_var = tk.StringVar(value=str(self.config_manager.settings.google_sheet_tracking_row or 3))
         tracking_row_entry = tk.Entry(
-            config_frame, 
+            tracking_input_frame, 
             textvariable=self.tracking_row_var, 
             font=("Arial", 10), 
             width=5
         )
-        tracking_row_entry.grid(row=1, column=1, sticky='w', pady=(0, 5))
+        tracking_row_entry.pack(side='left', padx=(5, 0))
         
         # SKU Column
-        sku_col_label = tk.Label(
-            config_frame, 
+        sku_frame = tk.Frame(content_frame, bg='white')
+        sku_frame.pack(fill='x', pady=(0, 10))
+        
+        sku_label = tk.Label(
+            sku_frame, 
             text="SKU Column:", 
             font=("Arial", 10), 
             bg='white'
         )
-        sku_col_label.grid(row=2, column=0, sticky='w', pady=(10, 5))
+        sku_label.pack(anchor='w')
+        
+        sku_input_frame = tk.Frame(sku_frame, bg='white')
+        sku_input_frame.pack(fill='x', pady=(5, 0))
         
         self.sku_col_var = tk.StringVar(value=self.config_manager.settings.google_sheet_sku_column or "F")
         sku_col_entry = tk.Entry(
-            config_frame, 
+            sku_input_frame, 
             textvariable=self.sku_col_var, 
             font=("Arial", 10), 
             width=5
         )
-        sku_col_entry.grid(row=2, column=1, sticky='w', pady=(10, 5))
+        sku_col_entry.pack(side='left')
         
-        # SKU Row
+        sku_col_help = tk.Label(
+            sku_input_frame, 
+            text="(e.g., A, B, C)", 
+            font=("Arial", 8), 
+            bg='white', 
+            fg='gray'
+        )
+        sku_col_help.pack(side='left', padx=(5, 20))
+        
         sku_row_label = tk.Label(
-            config_frame, 
-            text="SKU Row:", 
+            sku_input_frame, 
+            text="Starting Row:", 
             font=("Arial", 10), 
             bg='white'
         )
-        sku_row_label.grid(row=3, column=0, sticky='w', pady=(0, 5))
+        sku_row_label.pack(side='left')
         
         self.sku_row_var = tk.StringVar(value=str(self.config_manager.settings.google_sheet_sku_row or 3))
         sku_row_entry = tk.Entry(
-            config_frame, 
+            sku_input_frame, 
             textvariable=self.sku_row_var, 
             font=("Arial", 10), 
             width=5
         )
-        sku_row_entry.grid(row=3, column=1, sticky='w', pady=(0, 5))
+        sku_row_entry.pack(side='left', padx=(5, 0))
         
-        # Connection Status
+        # Status Frame
         status_frame = tk.Frame(content_frame, bg='white')
-        status_frame.pack(fill='x', pady=(10, 10))
+        status_frame.pack(fill='x', pady=(10, 0))
         
-        status_label = tk.Label(
+        status_label_title = tk.Label(
             status_frame, 
-            text="Connection Status:", 
-            font=("Arial", 10), 
+            text="Status:", 
+            font=("Arial", 10, "bold"), 
             bg='white'
         )
-        status_label.pack(side='left')
+        status_label_title.pack(side='left')
         
         self.status_label = tk.Label(
             status_frame, 
             text=self.connection_status, 
-            font=("Arial", 10, "bold"), 
-            fg='red' if self.connection_status != "Connected" else 'green',
-            bg='white'
+            font=("Arial", 10), 
+            bg='white', 
+            fg='red'
         )
         self.status_label.pack(side='left', padx=(5, 0))
-        
-        # Add instruction label above buttons
-        instruction_label = tk.Label(
-            content_frame,
-            text="Click 'Test Connection' to verify settings, then 'Save & Connect' to apply changes",
-            font=("Arial", 9, "italic"),
-            bg='white',
-            fg='#555555'
-        )
-        instruction_label.pack(fill='x', pady=(5, 10))
         
         # Add a separator line above the button frame
         separator = ttk.Separator(content_frame, orient='horizontal')
@@ -264,28 +267,6 @@ class GoogleSheetsDialog(tk.Toplevel):
         # Button Frame
         button_frame = tk.Frame(content_frame, bg='white')
         button_frame.pack(fill='x', pady=(0, 0), padx=20)  # Added horizontal padding
-        
-        # Fetch Sheets Button
-        fetch_button = create_button(
-            button_frame,
-            text="Fetch Sheets",
-            command=self._fetch_sheet_names,
-            bg='#2196F3',
-            padx=20,
-            pady=10
-        )
-        fetch_button.pack(side='left', padx=(10, 5))
-        
-        # Test Connection Button
-        test_button = create_button(
-            button_frame,
-            text="Test Connection",
-            command=self._test_connection,
-            bg='#FF9800',
-            padx=20,
-            pady=10
-        )
-        test_button.pack(side='left', padx=5)
         
         # Save Button
         save_button = create_button(
@@ -323,60 +304,6 @@ class GoogleSheetsDialog(tk.Toplevel):
                 )
         except Exception as e:
             print(f"Error updating status: {str(e)}")
-    
-    def _test_connection(self):
-        """Test the connection to the Google Sheet"""
-        try:
-            # Get values from UI
-            url = self.url_var.get().strip()
-            sheet_name = self.sheet_var.get().strip()
-            
-            # Validate inputs
-            if not url:
-                messagebox.showerror("Error", "Please enter a Google Sheet URL")
-                return
-                
-            if not sheet_name:
-                messagebox.showerror("Error", "Please select a sheet name")
-                return
-            
-            # Validate URL
-            is_valid, result = validate_sheet_url(url)
-            if not is_valid:
-                messagebox.showerror("Error", result)
-                self.connection_status = "Invalid URL"
-                self._update_status()
-                return
-            
-            sheet_id = result
-            
-            # Import required libraries
-            try:
-                import gspread
-                from oauth2client.service_account import ServiceAccountCredentials
-            except ImportError:
-                messagebox.showerror("Error", "Required libraries not installed.\n\nPlease install gspread and oauth2client:\npip install gspread oauth2client")
-                self.connection_status = "Libraries Missing"
-                self._update_status()
-                return
-            
-            # Test connection
-            from src.utils.sheets_utils import test_sheet_connection
-            success, message = test_sheet_connection(sheet_id, sheet_name)
-            
-            if success:
-                self.connection_status = "Connected"
-                self._update_status()
-                messagebox.showinfo("Success", "Successfully connected to Google Sheet!")
-            else:
-                self.connection_status = "Connection Failed"
-                self._update_status()
-                messagebox.showerror("Error", message)
-        
-        except Exception as e:
-            self.connection_status = "Error"
-            self._update_status()
-            messagebox.showerror("Error", f"An unexpected error occurred:\n\n{str(e)}")
     
     def _fetch_sheet_names(self):
         """Fetch the available sheet names from the Google Sheet"""
@@ -424,15 +351,21 @@ class GoogleSheetsDialog(tk.Toplevel):
             messagebox.showerror("Error", f"An unexpected error occurred:\n\n{str(e)}")
     
     def _save_settings(self):
-        """Save the settings to the config file"""
+        """Save the Google Sheets settings"""
         try:
             # Get values from UI
             url = self.url_var.get().strip()
             sheet_name = self.sheet_var.get().strip()
             tracking_col = self.tracking_col_var.get().strip().upper()
-            tracking_row = int(self.tracking_row_var.get())
             sku_col = self.sku_col_var.get().strip().upper()
-            sku_row = int(self.sku_row_var.get())
+            
+            # Get row values and convert to integers
+            try:
+                tracking_row = int(self.tracking_row_var.get().strip())
+                sku_row = int(self.sku_row_var.get().strip())
+            except ValueError:
+                messagebox.showerror("Error", "Row values must be numbers")
+                return
             
             # Validate inputs
             if not url:
@@ -442,8 +375,8 @@ class GoogleSheetsDialog(tk.Toplevel):
             if not sheet_name:
                 messagebox.showerror("Error", "Please select a sheet name")
                 return
-                
-            # Validate URL format
+            
+            # Validate URL
             is_valid, result = validate_sheet_url(url)
             if not is_valid:
                 messagebox.showerror("Error", result)
@@ -466,12 +399,30 @@ class GoogleSheetsDialog(tk.Toplevel):
             self.config_manager.settings.google_sheet_sku_row = sku_row
             
             # Save settings
-            if save_config(self.config_manager.settings):
+            try:
+                # Convert settings to dictionary
+                settings_dict = asdict(self.config_manager.settings)
+                
+                # Save to file
+                with open(self.config_manager.settings_file, 'w') as f:
+                    json.dump(settings_dict, f, indent=4)
+                
                 # Test connection before closing
                 try:
                     # Check for credentials file
                     creds_file = get_credentials_file_path()
                     if not file_exists(creds_file):
+                        self.config_manager.settings.google_sheets_connection_status = "Not Connected"
+                        
+                        # Save settings again with updated connection status
+                        settings_dict = asdict(self.config_manager.settings)
+                        with open(self.config_manager.settings_file, 'w') as f:
+                            json.dump(settings_dict, f, indent=4)
+                            
+                        # Call the update callback if it exists
+                        if self.update_callback:
+                            self.update_callback()
+                            
                         messagebox.showinfo("Settings Saved", "Settings saved successfully, but credentials file not found.\n\nPlease create a service account and download the credentials file.")
                         self.destroy()
                         return
@@ -481,27 +432,62 @@ class GoogleSheetsDialog(tk.Toplevel):
                     
                     if success:
                         self.connection_status = "Connected"
+                        self.config_manager.settings.google_sheets_connection_status = "Connected"
+                        
+                        # Save settings again with updated connection status
+                        settings_dict = asdict(self.config_manager.settings)
+                        with open(self.config_manager.settings_file, 'w') as f:
+                            json.dump(settings_dict, f, indent=4)
+                            
                         self._update_status()
+                        
+                        # Call the update callback if it exists
+                        if self.update_callback:
+                            self.update_callback()
+                            
                         messagebox.showinfo("Success", "Settings saved and connected to Google Sheet successfully!")
                         self.destroy()
                     else:
                         self.connection_status = "Settings Saved, Connection Failed"
+                        self.config_manager.settings.google_sheets_connection_status = "Connection Failed"
+                        
+                        # Save settings again with updated connection status
+                        settings_dict = asdict(self.config_manager.settings)
+                        with open(self.config_manager.settings_file, 'w') as f:
+                            json.dump(settings_dict, f, indent=4)
+                            
                         self._update_status()
-                        messagebox.showinfo("Settings Saved", f"Settings saved successfully, but could not connect to Google Sheet.\n\nError: {message}")
+                        
+                        # Call the update callback if it exists
+                        if self.update_callback:
+                            self.update_callback()
+                            
+                        messagebox.showwarning("Warning", f"Settings saved but connection failed: {message}")
                         self.destroy()
                         
-                except ImportError:
-                    messagebox.showinfo("Settings Saved", "Settings saved successfully, but required libraries not installed.\n\nPlease install gspread and oauth2client to connect to Google Sheets.")
-                    self.destroy()
                 except Exception as e:
-                    messagebox.showinfo("Settings Saved", f"Settings saved successfully, but an error occurred while testing the connection:\n\n{str(e)}")
+                    self.connection_status = "Settings Saved, Connection Error"
+                    self.config_manager.settings.google_sheets_connection_status = "Connection Error"
+                    
+                    # Save settings again with updated connection status
+                    settings_dict = asdict(self.config_manager.settings)
+                    with open(self.config_manager.settings_file, 'w') as f:
+                        json.dump(settings_dict, f, indent=4)
+                        
+                    self._update_status()
+                    
+                    # Call the update callback if it exists
+                    if self.update_callback:
+                        self.update_callback()
+                        
+                    messagebox.showwarning("Warning", f"Settings saved but error testing connection: {str(e)}")
                     self.destroy()
-            else:
-                messagebox.showerror("Error", "Failed to save settings.")
-        except ValueError:
-            messagebox.showerror("Error", "Invalid row number. Please enter a valid integer.")
+                    
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to save settings: {str(e)}")
+                
         except Exception as e:
-            messagebox.showerror("Error", f"An unexpected error occurred:\n\n{str(e)}")
+            messagebox.showerror("Error", f"An unexpected error occurred: {str(e)}")
     
     def center_window(self):
         """Center the window on the screen"""

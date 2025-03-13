@@ -1,9 +1,9 @@
 WELCOME WINDOW
 Maybe give some metadata? like Name: Variant, SKU times stamp? 
 
-Once the Create Label window is opened, close the Welcome window.
-Also make a setting for an alert reminder to scan it as reverse inbound
- 	Perhaps copy it so we can paste for now?
+Once the Create Label window is opened, close the Welcome window.=======> tried but did not work, had to load a backup.
+Also make a setting for an alert reminder to scan it as reverse inbound [X]
+ 	Perhaps copy it so we can paste for now? =======> DONE!
 
 Inside the Create Label window
 	Make it possible to Ctrl and shortcuts
