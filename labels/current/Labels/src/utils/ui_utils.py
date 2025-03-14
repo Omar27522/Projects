@@ -76,3 +76,28 @@ def make_window_modal(window, parent):
     window.lift()
     window.attributes('-topmost', True)
     window.after_idle(window.attributes, '-topmost', False)
+
+def create_modal_dialog(parent, title, width=400, height=300):
+    """
+    Create a modal dialog window
+    
+    Args:
+        parent: Parent window
+        title: Dialog title
+        width: Dialog width
+        height: Dialog height
+        
+    Returns:
+        dialog: The created dialog
+    """
+    # Create dialog window
+    window = tk.Toplevel(parent)
+    window.title(title)
+    window.geometry(f"{width}x{height}")
+    window.resizable(False, False)
+    window.configure(bg='white')
+    
+    # Center the dialog
+    center_window(window)
+    
+    return window

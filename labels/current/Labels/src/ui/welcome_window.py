@@ -21,7 +21,7 @@ from src.utils.sheets_operations import write_to_google_sheet, create_google_she
 from src.utils.returns_operations import load_returns_data, update_log_file, create_returns_dialog, create_edit_dialog
 from src.utils.settings_operations import create_settings_dialog, update_sheets_status_display
 from src.utils.dialog_handlers import (
-    create_user_dialog, create_label_dialog, create_labels_dialog, 
+    create_label_dialog, create_labels_dialog, 
     create_settings_dialog_handler, create_google_sheets_dialog_handler
 )
 
@@ -229,14 +229,171 @@ class WelcomeWindow(tk.Tk):
     
     def create_label_action(self):
         """Handler for Create Label button click"""
-        # Call the create_label_dialog function from our dialog_handlers module
-        create_label_dialog(self, self.config_manager, self.update_label_count)
+        try:
+            # Check if labels directory is set and exists
+            if not self.config_manager.settings.last_directory or not directory_exists(self.config_manager.settings.last_directory):
+                messagebox.showinfo("Labels Required", 
+                    "Please select a Labels directory before creating labels.\n\n"
+                    "Click the 'Settings' button to set your Labels directory.")
+                return
+            
+            # Get the path to the dialog launcher script
+            project_root = get_project_root()
+            launcher_script = os.path.join(project_root, 'launch_dialog.py')
+            
+            # Create the launcher script if it doesn't exist
+            if not file_exists(launcher_script):
+                with open(launcher_script, 'w') as f:
+                    f.write("""
+import os
+import sys
+import tkinter as tk
+from PIL import Image, ImageTk
+import ctypes
+
+# Add the parent directory to the Python path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+
+# Set DPI awareness before creating any windows
+try:
+    awareness = ctypes.c_int(2)  # PROCESS_PER_MONITOR_DPI_AWARE
+    ctypes.windll.shcore.SetProcessDpiAwareness(awareness)
+except AttributeError:
+    ctypes.windll.user32.SetProcessDPIAware()
+except Exception as e:
+    print(f"Failed to set DPI awareness: {e}")
+
+def set_taskbar_icon(dialog, icon_name):
+    try:
+        # Get the directory where the script is located
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        icon_path = os.path.join(script_dir, "assets", icon_name)
+        
+        if os.path.exists(icon_path):
+            # Load and set the icon using PhotoImage for the window icon
+            icon = tk.PhotoImage(file=icon_path)
+            dialog.iconphoto(True, icon)
+            
+            # Keep reference to prevent garbage collection
+            dialog._icon = icon
+            
+            # Set unique AppUserModelID for Windows taskbar
+            app_id = f'LabelMaker.{icon_name.split("_")[0]}'
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
+        else:
+            print(f"Icon file not found at {icon_path}")
+    except Exception as e:
+        print(f"Failed to set taskbar icon: {str(e)}")
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: python launch_dialog.py <dialog_type>")
+        sys.exit(1)
+        
+    dialog_type = sys.argv[1]
     
+    if dialog_type == "create_label":
+        from src.utils.dialog_handlers import create_label_dialog
+        from src.config.config_manager import ConfigManager
+        
+        # Create a dummy root window to avoid errors
+        root = tk.Tk()
+        root.withdraw()
+        
+        # Set the taskbar icon
+        set_taskbar_icon(root, "createlabels_64.png")
+        
+        # Create the dialog
+        config_manager = ConfigManager()
+        dialog = create_label_dialog(root, config_manager, lambda: None)
+        
+        # Run the dialog
+        root.mainloop()
+        
+    elif dialog_type == "returns_data":
+        from src.utils.dialog_handlers import create_labels_dialog
+        from src.config.config_manager import ConfigManager
+        
+        # Create a dummy root window to avoid errors
+        root = tk.Tk()
+        root.withdraw()
+        
+        # Set the taskbar icon
+        set_taskbar_icon(root, "returnsdata_64.png")
+        
+        # Create the dialog
+        dialog, _ = create_labels_dialog(root)
+        
+        # Run the dialog
+        root.mainloop()
+        
+    elif dialog_type == "settings":
+        from src.utils.dialog_handlers import create_settings_dialog_handler
+        from src.config.config_manager import ConfigManager
+        
+        # Create a dummy root window to avoid errors
+        root = tk.Tk()
+        root.withdraw()
+        
+        # Set the taskbar icon
+        set_taskbar_icon(root, "settings_64.png")
+        
+        # Create the dialog
+        config_manager = ConfigManager()
+        dialog = create_settings_dialog_handler(root, config_manager, lambda dir=None: None)
+        
+        # Run the dialog
+        root.mainloop()
+    elif dialog_type == "google_sheets":
+        from src.utils.dialog_handlers import create_google_sheets_dialog_handler
+        from src.config.config_manager import ConfigManager
+        
+        # Create a dummy root window to avoid errors
+        root = tk.Tk()
+        root.withdraw()
+        
+        # Set the taskbar icon
+        set_taskbar_icon(root, "settings_64.png")
+        
+        # Create the dialog
+        config_manager = ConfigManager()
+        dialog = create_google_sheets_dialog_handler(root, config_manager, None)
+        
+        # Run the dialog
+        root.mainloop()
+    else:
+        print(f"Unknown dialog type: {dialog_type}")
+        sys.exit(1)
+""")
+            
+            # Run the launcher script with the create_label argument
+            subprocess.Popen([sys.executable, launcher_script, "create_label"])
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to launch Create Label dialog: {str(e)}")
+
     def user_action(self):
         """Handler for User button click"""
-        # Call the create_user_dialog function from our dialog_handlers module
-        create_user_dialog(self, self.config_manager, self.update_label_count)
-    
+        try:
+            # Check if labels directory is set and exists
+            if not self.config_manager.settings.last_directory or not directory_exists(self.config_manager.settings.last_directory):
+                messagebox.showinfo("Labels Required", 
+                    "Please select a Labels directory before creating labels.\n\n"
+                    "Click the 'Settings' button to set your Labels directory.")
+                return
+            
+            # Get the path to the dialog launcher script
+            project_root = get_project_root()
+            launcher_script = os.path.join(project_root, 'launch_dialog.py')
+            
+            # Run the launcher script with the create_label argument
+            subprocess.Popen([sys.executable, launcher_script, "create_label"])
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to launch Create Label dialog: {str(e)}")
+
     def management_action(self):
         """Handler for Management button click"""
         try:
@@ -269,51 +426,151 @@ class WelcomeWindow(tk.Tk):
                     self.deiconify()
                     self.lift()
                     self.focus_force()
-                    return
-                # Check again after 1 second
-                self.after(1000, check_process)
-                
-            # Start monitoring the process
+                else:
+                    # Process still running, check again after 1 second
+                    self.after(1000, check_process)
+            
+            # Start checking the process
             self.after(1000, check_process)
             
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to open Label Maker: {str(e)}")
+            messagebox.showerror("Error", f"Failed to launch Label Maker: {str(e)}")
             self.deiconify()  # Show welcome window again
-    
+
     def labels_action(self):
         """Handler for Labels button click - Display and edit returns data"""
-        # Call the create_labels_dialog function from our dialog_handlers module
-        dialog, _ = create_labels_dialog(self)
-        
-        # Wait for the dialog to be closed
-        self.wait_window(dialog)
+        try:
+            # Get the path to the dialog launcher script
+            project_root = get_project_root()
+            launcher_script = os.path.join(project_root, 'launch_dialog.py')
+            
+            # Run the launcher script with the returns_data argument
+            subprocess.Popen([sys.executable, launcher_script, "returns_data"])
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to launch Returns Data dialog: {str(e)}")
 
     def settings_action(self):
         """Open settings dialog"""
-        # Call the create_settings_dialog_handler function from our dialog_handlers module
-        settings_dialog = create_settings_dialog_handler(
-            self,
-            self.config_manager,
-            self.update_label_count
-        )
-        
-        # Wait for the dialog to be closed
-        self.wait_window(settings_dialog)
+        try:
+            # Get the path to the dialog launcher script
+            project_root = get_project_root()
+            launcher_script = os.path.join(project_root, 'launch_dialog.py')
+            
+            # Run the launcher script with the settings argument
+            subprocess.Popen([sys.executable, launcher_script, "settings"])
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to launch Settings dialog: {str(e)}")
     
     def open_sheets_dialog(self):
         """Open the Google Sheets configuration dialog"""
-        # Call the create_google_sheets_dialog_handler function from our dialog_handlers module
-        sheets_dialog = create_google_sheets_dialog_handler(self, self.config_manager, self._update_sheets_status_display)
+        try:
+            # Get the path to the dialog launcher script
+            project_root = get_project_root()
+            launcher_script = os.path.join(project_root, 'launch_dialog.py')
+            
+            # Update the launcher script to include Google Sheets dialog
+            with open(launcher_script, 'r') as f:
+                content = f.read()
+            
+            if "google_sheets" not in content:
+                # Add Google Sheets dialog handling to the launcher script
+                with open(launcher_script, 'w') as f:
+                    # Find the position to insert the new code
+                    insert_pos = content.find("else:")
+                    if insert_pos != -1:
+                        new_content = content[:insert_pos] + """    elif dialog_type == "google_sheets":
+        from src.utils.dialog_handlers import create_google_sheets_dialog_handler
+        from src.config.config_manager import ConfigManager
         
-        # Wait for the dialog to be closed
-        self.wait_window(sheets_dialog)
+        # Create a dummy root window to avoid errors
+        root = tk.Tk()
+        root.withdraw()
         
-        # Reload config manager to get updated settings
-        self.config_manager = ConfigManager()
+        # Set the taskbar icon
+        set_taskbar_icon(root, "settings_64.png")
         
-        # Update the Google Sheets status display
-        self._update_sheets_status_display()
+        # Create the dialog
+        config_manager = ConfigManager()
+        dialog = create_google_sheets_dialog_handler(root, config_manager, None)
+        
+        # Run the dialog
+        root.mainloop()
+        
+""" + content[insert_pos:]
+                        f.write(new_content)
+            
+            # Run the launcher script with the google_sheets argument
+            subprocess.Popen([sys.executable, launcher_script, "google_sheets"])
+            
+            # Reload config manager after a delay to get updated settings
+            def reload_config():
+                self.config_manager = ConfigManager()
+                self._update_sheets_status_display()
+            
+            # Schedule the config reload after a few seconds
+            self.after(5000, reload_config)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to launch Google Sheets dialog: {str(e)}")
     
+    def update_label_count(self, directory=None):
+        """Update the label count display based on the current directory"""
+        # Get the labels directory from config
+        labels_dir = directory or self.config_manager.settings.last_directory
+        
+        # Count labels if directory exists using our utility function
+        label_count = count_files_in_directory(labels_dir)
+        
+        # Update the label count display
+        if hasattr(self, 'label_count_label'):
+            self.label_count_label.config(text=f"{label_count} Labels")
+        
+        if hasattr(self, 'label_count_var'):
+            self.label_count_var.set(str(label_count))
+    
+    def center_window(self, window=None):
+        """
+        Center a window on the screen
+        
+        Args:
+            window: Window to center (defaults to self)
+        """
+        if window is None:
+            window = self
+            
+        center_window(window)
+    
+    def _save_settings(self, dialog, directory):
+        """
+        Save settings to the config file
+        
+        Args:
+            dialog: Settings dialog to close on success
+            directory: Labels directory path
+        """
+        try:
+            # Validate directory
+            if directory and not directory_exists(directory):
+                messagebox.showerror("Error", "The selected directory does not exist.")
+                return
+                
+            # Update settings
+            self.config_manager.settings.last_directory = directory
+            
+            # Save settings using the config manager
+            if self.config_manager.save_settings():
+                # Close dialog
+                dialog.destroy()
+                
+                # Update label count
+                self.update_label_count()
+            else:
+                messagebox.showerror("Error", "Failed to save settings.")
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred while saving settings: {str(e)}")
+
     def _update_sheets_status_display(self):
         """Update the Google Sheets status display in the welcome window"""
         if hasattr(self, 'sheets_status_label'):
@@ -406,59 +663,3 @@ class WelcomeWindow(tk.Tk):
             messagebox.showerror("Error", "Required libraries not installed. Please install gspread and oauth2client to connect to Google Sheets.")
         except Exception as e:
             messagebox.showerror("Error", f"An unexpected error occurred:\n\n{str(e)}")
-    
-    def update_label_count(self, directory=None):
-        """Update the label count display based on the current directory"""
-        # Get the labels directory from config
-        labels_dir = directory or self.config_manager.settings.last_directory
-        
-        # Count labels if directory exists using our utility function
-        label_count = count_files_in_directory(labels_dir)
-        
-        # Update the label count display
-        if hasattr(self, 'label_count_label'):
-            self.label_count_label.config(text=f"{label_count} Labels")
-        
-        if hasattr(self, 'label_count_var'):
-            self.label_count_var.set(str(label_count))
-    
-    def center_window(self, window=None):
-        """
-        Center a window on the screen
-        
-        Args:
-            window: Window to center (defaults to self)
-        """
-        if window is None:
-            window = self
-            
-        center_window(window)
-    
-    def _save_settings(self, dialog, directory):
-        """
-        Save settings to the config file
-        
-        Args:
-            dialog: Settings dialog to close on success
-            directory: Labels directory path
-        """
-        try:
-            # Validate directory
-            if directory and not directory_exists(directory):
-                messagebox.showerror("Error", "The selected directory does not exist.")
-                return
-                
-            # Update settings
-            self.config_manager.settings.last_directory = directory
-            
-            # Save settings using the config manager
-            if self.config_manager.save_settings():
-                # Close dialog
-                dialog.destroy()
-                
-                # Update label count
-                self.update_label_count()
-            else:
-                messagebox.showerror("Error", "Failed to save settings.")
-        except Exception as e:
-            messagebox.showerror("Error", f"An error occurred while saving settings: {str(e)}")

@@ -1,3 +1,6 @@
+When the Create Label window is focused, do not bring forth Welcome. Keep the Create Label window in front of all other windows like it is right now.
+Make the Words Ver. at the bottom right corner clickable, an SKU window will show up, for quick label printing, only SKU needed, and save it on a quick print local text file
+
 WELCOME WINDOW
 Maybe give some metadata? like Name: Variant, SKU times stamp? 
 
@@ -7,7 +10,7 @@ Also make a setting for an alert reminder to scan it as reverse inbound [X]
 
 Inside the Create Label window
 	Make it possible to Ctrl and shortcuts
-	Add another button that will search for a label if one is not found, make the search better than before????? I'M not sure about this one just yet.
+	Add another button that will search for a label if one is not found, make the search better than before????? I'm not sure about this one just yet.
 	Add another button that will bring the Labels forth. I want to edit, but not delete entries. 
 	Make the Window position itself where it last was. like, if I open it again, it opens on the left top corner of the screen.
 	Tab onto the SKU, when a Tracking number is scanned.

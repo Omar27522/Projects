@@ -113,11 +113,12 @@ def create_returns_dialog(parent):
     # Create a dialog window for viewing and editing returns data
     dialog = tk.Toplevel(parent)
     dialog.title("Returns Data")
-    dialog.geometry("800x500")
+    dialog.geometry("800x600")
     dialog.resizable(True, True)
     dialog.configure(bg='white')
-    dialog.transient(parent)  # Make dialog modal
-    dialog.grab_set()  # Make dialog modal
+    # Remove transient and grab_set to allow separate taskbar icon
+    # dialog.transient(parent)  # Make dialog modal
+    # dialog.grab_set()  # Make dialog modal
     
     # Center the dialog
     center_window(dialog)
@@ -208,12 +209,13 @@ def create_edit_dialog(parent, tree, selected_item):
     
     # Create edit dialog
     edit_dialog = tk.Toplevel(parent)
-    edit_dialog.title("Edit Record")
-    edit_dialog.geometry("500x450")  
-    edit_dialog.resizable(True, True)  
+    edit_dialog.title("Edit Return Record")
+    edit_dialog.geometry("500x400")
+    edit_dialog.resizable(False, False)
     edit_dialog.configure(bg='white')
-    edit_dialog.transient(parent)
-    edit_dialog.grab_set()
+    # Remove transient and grab_set to allow separate taskbar icon
+    # edit_dialog.transient(parent)
+    # edit_dialog.grab_set()
     
     # Center the dialog
     center_window(edit_dialog)

@@ -25,11 +25,12 @@ def create_settings_dialog(parent, config_manager, update_label_count_callback, 
     # Create settings dialog
     settings_dialog = tk.Toplevel(parent)
     settings_dialog.title("Settings")
-    settings_dialog.geometry("600x400")  # Reduced height since we're removing sections
+    settings_dialog.geometry("500x400")
     settings_dialog.resizable(False, False)
     settings_dialog.configure(bg='white')
-    settings_dialog.transient(parent)  # Make dialog modal
-    settings_dialog.grab_set()  # Make dialog modal
+    # Remove transient and grab_set to allow separate taskbar icon
+    # settings_dialog.transient(parent)  # Make dialog modal
+    # settings_dialog.grab_set()  # Make dialog modal
     
     # Center the dialog
     center_window(settings_dialog)

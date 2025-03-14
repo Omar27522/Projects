@@ -44,11 +44,13 @@ def write_to_google_sheet(config_manager, tracking_number, sku, status_callback=
         sheet_id = result
         
         # Get authorized client
-        client = get_authorized_client(creds_file)
-        if not client:
+        success, client_result = get_authorized_client()
+        if not success:
             if status_callback:
-                status_callback("Failed to authorize Google Sheets client", 'red')
-            return False, "Failed to authorize Google Sheets client"
+                status_callback(f"Failed to authorize Google Sheets client: {client_result}", 'red')
+            return False, f"Failed to authorize Google Sheets client: {client_result}"
+        
+        client = client_result
         
         # Open the spreadsheet
         spreadsheet = client.open_by_key(sheet_id)
@@ -100,15 +102,10 @@ def create_google_sheets_dialog(parent, config_manager, update_callback=None):
     Returns:
         GoogleSheetsDialog: The created dialog
     """
+    # Import here to avoid circular imports
     from src.ui.google_sheets_dialog import GoogleSheetsDialog
     
     # Create the dialog
-    sheets_dialog = GoogleSheetsDialog(parent, config_manager, update_callback)
+    dialog = GoogleSheetsDialog(parent, config_manager, update_callback)
     
-    # Make the dialog modal
-    sheets_dialog.transient(parent)
-    sheets_dialog.grab_set()
-    sheets_dialog.focus_force()
-    
-    # Return the dialog for further handling
-    return sheets_dialog
+    return dialog

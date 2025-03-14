@@ -165,8 +165,9 @@ def set_taskbar_icon(root):
             # Keep reference to prevent garbage collection
             root._icon = icon
 
-            # Set the Windows taskbar icon
-            myappid = 'labelmaker.app.ver3.0'
+            # Set the Windows taskbar icon with a unique AppUserModelID
+            # Use a completely different pattern from dialog windows
+            myappid = 'LabelMaker.WelcomeWindow.1.0'
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
         else:
             logger.warning(f"Icon file not found at {icon_path}")
@@ -176,7 +177,7 @@ def set_taskbar_icon(root):
                 icon = tk.PhotoImage(file=icon_path)
                 root.iconphoto(True, icon)
                 root._icon = icon
-                myappid = 'labelmaker.app.ver3.0'
+                myappid = 'LabelMaker.WelcomeWindow.1.0'
                 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
             else:
                 logger.warning(f"Icon file not found at alternate path {icon_path}")
