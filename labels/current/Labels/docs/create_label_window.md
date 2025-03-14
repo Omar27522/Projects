@@ -19,6 +19,8 @@ The Create Label window is implemented in the `dialog_handlers.py` file through 
    - When the user presses Enter after typing a tracking number, it is automatically copied to the clipboard
    - Focus automatically moves to the SKU field
    - This streamlines the workflow when the tracking number needs to be pasted into the SKU field
+   - Eliminates the need for manual copying and tabbing, reducing user effort and potential errors
+   - Implemented in both the standard Create Label dialog and the User dialog variant
 
 3. **Mirror Print Toggle**:
    - Button to toggle mirror printing on/off
@@ -37,11 +39,45 @@ The Create Label window is implemented in the `dialog_handlers.py` file through 
    - Uses PyAutoGUI to automatically press Enter after sending to the printer
    - Fallback to opening the image if printing fails
 
+## Enhanced Workflow with Auto-Copy and Tab
+
+The auto-copy and tab functionality significantly improves the user experience by:
+
+1. **Streamlining Data Entry**:
+   - Automatically copies the tracking number to the clipboard when the user presses Enter
+   - Automatically moves focus to the SKU field without requiring manual tabbing
+   - Makes it easier to paste the tracking number into the SKU field if needed
+
+2. **Implementation Details**:
+   ```python
+   def on_tracking_enter(event):
+       # Get the tracking number
+       tracking_number = tracking_var.get().strip()
+       
+       # Copy to clipboard
+       root.clipboard_clear()
+       root.clipboard_append(tracking_number)
+       
+       # Move focus to SKU field
+       sku_entry.focus_set()
+       
+       return "break"  # Prevent default Enter behavior
+   
+   # Bind Enter key to the tracking entry field
+   tracking_entry.bind("<Return>", on_tracking_enter)
+   ```
+
+3. **User Experience Benefits**:
+   - Reduces the number of keystrokes and mouse clicks required
+   - Minimizes the chance of transcription errors
+   - Speeds up the label creation process
+   - Particularly useful when the tracking number and SKU are identical or related
+
 ## Usage Flow
 
 1. User opens the Create Label window from the welcome screen
 2. User enters a tracking number and presses Enter
-   - The tracking number is copied to the clipboard
+   - The tracking number is automatically copied to the clipboard
    - Focus moves to the SKU field
 3. User enters an SKU (optionally pasting the tracking number)
 4. User clicks "Print Label" or presses Enter
@@ -91,3 +127,14 @@ def create_label_dialog(parent, config_manager, update_label_count_callback):
 - **Barcode Operations**: Utility functions for barcode generation and printing
 - **Google Sheets Integration**: Functions for writing data to Google Sheets
 - **Configuration Manager**: For storing and retrieving settings
+
+## Consolidated Functionality
+
+The Label Maker application has consolidated the label printing functionality by:
+
+1. Removing the redundant `create_user_dialog` function
+2. Updating the `user_action` method to call `create_label_action`
+3. Enhancing the `create_label_dialog` function to include SKU validation
+4. Using the same dialog for both User and Create Label buttons
+
+This simplification ensures there's only one way to print labels through the Create Label dialog, making the application more intuitive and the codebase more maintainable with less duplicate code.

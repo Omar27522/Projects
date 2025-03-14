@@ -152,7 +152,7 @@ def cleanup():
         logger.error(f"Error during cleanup: {str(e)}")
 
 def set_taskbar_icon(root):
-    """Set the taskbar icon and Windows taskbar icon"""
+    """Set the taskbar icon"""
     try:
         # Get the directory where the script is located
         script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -161,14 +161,11 @@ def set_taskbar_icon(root):
         if os.path.exists(icon_path):
             # Load and set the icon using PhotoImage for the window icon
             icon = tk.PhotoImage(file=icon_path)
-            root.iconphoto(True, icon)
+            root.iconphoto(True, icon)  # True makes this the default for all future windows
             # Keep reference to prevent garbage collection
             root._icon = icon
-
-            # Set the Windows taskbar icon with a unique AppUserModelID
-            # Use a completely different pattern from dialog windows
-            myappid = 'LabelMaker.WelcomeWindow.1.0'
-            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+            
+            print(f"Successfully set taskbar icon from {icon_path}")
         else:
             logger.warning(f"Icon file not found at {icon_path}")
             # Try alternate path
@@ -177,8 +174,7 @@ def set_taskbar_icon(root):
                 icon = tk.PhotoImage(file=icon_path)
                 root.iconphoto(True, icon)
                 root._icon = icon
-                myappid = 'LabelMaker.WelcomeWindow.1.0'
-                ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+                print(f"Successfully set taskbar icon from alternate path {icon_path}")
             else:
                 logger.warning(f"Icon file not found at alternate path {icon_path}")
     except Exception as e:
@@ -199,90 +195,36 @@ if __name__ == "__main__":
             # Another instance is already running
             logger.info("Application is already running. Exiting.")
             
-            # Show a warning message
+            # Show a message to the user
             try:
-                import ctypes
-                ctypes.windll.user32.MessageBoxW(0, 
-                    "Label Maker is already running.\n\nPlease check your taskbar or system tray for the existing application.", 
-                    "Label Maker - Warning", 
-                    0x30)  # 0x30 = MB_ICONWARNING | MB_OK
+                import tkinter.messagebox as messagebox
+                messagebox.showinfo("Label Maker", "Label Maker is already running.")
             except:
-                # Fall back to tkinter if ctypes fails
-                tk.messagebox.showwarning("Label Maker - Warning", 
-                    "Label Maker is already running.\n\nPlease check your taskbar or system tray for the existing application.")
-            
+                pass
+                
             sys.exit(0)
         
-        # Create the welcome window
-        app = WelcomeWindow()
-        
-        # Set the app instance in the single instance handler
-        single_instance.set_app(app)
-        
         # Set the taskbar icon
-        set_taskbar_icon(app)
+        # This MUST be done before creating any windows
+        myappid = 'LabelMaker.WelcomeWindow.1.0'
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+        logger.info(f"Set AppUserModelID to {myappid}")
+
+        # Create the application
+        root = WelcomeWindow()
+
+        # Set the window icon
+        set_taskbar_icon(root)
         
-        # Register cleanup for the single instance handler
+        # Set the application reference in the single instance app
+        single_instance.set_app(root)
+        
+        # Register cleanup function
         atexit.register(single_instance.cleanup)
         
-        # Create a file association for .pyw files to ensure clicking on main.pyw
-        # will use the single instance mechanism
-        try:
-            import winreg
-            
-            # Get the path to the Python executable
-            python_exe = sys.executable
-            
-            # Get the full path to this script
-            script_path = os.path.abspath(__file__)
-            
-            # Create a registry key for the file association
-            # This is done silently and only affects this user's settings
-            try:
-                # Check if we have write access to the registry
-                test_key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, r"Software\Classes\Test")
-                winreg.CloseKey(test_key)
-                winreg.DeleteKey(winreg.HKEY_CURRENT_USER, r"Software\Classes\Test")
-                
-                # We have access, so create the file association
-                key_path = r"Software\Classes\LabelMakerApp"
-                key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, key_path)
-                winreg.SetValue(key, "", winreg.REG_SZ, "Label Maker Application")
-                winreg.CloseKey(key)
-                
-                # Create command key
-                cmd_key_path = f"{key_path}\\shell\\open\\command"
-                cmd_key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, cmd_key_path)
-                winreg.SetValue(cmd_key, "", winreg.REG_SZ, f'"{python_exe}" "{script_path}"')
-                winreg.CloseKey(cmd_key)
-                
-                # Associate .labelmaker extension
-                ext_key_path = r"Software\Classes\.labelmaker"
-                ext_key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, ext_key_path)
-                winreg.SetValue(ext_key, "", winreg.REG_SZ, "LabelMakerApp")
-                winreg.CloseKey(ext_key)
-                
-                logger.info("File association created successfully")
-            except Exception as e:
-                # If we can't create the registry keys, just log it and continue
-                logger.warning(f"Could not create file association: {str(e)}")
-        except ImportError:
-            # If winreg is not available, just log it and continue
-            logger.warning("winreg module not available, skipping file association")
-        
-        # Center the window
-        app.center_window()
-        
-        # Start the main loop
-        app.mainloop()
+        # Start the application
+        root.mainloop()
     except Exception as e:
-        # Log any errors during startup
-        logger.error(f"Error during startup: {str(e)}")
+        logger.error(f"Error in main: {str(e)}")
         traceback.print_exc()
-        
-        # Show error message to user
-        try:
-            error_msg = f"An error occurred during startup:\n\n{str(e)}\n\nPlease check the logs for details."
-            tk.messagebox.showerror("Error", error_msg)
-        except:
-            pass  # If showing the error dialog fails, at least we logged the error
+        sys.exit(1)

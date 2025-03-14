@@ -210,19 +210,25 @@ def create_edit_dialog(parent, tree, selected_item):
     # Create edit dialog
     edit_dialog = tk.Toplevel(parent)
     edit_dialog.title("Edit Return Record")
-    edit_dialog.geometry("500x400")
+    edit_dialog.geometry("500x450")  # Increased height to accommodate buttons
     edit_dialog.resizable(False, False)
     edit_dialog.configure(bg='white')
-    # Remove transient and grab_set to allow separate taskbar icon
-    # edit_dialog.transient(parent)
-    # edit_dialog.grab_set()
+    # Make dialog transient for proper taskbar behavior
+    edit_dialog.transient(parent)
+    # Set dialog icon
+    try:
+        from src.utils.dialog_handlers import set_taskbar_icon
+        set_taskbar_icon(edit_dialog, "icon_64.png")
+    except Exception as e:
+        print(f"Failed to set dialog icon: {e}")
     
     # Center the dialog
     center_window(edit_dialog)
     
-    # Create a main frame to hold everything
-    main_frame = tk.Frame(edit_dialog, bg='white')
-    main_frame.pack(fill='both', expand=True, padx=10, pady=10)
+    # Create a main frame to hold everything with fixed height to ensure buttons are visible
+    main_frame = tk.Frame(edit_dialog, bg='white', height=320)
+    main_frame.pack(fill='both', expand=False, padx=10, pady=10)
+    main_frame.pack_propagate(False)  # Prevent the frame from shrinking
     
     # Create title section at the top (outside the scrollable area)
     title_frame, _, _ = create_title_section(main_frame, "Edit Record")
@@ -291,8 +297,9 @@ def create_edit_dialog(parent, tree, selected_item):
     padding_frame.pack(fill='x')
     
     # Create a separate frame for buttons at the bottom of the dialog
-    button_container = tk.Frame(edit_dialog, bg='white', pady=10)
+    button_container = tk.Frame(edit_dialog, bg='white', height=70)
     button_container.pack(side='bottom', fill='x', padx=20, pady=10)
+    button_container.pack_propagate(False)  # Prevent the frame from shrinking
     
     # Create a frame for the buttons inside the container
     button_frame = tk.Frame(button_container, bg='white')
@@ -349,7 +356,7 @@ def create_edit_dialog(parent, tree, selected_item):
         '#A5D6A7',  # Light Green
         save_changes
     )
-    save_button.config(height=5, font=('Arial', 12, 'bold'), width=12)
+    save_button.config(height=2, font=('Arial', 12, 'bold'), width=12)
     save_button.pack(side='left', padx=(0, 20))
     
     # Cancel Button
@@ -360,7 +367,7 @@ def create_edit_dialog(parent, tree, selected_item):
         '#E0E0E0',  # Light Gray
         edit_dialog.destroy
     )
-    cancel_button.config(height=5, font=('Arial', 12, 'bold'), width=12)
+    cancel_button.config(height=2, font=('Arial', 12, 'bold'), width=12)
     cancel_button.pack(side='left')
     
     # Add mouse wheel scrolling

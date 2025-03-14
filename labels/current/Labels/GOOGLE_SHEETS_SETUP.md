@@ -53,6 +53,36 @@ pip install gspread oauth2client
 6. Click "Test Connection" to verify that the connection works
 7. Click "Save" to save your settings
 
+## Connection Status Display
+
+The welcome window displays the current Google Sheets connection status:
+
+- **Green "Connected"**: Successfully connected to the configured Google Sheet
+- **Orange "Configured (Not Tested)"**: Configuration exists but hasn't been tested
+- **Red "Not Connected"**: Not configured or connection failed
+
+The status indicator is clickable:
+- Clicking on the "Configured (Not Tested)" status will test the connection without opening the full configuration dialog
+- The text changes color and becomes underlined when hovered over, indicating it's clickable
+- This provides a quick way to verify the connection status without navigating through the settings menu
+
+## Persistent Connection Status
+
+The Google Sheets connection status persists between application sessions:
+
+1. The connection status is saved in the `label_maker_settings.json` file
+2. When the application starts, it automatically verifies the connection using the saved settings
+3. The status display is updated to reflect the current connection state
+4. No need to reconnect or reconfigure when restarting the application
+
+## Real-time Status Updates
+
+The Google Sheets status updates immediately when changes are made:
+
+1. When you save settings in the Google Sheets dialog, the status in the welcome window updates immediately
+2. The application forces the UI to refresh using `update_idletasks()` to ensure the status is visible
+3. Status changes are reflected without requiring the application to be restarted
+
 ## Using the Google Sheets Integration
 
 Once configured, the Label Maker application will automatically write tracking numbers and SKUs to your Google Sheet when you create a new label.
@@ -71,3 +101,5 @@ If you encounter issues with the Google Sheets integration, check the following:
 3. Check that the worksheet name is correct
 4. Ensure that the Google Sheets API is enabled for your project
 5. Verify that the required Python libraries are installed
+6. Try clicking the status indicator to test the connection
+7. Check the application logs for detailed error messages

@@ -7,7 +7,6 @@ import tkinter as tk
 from tkinter import messagebox
 import os
 import datetime
-import logging
 import sys
 import ctypes
 from PIL import Image, ImageTk
@@ -22,12 +21,9 @@ from src.utils.returns_operations import load_returns_data, update_log_file, cre
 from src.utils.settings_operations import create_settings_dialog
 from src.config.config_manager import ConfigManager
 
-# Cache for icon images to improve performance
-_icon_cache = {}
-
 def set_taskbar_icon(dialog, icon_name):
     """
-    Set the taskbar icon for a dialog
+    Set the window icon for a dialog without changing the taskbar icon
     
     Args:
         dialog: Dialog to set icon for
@@ -44,29 +40,18 @@ def set_taskbar_icon(dialog, icon_name):
         icon_path = os.path.join(script_dir, "assets", icon_name)
         
         if os.path.exists(icon_path):
-            # Check if icon is already in cache
-            if icon_path in _icon_cache:
-                icon = _icon_cache[icon_path]
-            else:
-                # Load and cache the icon
-                icon = tk.PhotoImage(file=icon_path)
-                _icon_cache[icon_path] = icon
-            
-            # Set the icon for the dialog
-            dialog.iconphoto(True, icon)
+            # Load and set the icon using PhotoImage for the window icon
+            icon = tk.PhotoImage(file=icon_path)
+            dialog.iconphoto(False, icon)  # False means only set for this window
             
             # Keep reference to prevent garbage collection
-            dialog.icon_image = icon
+            dialog._icon = icon  # Use _icon to be consistent with main window
             
-            # Set unique AppUserModelID for Windows taskbar
-            # Use a different pattern to avoid affecting the main window
-            dialog_type = icon_name.split("_")[0]
-            app_id = f'com.labelmaker.dialog.{dialog_type}'
-            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
+            print(f"Successfully set window icon for dialog from {icon_path}")
         else:
             print(f"Icon file not found at {icon_path}")
     except Exception as e:
-        print(f"Failed to set taskbar icon: {str(e)}")
+        print(f"Failed to set window icon: {str(e)}")
 
 def create_label_dialog(parent, config_manager, update_label_count_callback):
     """
@@ -89,7 +74,10 @@ def create_label_dialog(parent, config_manager, update_label_count_callback):
     dialog.resizable(False, False)
     dialog.configure(bg='white')
     
-    # Set taskbar icon
+    # Make this dialog a transient window of the parent
+    dialog.transient(parent)
+    
+    # Set window icon (not taskbar icon)
     set_taskbar_icon(dialog, "createlabels_64.png")
     
     # Create a frame for the content
@@ -168,7 +156,7 @@ def create_label_dialog(parent, config_manager, update_label_count_callback):
     initial_color = '#90EE90' if config_manager.settings.mirror_print else '#C71585'
     initial_relief = 'sunken' if config_manager.settings.mirror_print else 'raised'
     
-    mirror_btn = tk.Button(options_frame, text=" 🖨️ ", bg=initial_color, 
+    mirror_btn = tk.Button(options_frame, text=" ", bg=initial_color, 
                            relief=initial_relief, width=3,
                            font=('TkDefaultFont', 14), anchor='center')
     
@@ -297,7 +285,10 @@ def create_labels_dialog(parent):
     # Create a dialog for viewing and editing returns data
     dialog, tree, content_frame = create_returns_dialog(parent)
     
-    # Set taskbar icon
+    # Make this dialog a transient window of the parent
+    dialog.transient(parent)
+    
+    # Set window icon (not taskbar icon)
     set_taskbar_icon(dialog, "returnsdata_64.png")
     
     # Load returns data
@@ -349,124 +340,58 @@ def create_labels_dialog(parent):
 
 def create_settings_dialog_handler(parent, config_manager, update_label_count_callback):
     """
-    Handle the creation of the settings dialog and related operations
+    Create a settings dialog with handlers for saving settings.
     
     Args:
-        parent: Parent window
-        config_manager: Configuration manager instance
-        update_label_count_callback: Callback to update label count after settings changes
+        parent: The parent window
+        config_manager: The configuration manager
+        update_label_count_callback: Callback for updating the label count
         
     Returns:
-        None
+        The created settings dialog
     """
-    # Function to open Google Sheets dialog
-    def open_sheets_dialog():
-        nonlocal config_manager
-        
-        # Create Google Sheets dialog
-        sheets_dialog = create_google_sheets_dialog_handler(parent, config_manager)
-        
-        # Wait for the dialog to be closed
-        parent.wait_window(sheets_dialog)
-        
-        # Reload config manager to get updated settings
-        config_manager = ConfigManager()
-        
-        # Update the Google Sheets status in the settings dialog
-        if hasattr(sheets_status_label, 'config'):
-            # Check if Google Sheets is configured and connected
-            sheets_config = config_manager.settings
-            
-            # Default status
-            status_text = "Not Connected"
-            status_color = 'red'
-            
-            # Check if Google Sheets is configured and connected
-            if (hasattr(sheets_config, 'google_sheets_connection_status') and 
-                sheets_config.google_sheets_connection_status == "Connected"):
-                
-                status_text = "Connected"
-                status_color = 'green'
-            # Fallback to checking if configuration exists
-            elif (hasattr(sheets_config, 'google_sheet_url') and 
-                sheets_config.google_sheet_url and 
-                hasattr(sheets_config, 'google_sheet_name') and 
-                sheets_config.google_sheet_name):
-                
-                status_text = "Configured (Not Tested)"
-                status_color = 'orange'
-            
-            # Update the status label
-            sheets_status_label.config(text=status_text, fg=status_color)
-    
-    # Function to save settings
+    # Function to handle saving settings
     def save_settings(dialog, directory):
-        # Validate directory
-        if not directory:
-            messagebox.showerror("Error", "Please select a labels directory.")
-            return
-        
-        # Check if directory exists
-        if not directory_exists(directory):
-            # Ask if we should create the directory
-            create_dir = messagebox.askyesno(
-                "Directory Not Found", 
-                f"The directory '{directory}' does not exist. Would you like to create it?"
-            )
-            
-            if create_dir:
-                try:
-                    os.makedirs(directory)
-                except Exception as e:
-                    messagebox.showerror("Error", f"Failed to create directory: {str(e)}")
-                    return
-            else:
-                return
-        
-        # Save settings
+        # Save the directory to settings
         config_manager.settings.last_directory = directory
         config_manager.save_settings()
         
-        # Update label count
-        update_label_count_callback(directory)
-        
-        # Close dialog
+        # Close the dialog
         dialog.destroy()
     
+    # Function to open Google Sheets dialog
+    def open_sheets_dialog():
+        # Create Google Sheets dialog
+        sheets_dialog = create_google_sheets_dialog_handler(parent, config_manager)
+        
+        # Return the dialog so it can be managed by the settings dialog
+        return sheets_dialog
+    
     # Create settings dialog
-    settings_dialog, directory_var, label_count_var = create_settings_dialog(
+    settings_dialog, _ = create_settings_dialog(
         parent, 
         config_manager, 
         update_label_count_callback, 
-        open_sheets_dialog,
+        open_sheets_dialog, 
         save_settings
     )
     
-    # Set taskbar icon
-    set_taskbar_icon(settings_dialog, "settings_64.png")
+    # Make this dialog a transient window of the parent
+    settings_dialog.transient(parent)
     
-    # Get reference to sheets status label
-    for widget in settings_dialog.winfo_children():
-        if isinstance(widget, tk.Frame):
-            for child in widget.winfo_children():
-                if isinstance(child, tk.LabelFrame) and child.cget('text') == "Google Sheets Integration":
-                    for grandchild in child.winfo_children():
-                        if isinstance(grandchild, tk.Frame):
-                            for great_grandchild in grandchild.winfo_children():
-                                if isinstance(great_grandchild, tk.Label) and great_grandchild.cget('text') != "Status:":
-                                    sheets_status_label = great_grandchild
-                                    break
+    # Set window icon (not taskbar icon)
+    set_taskbar_icon(settings_dialog, "settings_64.png")
     
     return settings_dialog
 
 def create_google_sheets_dialog_handler(parent, config_manager, update_callback=None):
     """
-    Handle the creation of the Google Sheets configuration dialog
+    Create a Google Sheets configuration dialog with handlers for saving settings.
     
     Args:
-        parent: Parent window
-        config_manager: Configuration manager instance
-        update_callback: Optional callback to update the status display after dialog closes
+        parent: The parent window
+        config_manager: The configuration manager
+        update_callback: Optional callback to update the UI after settings are saved
         
     Returns:
         The created Google Sheets dialog
@@ -474,7 +399,10 @@ def create_google_sheets_dialog_handler(parent, config_manager, update_callback=
     # Create Google Sheets dialog
     sheets_dialog = create_google_sheets_dialog(parent, config_manager, update_callback)
     
-    # Set taskbar icon
-    set_taskbar_icon(sheets_dialog, "settings_64.png")
+    # Make this dialog a transient window of the parent
+    sheets_dialog.transient(parent)
+    
+    # Set window icon (not taskbar icon)
+    set_taskbar_icon(sheets_dialog, "icon_64.png")
     
     return sheets_dialog

@@ -78,6 +78,14 @@ class WelcomeWindow(tk.Tk):
 
         # Initialize config manager
         self.config_manager = ConfigManager()
+        
+        # Track open dialogs to prevent duplicates
+        self.open_dialogs = {
+            'create_label': None,
+            'returns_data': None,
+            'settings': None,
+            'google_sheets': None
+        }
 
         # Window setup
         self.title("Welcome")
@@ -105,12 +113,12 @@ class WelcomeWindow(tk.Tk):
         self._create_version_label()
         
         # Create Google Sheets status display
-        sheets_status_frame, self.sheets_status_label = create_sheets_status_display(
+        self.sheets_status_frame, self.sheets_status_label = create_sheets_status_display(
             self,
             "Not Connected",
             "red"
         )
-        sheets_status_frame.pack(side='left', anchor='sw', padx=10, pady=10)
+        self.sheets_status_frame.pack(side='left', anchor='sw', padx=10, pady=10)
         
         # Initialize the Google Sheets status display
         self._update_sheets_status_display()
@@ -229,171 +237,41 @@ class WelcomeWindow(tk.Tk):
     
     def create_label_action(self):
         """Handler for Create Label button click"""
-        try:
-            # Check if labels directory is set and exists
-            if not self.config_manager.settings.last_directory or not directory_exists(self.config_manager.settings.last_directory):
-                messagebox.showinfo("Labels Required", 
-                    "Please select a Labels directory before creating labels.\n\n"
-                    "Click the 'Settings' button to set your Labels directory.")
+        # Check if dialog is already open
+        if self.open_dialogs['create_label'] is not None:
+            # If dialog exists but was destroyed, remove the reference
+            if not self.open_dialogs['create_label'].winfo_exists():
+                self.open_dialogs['create_label'] = None
+            else:
+                # Dialog exists, bring it to front
+                dialog = self.open_dialogs['create_label']
+                
+                # Check if dialog is minimized (iconified)
+                if dialog.state() == 'iconic':
+                    dialog.deiconify()  # Restore the window
+                
+                dialog.lift()
+                dialog.focus_force()
                 return
-            
-            # Get the path to the dialog launcher script
-            project_root = get_project_root()
-            launcher_script = os.path.join(project_root, 'launch_dialog.py')
-            
-            # Create the launcher script if it doesn't exist
-            if not file_exists(launcher_script):
-                with open(launcher_script, 'w') as f:
-                    f.write("""
-import os
-import sys
-import tkinter as tk
-from PIL import Image, ImageTk
-import ctypes
-
-# Add the parent directory to the Python path
-current_dir = os.path.dirname(os.path.abspath(__file__))
-if current_dir not in sys.path:
-    sys.path.insert(0, current_dir)
-
-# Set DPI awareness before creating any windows
-try:
-    awareness = ctypes.c_int(2)  # PROCESS_PER_MONITOR_DPI_AWARE
-    ctypes.windll.shcore.SetProcessDpiAwareness(awareness)
-except AttributeError:
-    ctypes.windll.user32.SetProcessDPIAware()
-except Exception as e:
-    print(f"Failed to set DPI awareness: {e}")
-
-def set_taskbar_icon(dialog, icon_name):
-    try:
-        # Get the directory where the script is located
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        icon_path = os.path.join(script_dir, "assets", icon_name)
         
-        if os.path.exists(icon_path):
-            # Load and set the icon using PhotoImage for the window icon
-            icon = tk.PhotoImage(file=icon_path)
-            dialog.iconphoto(True, icon)
-            
-            # Keep reference to prevent garbage collection
-            dialog._icon = icon
-            
-            # Set unique AppUserModelID for Windows taskbar
-            app_id = f'LabelMaker.{icon_name.split("_")[0]}'
-            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
-        else:
-            print(f"Icon file not found at {icon_path}")
-    except Exception as e:
-        print(f"Failed to set taskbar icon: {str(e)}")
-
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python launch_dialog.py <dialog_type>")
-        sys.exit(1)
+        # Call the create_label_dialog function from our dialog_handlers module
+        dialog = create_label_dialog(self, self.config_manager, self.update_label_count)
         
-    dialog_type = sys.argv[1]
+        # Store reference to the dialog
+        self.open_dialogs['create_label'] = dialog
+        
+        # Set up callback for when dialog is closed
+        def on_dialog_close():
+            self.open_dialogs['create_label'] = None
+            dialog.destroy()
+            
+        dialog.protocol("WM_DELETE_WINDOW", on_dialog_close)
     
-    if dialog_type == "create_label":
-        from src.utils.dialog_handlers import create_label_dialog
-        from src.config.config_manager import ConfigManager
-        
-        # Create a dummy root window to avoid errors
-        root = tk.Tk()
-        root.withdraw()
-        
-        # Set the taskbar icon
-        set_taskbar_icon(root, "createlabels_64.png")
-        
-        # Create the dialog
-        config_manager = ConfigManager()
-        dialog = create_label_dialog(root, config_manager, lambda: None)
-        
-        # Run the dialog
-        root.mainloop()
-        
-    elif dialog_type == "returns_data":
-        from src.utils.dialog_handlers import create_labels_dialog
-        from src.config.config_manager import ConfigManager
-        
-        # Create a dummy root window to avoid errors
-        root = tk.Tk()
-        root.withdraw()
-        
-        # Set the taskbar icon
-        set_taskbar_icon(root, "returnsdata_64.png")
-        
-        # Create the dialog
-        dialog, _ = create_labels_dialog(root)
-        
-        # Run the dialog
-        root.mainloop()
-        
-    elif dialog_type == "settings":
-        from src.utils.dialog_handlers import create_settings_dialog_handler
-        from src.config.config_manager import ConfigManager
-        
-        # Create a dummy root window to avoid errors
-        root = tk.Tk()
-        root.withdraw()
-        
-        # Set the taskbar icon
-        set_taskbar_icon(root, "settings_64.png")
-        
-        # Create the dialog
-        config_manager = ConfigManager()
-        dialog = create_settings_dialog_handler(root, config_manager, lambda dir=None: None)
-        
-        # Run the dialog
-        root.mainloop()
-    elif dialog_type == "google_sheets":
-        from src.utils.dialog_handlers import create_google_sheets_dialog_handler
-        from src.config.config_manager import ConfigManager
-        
-        # Create a dummy root window to avoid errors
-        root = tk.Tk()
-        root.withdraw()
-        
-        # Set the taskbar icon
-        set_taskbar_icon(root, "settings_64.png")
-        
-        # Create the dialog
-        config_manager = ConfigManager()
-        dialog = create_google_sheets_dialog_handler(root, config_manager, None)
-        
-        # Run the dialog
-        root.mainloop()
-    else:
-        print(f"Unknown dialog type: {dialog_type}")
-        sys.exit(1)
-""")
-            
-            # Run the launcher script with the create_label argument
-            subprocess.Popen([sys.executable, launcher_script, "create_label"])
-            
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to launch Create Label dialog: {str(e)}")
-
     def user_action(self):
         """Handler for User button click"""
-        try:
-            # Check if labels directory is set and exists
-            if not self.config_manager.settings.last_directory or not directory_exists(self.config_manager.settings.last_directory):
-                messagebox.showinfo("Labels Required", 
-                    "Please select a Labels directory before creating labels.\n\n"
-                    "Click the 'Settings' button to set your Labels directory.")
-                return
-            
-            # Get the path to the dialog launcher script
-            project_root = get_project_root()
-            launcher_script = os.path.join(project_root, 'launch_dialog.py')
-            
-            # Run the launcher script with the create_label argument
-            subprocess.Popen([sys.executable, launcher_script, "create_label"])
-            
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to launch Create Label dialog: {str(e)}")
-
+        # Call the create_label_dialog function with the same parameters
+        self.create_label_action()
+    
     def management_action(self):
         """Handler for Management button click"""
         try:
@@ -426,94 +304,224 @@ if __name__ == "__main__":
                     self.deiconify()
                     self.lift()
                     self.focus_force()
-                else:
-                    # Process still running, check again after 1 second
-                    self.after(1000, check_process)
-            
-            # Start checking the process
+                    return
+                # Check again after 1 second
+                self.after(1000, check_process)
+                
+            # Start monitoring the process
             self.after(1000, check_process)
             
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to launch Label Maker: {str(e)}")
+            messagebox.showerror("Error", f"Failed to open Label Maker: {str(e)}")
             self.deiconify()  # Show welcome window again
-
+    
     def labels_action(self):
         """Handler for Labels button click - Display and edit returns data"""
-        try:
-            # Get the path to the dialog launcher script
-            project_root = get_project_root()
-            launcher_script = os.path.join(project_root, 'launch_dialog.py')
+        # Check if dialog is already open
+        if self.open_dialogs['returns_data'] is not None:
+            # If dialog exists but was destroyed, remove the reference
+            if not self.open_dialogs['returns_data'].winfo_exists():
+                self.open_dialogs['returns_data'] = None
+            else:
+                # Dialog exists, bring it to front
+                dialog = self.open_dialogs['returns_data']
+                
+                # Check if dialog is minimized (iconified)
+                if dialog.state() == 'iconic':
+                    dialog.deiconify()  # Restore the window
+                
+                dialog.lift()
+                dialog.focus_force()
+                return
+        
+        # Call the create_labels_dialog function from our dialog_handlers module
+        dialog, _ = create_labels_dialog(self)
+        
+        # Store reference to the dialog
+        self.open_dialogs['returns_data'] = dialog
+        
+        # Set up callback for when dialog is closed
+        def on_dialog_close():
+            self.open_dialogs['returns_data'] = None
+            dialog.destroy()
             
-            # Run the launcher script with the returns_data argument
-            subprocess.Popen([sys.executable, launcher_script, "returns_data"])
-            
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to launch Returns Data dialog: {str(e)}")
-
+        dialog.protocol("WM_DELETE_WINDOW", on_dialog_close)
+    
     def settings_action(self):
         """Open settings dialog"""
-        try:
-            # Get the path to the dialog launcher script
-            project_root = get_project_root()
-            launcher_script = os.path.join(project_root, 'launch_dialog.py')
+        # Check if dialog is already open
+        if self.open_dialogs['settings'] is not None:
+            # If dialog exists but was destroyed, remove the reference
+            if not self.open_dialogs['settings'].winfo_exists():
+                self.open_dialogs['settings'] = None
+            else:
+                # Dialog exists, bring it to front
+                dialog = self.open_dialogs['settings']
+                
+                # Check if dialog is minimized (iconified)
+                if dialog.state() == 'iconic':
+                    dialog.deiconify()  # Restore the window
+                
+                dialog.lift()
+                dialog.focus_force()
+                return
+        
+        # Call the create_settings_dialog_handler function from our dialog_handlers module
+        dialog = create_settings_dialog_handler(
+            self,
+            self.config_manager,
+            self.update_label_count
+        )
+        
+        # Store reference to the dialog
+        self.open_dialogs['settings'] = dialog
+        
+        # Set up callback for when dialog is closed
+        def on_dialog_close():
+            self.open_dialogs['settings'] = None
+            dialog.destroy()
             
-            # Run the launcher script with the settings argument
-            subprocess.Popen([sys.executable, launcher_script, "settings"])
-            
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to launch Settings dialog: {str(e)}")
+        dialog.protocol("WM_DELETE_WINDOW", on_dialog_close)
     
     def open_sheets_dialog(self):
         """Open the Google Sheets configuration dialog"""
+        # This method will now be called from the Settings dialog
+        # We'll keep it for backward compatibility, but it should redirect to Settings
+        
+        # Check if Settings dialog is already open
+        if self.open_dialogs['settings'] is not None and self.open_dialogs['settings'].winfo_exists():
+            # Settings dialog exists, bring it to front
+            dialog = self.open_dialogs['settings']
+            
+            # Check if dialog is minimized (iconified)
+            if dialog.state() == 'iconic':
+                dialog.deiconify()  # Restore the window
+            
+            dialog.lift()
+            dialog.focus_force()
+            
+            # Trigger the Google Sheets button in the Settings dialog
+            if hasattr(dialog, 'sheets_button') and dialog.sheets_button:
+                dialog.sheets_button.invoke()
+        else:
+            # Open Settings dialog first
+            self.settings_action()
+            
+            # Then open Google Sheets dialog from Settings
+            if self.open_dialogs['settings'] is not None and self.open_dialogs['settings'].winfo_exists():
+                dialog = self.open_dialogs['settings']
+                if hasattr(dialog, 'sheets_button') and dialog.sheets_button:
+                    dialog.sheets_button.invoke()
+    
+    def _update_sheets_status_display(self):
+        """Update the Google Sheets status display in the welcome window"""
+        if hasattr(self, 'sheets_status_label'):
+            # Reload config manager to get the latest settings
+            self.config_manager = ConfigManager()
+            
+            # Get Google Sheets configuration
+            sheets_config = self.config_manager.settings
+            
+            # Default status
+            status_text = "Not Connected"
+            status_color = "red"
+            sheet_name = None
+            on_click = None
+            
+            # Check if Google Sheets is configured and connected
+            if (hasattr(sheets_config, 'google_sheets_connection_status') and 
+                sheets_config.google_sheets_connection_status == "Connected"):
+                
+                status_text = "Connected"
+                status_color = "green"
+                # Include sheet name if available
+                if hasattr(sheets_config, 'google_sheet_name') and sheets_config.google_sheet_name:
+                    sheet_name = sheets_config.google_sheet_name
+            # Fallback to checking if configuration exists
+            elif (hasattr(sheets_config, 'google_sheet_url') and 
+                sheets_config.google_sheet_url and 
+                hasattr(sheets_config, 'google_sheet_name') and 
+                sheets_config.google_sheet_name):
+                
+                status_text = "Configured (Not Tested)"
+                status_color = "orange"
+                sheet_name = sheets_config.google_sheet_name
+                on_click = self.test_sheets_connection
+            
+            # Create a new status display with the sheet name
+            if hasattr(self, 'sheets_status_frame'):
+                self.sheets_status_frame.destroy()
+            
+            self.sheets_status_frame, self.sheets_status_label = create_sheets_status_display(
+                self,
+                status_text,
+                status_color,
+                sheet_name
+            )
+            self.sheets_status_frame.pack(side='left', anchor='sw', padx=10, pady=10)
+            
+            # Make the label clickable if it's the orange "Configured (Not Tested)" status
+            if status_text == "Configured (Not Tested)" and on_click:
+                self.sheets_status_label.bind("<Button-1>", lambda e: on_click())
+                self.sheets_status_label.bind("<Enter>", lambda e: self.sheets_status_label.config(cursor="hand2", font=("Arial", 8, "underline")))
+                self.sheets_status_label.bind("<Leave>", lambda e: self.sheets_status_label.config(cursor="", font=("Arial", 8)))
+            
+            # Force UI update
+            self.update_idletasks()
+    
+    def test_sheets_connection(self):
+        """Test the connection to Google Sheets without opening the full dialog"""
+        from src.utils.sheets_utils import validate_sheet_url, test_sheet_connection
+        from src.utils.file_utils import get_credentials_file_path, file_exists
+        from tkinter import messagebox
+        
         try:
-            # Get the path to the dialog launcher script
-            project_root = get_project_root()
-            launcher_script = os.path.join(project_root, 'launch_dialog.py')
+            # Get Google Sheets configuration
+            sheets_config = self.config_manager.settings
             
-            # Update the launcher script to include Google Sheets dialog
-            with open(launcher_script, 'r') as f:
-                content = f.read()
+            # Check if Google Sheets is configured
+            if not (sheets_config.google_sheet_url and sheets_config.google_sheet_name):
+                messagebox.showerror("Error", "Google Sheets is not fully configured. Please open the settings to configure it.")
+                return
             
-            if "google_sheets" not in content:
-                # Add Google Sheets dialog handling to the launcher script
-                with open(launcher_script, 'w') as f:
-                    # Find the position to insert the new code
-                    insert_pos = content.find("else:")
-                    if insert_pos != -1:
-                        new_content = content[:insert_pos] + """    elif dialog_type == "google_sheets":
-        from src.utils.dialog_handlers import create_google_sheets_dialog_handler
-        from src.config.config_manager import ConfigManager
-        
-        # Create a dummy root window to avoid errors
-        root = tk.Tk()
-        root.withdraw()
-        
-        # Set the taskbar icon
-        set_taskbar_icon(root, "settings_64.png")
-        
-        # Create the dialog
-        config_manager = ConfigManager()
-        dialog = create_google_sheets_dialog_handler(root, config_manager, None)
-        
-        # Run the dialog
-        root.mainloop()
-        
-""" + content[insert_pos:]
-                        f.write(new_content)
+            # Check for credentials file
+            creds_file = get_credentials_file_path()
+            if not file_exists(creds_file):
+                messagebox.showerror("Error", f"Credentials file not found at:\n{creds_file}\n\nPlease create a service account and download the credentials file.")
+                return
             
-            # Run the launcher script with the google_sheets argument
-            subprocess.Popen([sys.executable, launcher_script, "google_sheets"])
+            # Validate the sheet URL
+            is_valid, result = validate_sheet_url(sheets_config.google_sheet_url)
+            if not is_valid:
+                messagebox.showerror("Error", result)
+                return
             
-            # Reload config manager after a delay to get updated settings
-            def reload_config():
-                self.config_manager = ConfigManager()
+            # Test connection
+            success, message = test_sheet_connection(result, sheets_config.google_sheet_name)
+            
+            if success:
+                # Update connection status
+                self.config_manager.settings.google_sheets_connection_status = "Connected"
+                self.config_manager.save_settings()
+                
+                # Update the display
                 self._update_sheets_status_display()
-            
-            # Schedule the config reload after a few seconds
-            self.after(5000, reload_config)
-            
+                
+                messagebox.showinfo("Success", "Connected to Google Sheet successfully!")
+            else:
+                # Update connection status
+                self.config_manager.settings.google_sheets_connection_status = "Connection Failed"
+                self.config_manager.save_settings()
+                
+                # Update the display
+                self._update_sheets_status_display()
+                
+                messagebox.showerror("Error", f"Could not connect to Google Sheet.\n\nError: {message}")
+                
+        except ImportError:
+            messagebox.showerror("Error", "Required libraries not installed. Please install gspread and oauth2client to connect to Google Sheets.")
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to launch Google Sheets dialog: {str(e)}")
+            messagebox.showerror("Error", f"An unexpected error occurred:\n\n{str(e)}")
     
     def update_label_count(self, directory=None):
         """Update the label count display based on the current directory"""
@@ -570,96 +578,3 @@ if __name__ == "__main__":
                 messagebox.showerror("Error", "Failed to save settings.")
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred while saving settings: {str(e)}")
-
-    def _update_sheets_status_display(self):
-        """Update the Google Sheets status display in the welcome window"""
-        if hasattr(self, 'sheets_status_label'):
-            # Reload config manager to get the latest settings
-            self.config_manager = ConfigManager()
-            
-            # Get Google Sheets configuration
-            sheets_config = self.config_manager.settings
-            
-            # Default status
-            status_text = "Not Connected"
-            status_color = "red"
-            on_click = None
-            
-            # Check if Google Sheets is configured and connected
-            if (hasattr(sheets_config, 'google_sheets_connection_status') and 
-                sheets_config.google_sheets_connection_status == "Connected"):
-                
-                status_text = "Connected"
-                status_color = "green"
-            # Fallback to checking if configuration exists
-            elif (hasattr(sheets_config, 'google_sheet_url') and 
-                sheets_config.google_sheet_url and 
-                hasattr(sheets_config, 'google_sheet_name') and 
-                sheets_config.google_sheet_name):
-                
-                status_text = "Configured (Not Tested)"
-                status_color = "orange"
-                on_click = self.test_sheets_connection
-            
-            # Update the status label
-            self.sheets_status_label.config(text=status_text, fg=status_color, font=("Arial", 8))
-            
-            # Make the label clickable if it's the orange "Configured (Not Tested)" status
-            if status_text == "Configured (Not Tested)" and on_click:
-                self.sheets_status_label.bind("<Button-1>", lambda e: on_click())
-                self.sheets_status_label.bind("<Enter>", lambda e: self.sheets_status_label.config(cursor="hand2", font=("Arial", 8, "underline")))
-                self.sheets_status_label.bind("<Leave>", lambda e: self.sheets_status_label.config(cursor="", font=("Arial", 8)))
-    
-    def test_sheets_connection(self):
-        """Test the connection to Google Sheets without opening the full dialog"""
-        from src.utils.sheets_utils import validate_sheet_url, test_sheet_connection
-        from src.utils.file_utils import get_credentials_file_path, file_exists
-        from tkinter import messagebox
-        
-        try:
-            # Get Google Sheets configuration
-            sheets_config = self.config_manager.settings
-            
-            # Check if Google Sheets is configured
-            if not (sheets_config.google_sheet_url and sheets_config.google_sheet_name):
-                messagebox.showerror("Error", "Google Sheets is not fully configured. Please open the settings to configure it.")
-                return
-            
-            # Check for credentials file
-            creds_file = get_credentials_file_path()
-            if not file_exists(creds_file):
-                messagebox.showerror("Error", f"Credentials file not found at:\n{creds_file}\n\nPlease create a service account and download the credentials file.")
-                return
-            
-            # Validate the sheet URL
-            is_valid, result = validate_sheet_url(sheets_config.google_sheet_url)
-            if not is_valid:
-                messagebox.showerror("Error", result)
-                return
-            
-            # Test connection
-            success, message = test_sheet_connection(result, sheets_config.google_sheet_name)
-            
-            if success:
-                # Update connection status
-                self.config_manager.settings.google_sheets_connection_status = "Connected"
-                self.config_manager.save_settings()
-                
-                # Update the display
-                self._update_sheets_status_display()
-                
-                messagebox.showinfo("Success", "Connected to Google Sheet successfully!")
-            else:
-                # Update connection status
-                self.config_manager.settings.google_sheets_connection_status = "Connection Failed"
-                self.config_manager.save_settings()
-                
-                # Update the display
-                self._update_sheets_status_display()
-                
-                messagebox.showerror("Error", f"Could not connect to Google Sheet.\n\nError: {message}")
-                
-        except ImportError:
-            messagebox.showerror("Error", "Required libraries not installed. Please install gspread and oauth2client to connect to Google Sheets.")
-        except Exception as e:
-            messagebox.showerror("Error", f"An unexpected error occurred:\n\n{str(e)}")

@@ -2,3 +2,7 @@
 2025-03-13 09:27:55 | Tracking: 54165 | SKU: 810194033414 | Label: C:/Users/Justin/Documents/Labels\PC CAR No Battery_WHTV1_label_810194033414.png
 2025-03-13 09:51:46 | Tracking: 1Z87FE369093651969 | SKU: 810194033414 | Label: C:/Users/Justin/Documents/Labels\PC CAR No Battery_WHTV1_label_810194033414.png
 2025-03-13 09:54:15 | Tracking: 1Z87FE369093651969 | SKU: 810194033414 | Label: C:/Users/Justin/Documents/Labels\PC CAR No Battery_WHTV1_label_810194033414.png
+2025-03-14 14:39:31 | Tracking: B-135-3PL | SKU: 840168718740 | Label: C:/Users/Justin/Documents/Labels\Carry-On 2.0 No Battery_MOLVGV1_label_840168718740.png
+2025-03-14 14:46:32 | Tracking: B-133-3PL | SKU: 840168718740 | Label: C:/Users/Justin/Documents/Labels\Carry-On 2.0 No Battery_MOLVGV1_label_840168718740.png
+2025-03-14 15:29:53 | Tracking: M-193-3PL-01-D5 | SKU: 840168713158 | Label: C:/Users/Justin/Documents/Labels\Everywhere Sling_BLKV1Standard_label_840168713158.png
+2025-03-14 15:41:256 | Tracking: B-133-3PL5 | SKU: 840168713158 | Label: C:/Users/Justin/Documents/Labels\Everywhere Sling_BLKV1Standard_label_840168713158.png

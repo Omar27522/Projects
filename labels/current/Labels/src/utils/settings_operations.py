@@ -131,16 +131,70 @@ def create_settings_dialog(parent, config_manager, update_label_count_callback, 
         tk.Label(status_frame, text=" | Sheet:", font=("Arial", 10), bg='white').pack(side='left', padx=(10, 0))
         tk.Label(status_frame, text=sheet_info, font=("Arial", 10, "italic"), bg='white').pack(side='left', padx=(5, 0))
     
+    # Store reference to sheets dialog
+    settings_dialog.sheets_dialog = None
+    
+    # Function to open Google Sheets dialog as a child of Settings
+    def open_sheets_dialog_as_child():
+        # If a sheets dialog is already open, just bring it to front
+        if settings_dialog.sheets_dialog is not None and settings_dialog.sheets_dialog.winfo_exists():
+            # Check if dialog is minimized (iconified)
+            if settings_dialog.sheets_dialog.state() == 'iconic':
+                settings_dialog.sheets_dialog.deiconify()  # Restore the window
+            
+            settings_dialog.sheets_dialog.lift()
+            settings_dialog.sheets_dialog.focus_force()
+            return
+            
+        # Call the original callback to create the dialog
+        sheets_dialog = open_sheets_dialog_callback()
+        
+        if sheets_dialog:
+            # Store reference to the sheets dialog
+            settings_dialog.sheets_dialog = sheets_dialog
+            
+            # Make sheets dialog a child of settings dialog
+            sheets_dialog.transient(settings_dialog)
+            
+            # Make sheets dialog modal to settings dialog
+            sheets_dialog.grab_set()
+            
+            # When sheets dialog is closed, update the settings dialog
+            def on_sheets_dialog_close():
+                # Release grab
+                sheets_dialog.grab_release()
+                
+                # Clear reference
+                settings_dialog.sheets_dialog = None
+                
+                # Destroy the dialog
+                sheets_dialog.destroy()
+                
+                # Update the status display
+                nonlocal config_manager
+                config_manager = ConfigManager()
+                update_sheets_status_display(parent, config_manager, sheets_status_label)
+                
+                # Give focus back to settings dialog
+                settings_dialog.lift()
+                settings_dialog.focus_force()
+                
+            # Set the close protocol
+            sheets_dialog.protocol("WM_DELETE_WINDOW", on_sheets_dialog_close)
+    
     # Configure button
     configure_button = create_button(
         sheets_section,
         text="Configure Google Sheets",
-        command=open_sheets_dialog_callback,
+        command=open_sheets_dialog_as_child,
         bg='#2196F3',
         padx=10,
         pady=5
     )
     configure_button.pack(pady=(5, 5))
+    
+    # Store reference to the button for external access
+    settings_dialog.sheets_button = configure_button
     
     # Button Frame
     button_frame = tk.Frame(content_frame, bg='white')
@@ -162,13 +216,25 @@ def create_settings_dialog(parent, config_manager, update_label_count_callback, 
         button_frame,
         text="Cancel",
         command=settings_dialog.destroy,
-        bg='#f44336',
+        bg='#F44336',
         padx=15,
         pady=5
     )
     cancel_button.pack(side='right')
     
-    return settings_dialog, directory_var, label_count_var
+    # When settings dialog is closed, also close any child dialogs
+    def on_settings_dialog_close():
+        # Close sheets dialog if open
+        if settings_dialog.sheets_dialog is not None and settings_dialog.sheets_dialog.winfo_exists():
+            settings_dialog.sheets_dialog.destroy()
+        
+        # Destroy settings dialog
+        settings_dialog.destroy()
+    
+    # Set the close protocol
+    settings_dialog.protocol("WM_DELETE_WINDOW", on_settings_dialog_close)
+    
+    return settings_dialog, directory_var
 
 def update_sheets_status_display(parent, config_manager, sheets_status_label):
     """
