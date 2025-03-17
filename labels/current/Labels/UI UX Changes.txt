@@ -38,7 +38,11 @@ Maybe a Variant Dictionary?
 
 3/17
 Production Testing
--Create Label does not have a minimize button, I can hide the welcome window behind it, and when I click off the welcome window loses focus, but Create label stays on top of all other windows, this is ideal for production. but I dont want to change the behavior, this is fine.
--Maybe where it says: "Label sent to printer. Ready for next label" it can be changed to the name, variant, SKU, and last of tracking number, --design it to make it fit. --
--after restarting the app the configuration is lost, but the welcome window, shows teh right config, but the google settings defaults back to the first sheet instead of the active one. XD
--
+-Create Label does not have a minimize button, I can hide the welcome window behind it, and when I click off the welcome window loses focus, but Create Label stays on top of all other windows, this is ideal for production. but I don't want to change the behavior, this is fine.
+-Maybe where it says: "Label sent to the printer. Ready for next label" it can be changed to the name, variant, SKU, and last tracking number, --design it to make it fit. --
+-after restarting the app the configuration is lost, but the welcome window, shows the right config, but the Google settings defaults back to the first sheet instead of the active one. XD
+-A module will have to be built that checks the state of the state of sheet connection, every time there is a change, so it can be like real-time updates, but not when the connections have been established, and no changes have been made. perhaps something that starts at the beginning, checks the state, and then lets the other functions know. because it looks like right now the update is hardcoded and does not know when a change has been made, until the user restarts the app, and also the settings are lost and the user needs to select a new sheet every time.
+-The create Label window closes and it looks like the sheet settings change. XD.
+-If the next label has the same Tracking number, throw a warning, so that way there is no way to pass the same data several times. Idk how it happened, but I got 3 entries on the same record. XD
+-make the Create label window more compact. it looks like the Google Sheets configuration loses the settings.
+-Also the program hangs after some use, I imagine, there is a memory leak somewhere, or the logs are just way too big, or something odd. A program restart fixes this issue. XD
