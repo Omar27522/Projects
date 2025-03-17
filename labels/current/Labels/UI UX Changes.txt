@@ -31,3 +31,14 @@ Inside Label Maker
 
 More features:
 Maybe a Variant Dictionary?
+
+
+
+
+
+3/17
+Production Testing
+-Create Label does not have a minimize button, I can hide the welcome window behind it, and when I click off the welcome window loses focus, but Create label stays on top of all other windows, this is ideal for production. but I dont want to change the behavior, this is fine.
+-Maybe where it says: "Label sent to printer. Ready for next label" it can be changed to the name, variant, SKU, and last of tracking number, --design it to make it fit. --
+-after restarting the app the configuration is lost, but the welcome window, shows teh right config, but the google settings defaults back to the first sheet instead of the active one. XD
+-
