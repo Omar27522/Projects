@@ -344,8 +344,14 @@ class GoogleSheetsDialog(tk.Toplevel):
             # Update the dropdown with the available sheet names
             self.sheet_dropdown['values'] = sheet_names
             
-            # Select the first sheet by default
-            self.sheet_var.set(sheet_names[0] if sheet_names else "")
+            # Get the previously saved sheet name
+            saved_sheet_name = self.config_manager.settings.google_sheet_name
+            
+            # Select the previously saved sheet if it exists in the list, otherwise select the first sheet
+            if saved_sheet_name and saved_sheet_name in sheet_names:
+                self.sheet_var.set(saved_sheet_name)
+            else:
+                self.sheet_var.set(sheet_names[0] if sheet_names else "")
             
         except Exception as e:
             messagebox.showerror("Error", f"An unexpected error occurred:\n\n{str(e)}")

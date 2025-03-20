@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 from src.utils.ui_components import create_title_section, create_colored_button, create_form_field_group
 from src.utils.barcode_operations import process_barcode
 from src.utils.sheets_operations import write_to_google_sheet
-from src.utils.file_utils import directory_exists
+from src.utils.file_utils import directory_exists, file_exists, find_files_by_sku
 
 # Configure logging
 logging.basicConfig(
@@ -288,15 +288,8 @@ class CreateLabelFrame(tk.Frame):
         sku = self.sku_var.get().strip()
         
         # Validate tracking number
-        if not tracking_number:
-            self._update_status("Please enter a tracking number", 'red')
-            self.field_widgets["Tracking Number:"]["widget"].focus_set()
-            return
-        
-        # Validate tracking number length
-        if len(tracking_number) <= 12:
+        if tracking_number and len(tracking_number) <= 12:
             self._update_status("Tracking number must be longer than 12 characters", 'red')
-            messagebox.showerror("Invalid Tracking Number", "Tracking number must be longer than 12 characters.\n\nPlease enter a valid tracking number.")
             self.field_widgets["Tracking Number:"]["widget"].focus_set()
             return
         
@@ -312,27 +305,36 @@ class CreateLabelFrame(tk.Frame):
             self._update_status(f"Labels directory not found: {labels_dir}", 'red')
             return
         
-        # Create a unique filename based on tracking number and date (but don't create the actual file)
-        date_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"{tracking_number}_{date_str}.txt"
-        filepath = os.path.join(labels_dir, filename)
-        
         # Define a status callback function to update the status label
         def update_status(message, color):
             self._update_status(message, color)
             self.update()
         
-        # Write to Google Sheets if configured
-        if (hasattr(self.config_manager.settings, 'google_sheet_url') and 
-            self.config_manager.settings.google_sheet_url and 
-            hasattr(self.config_manager.settings, 'google_sheet_name') and
-            self.config_manager.settings.google_sheet_name):
-            success, message = write_to_google_sheet(
-                self.config_manager, 
-                tracking_number, 
-                sku, 
-                update_status
-            )
+        # Early validation - Check if the label file exists before proceeding
+        label_exists = False
+        
+        # First check if a file with this SKU exists directly
+        sku_file = os.path.join(labels_dir, f"{sku}.txt")
+        if file_exists(sku_file):
+            label_exists = True
+        else:
+            # If no direct SKU file, check if it exists in the database
+            matching_files = find_files_by_sku(labels_dir, sku, extension='.txt')
+            if matching_files:
+                label_exists = True
+        
+        # If we don't have a tracking number and the label doesn't exist, show error and don't log
+        if not tracking_number and not label_exists:
+            error_message = f"Could not find a label for SKU: {sku}"
+            self._update_status(f"Error: {error_message}", 'red')
+            messagebox.showerror("Error", error_message)
+            self._clear_fields()
+            return
+        
+        # Create a unique filename based on tracking number and date (but don't create the actual file)
+        date_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{tracking_number}_{date_str}.txt"
+        filepath = os.path.join(labels_dir, filename)
         
         # Get mirror print setting from the toggle button
         mirror_print = self.mirror_print_var.get()
@@ -373,6 +375,21 @@ class CreateLabelFrame(tk.Frame):
         try:
             # Define a function to run after successful printing
             def after_print_success():
+                # Log the shipping record ONLY after successful printing
+                log_shipping_record(tracking_number, sku, filepath)
+                
+                # Write to Google Sheets ONLY after successful printing
+                if (hasattr(self.config_manager.settings, 'google_sheet_url') and 
+                    self.config_manager.settings.google_sheet_url and 
+                    hasattr(self.config_manager.settings, 'google_sheet_name') and
+                    self.config_manager.settings.google_sheet_name):
+                    write_to_google_sheet(
+                        self.config_manager, 
+                        tracking_number, 
+                        sku, 
+                        update_status
+                    )
+                
                 # Show success message in the title
                 self._show_success_message(f"Label for {sku} printed successfully!")
                 
@@ -383,28 +400,152 @@ class CreateLabelFrame(tk.Frame):
                 if self.update_label_count_callback:
                     self.update_label_count_callback()
             
-            # Use our utility function to process the barcode
-            success, message = process_barcode(
-                tracking_number,
-                sku,
-                labels_dir,
-                mirror_print,
-                update_status,
-                after_print_success
-            )
+            # Use a modified approach to find or create the barcode without logging yet
+            if tracking_number:
+                # If we have a tracking number, we'll create a new barcode
+                success, barcode_path, message = self._find_or_create_barcode_without_logging(
+                    tracking_number,
+                    sku,
+                    labels_dir,
+                    mirror_print,
+                    update_status
+                )
+            else:
+                # If we only have an SKU, we'll find an existing barcode
+                success, barcode_path, message = self._find_barcode_by_sku(
+                    sku,
+                    labels_dir,
+                    update_status
+                )
             
-            # Use pyautogui to automatically press Enter after a short delay
-            if success:
+            if not success:
+                self._update_status(f"Error: {message}", 'red')
+                messagebox.showerror("Error", message)
+                self._clear_fields()
+                return False, message
+            
+            # Print the barcode
+            print_success, print_message = print_barcode(barcode_path, mirror_print, update_status)
+            
+            # Only log and send to Google Sheets if printing was successful
+            if print_success:
+                after_print_success()
+                
+                # Use pyautogui to automatically press Enter after a short delay
                 try:
                     # Wait a moment for the print dialog to appear (longer delay)
                     print("Waiting for print dialog to appear...")
                     self.after(2000, lambda: self._press_enter_for_print_dialog())
                 except Exception as e:
                     print(f"Error setting up auto-press Enter: {str(e)}")
+            else:
+                self._update_status(f"Error printing: {print_message}", 'red')
+                messagebox.showerror("Error", f"Error printing: {print_message}")
+                self._clear_fields()
+            
+            return print_success, print_message
             
         except Exception as e:
             error_msg = str(e)
             self._update_status(f"Error processing barcode: {error_msg}", 'red')
+            messagebox.showerror("Error", f"Error processing barcode: {error_msg}")
+            self._clear_fields()
+            return False, error_msg
+    
+    def _find_or_create_barcode_without_logging(self, tracking_number, sku, directory, mirror_print=False, status_callback=None):
+        """
+        Find an existing barcode file for the given SKU or create a new one for the tracking number,
+        without logging the shipping record.
+        
+        Args:
+            tracking_number: The tracking number to encode in the barcode
+            sku: The SKU to search for existing barcodes
+            directory: The directory to save the barcode image to
+            mirror_print: Whether to create a mirrored version of the barcode
+            status_callback: Optional callback function to update status messages
+            
+        Returns:
+            tuple: (success, barcode_path, message)
+        """
+        try:
+            # Check if the directory exists
+            if not directory_exists(directory):
+                if status_callback:
+                    status_callback(f"Error: Directory not found: {directory}", 'red')
+                return False, None, f"Error: Directory not found: {directory}"
+            
+            # First, try to find an existing file for this SKU
+            sku_file = os.path.join(directory, f"{sku}.txt")
+            if file_exists(sku_file):
+                return True, sku_file, "Found existing barcode file"
+            
+            # If no direct match, try to find files containing the SKU
+            matching_files = find_files_by_sku(directory, sku, extension='.txt')
+            if matching_files:
+                return True, matching_files[0], "Found existing barcode file"
+            
+            # If we have a tracking number, create a new barcode
+            if tracking_number:
+                # Create a unique filename based on tracking number and date
+                date_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                filename = f"{tracking_number}_{date_str}.txt"
+                filepath = os.path.join(directory, filename)
+                
+                # Create a barcode for the tracking number
+                from src.utils.barcode_operations import create_barcode_for_tracking
+                success, barcode_path, message = create_barcode_for_tracking(
+                    tracking_number, directory, mirror_print, status_callback
+                )
+                
+                if success:
+                    return True, barcode_path, "Created new barcode file"
+                else:
+                    return False, None, message
+            else:
+                return False, None, f"No label file found for SKU: {sku}"
+                
+        except Exception as e:
+            error_msg = str(e)
+            if status_callback:
+                status_callback(f"Error finding or creating barcode: {error_msg}", 'red')
+            return False, None, f"Error finding or creating barcode: {error_msg}"
+    
+    def _find_barcode_by_sku(self, sku, directory, status_callback=None):
+        """
+        Find an existing barcode file for the given SKU.
+        
+        Args:
+            sku: The SKU to search for existing barcodes
+            directory: The directory to search in
+            status_callback: Optional callback function to update status messages
+            
+        Returns:
+            tuple: (success, barcode_path, message)
+        """
+        try:
+            # Check if the directory exists
+            if not directory_exists(directory):
+                if status_callback:
+                    status_callback(f"Error: Directory not found: {directory}", 'red')
+                return False, None, f"Error: Directory not found: {directory}"
+            
+            # First, try to find an existing file for this SKU
+            sku_file = os.path.join(directory, f"{sku}.txt")
+            if file_exists(sku_file):
+                return True, sku_file, "Found existing barcode file"
+            
+            # If no direct match, try to find files containing the SKU
+            matching_files = find_files_by_sku(directory, sku, extension='.txt')
+            if matching_files:
+                return True, matching_files[0], "Found existing barcode file"
+            
+            return False, None, f"No label file found for SKU: {sku}"
+                
+        except Exception as e:
+            error_msg = str(e)
+            if status_callback:
+                status_callback(f"Error finding barcode: {error_msg}", 'red')
+            return False, None, f"Error finding barcode: {error_msg}"
     
     def _press_enter_for_print_dialog(self):
         """Press Enter key to confirm print dialog"""

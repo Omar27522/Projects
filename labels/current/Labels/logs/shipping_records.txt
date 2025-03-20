@@ -36,3 +36,5 @@
 2025-03-19 15:46:15 | Tracking: 1Z87FE369092842406 | SKU: 840168721139 | Label: C:/Users/Justin/Documents/Labels\Featherlight Small Backpack_ABLUV1Small_label_840168721139.png
 2025-03-19 15:53:10 | Tracking: 840168721139 | SKU: 840168721139 | Label: C:/Users/Justin/Documents/Labels\Featherlight Small Backpack_ABLUV1Small_label_840168721139.png
 2025-03-19 17:11:59 | Tracking: 1Z87FE369094184392 | SKU: 810031470464 | Label: C:/Users/Justin/Documents/Labels\ALM BCO No Battery_ONYXV1_label_810031470464.png
+2025-03-20 12:18:06 | Tracking: 1ZK10H700322949594 | SKU: 840168723973 | Label: C:/Users/Justin/Documents/Labels\Featherlight Super Large Tote_SGRNV1Large_label_840168723973.png
+2025-03-20 16:11:33 | Tracking: 000010C0000000578002153 | SKU: 840168719945 | Label: C:/Users/Justin/Documents/Labels\Rolling Duffle_NVYV1_label_840168719945.png

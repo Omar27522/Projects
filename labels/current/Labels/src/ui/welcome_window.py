@@ -21,7 +21,7 @@ from src.utils.sheets_operations import write_to_google_sheet, create_google_she
 from src.utils.returns_operations import load_returns_data, update_log_file, create_returns_dialog, create_edit_dialog
 from src.utils.settings_operations import create_settings_dialog, update_sheets_status_display
 from src.utils.dialog_handlers import (
-    create_label_dialog, create_labels_dialog, 
+    create_labels_dialog, 
     create_settings_dialog_handler, create_google_sheets_dialog_handler
 )
 from src.ui.create_label_frame import CreateLabelFrame
@@ -249,8 +249,38 @@ class WelcomeWindow(tk.Tk):
     def _create_version_label(self):
         """Create the version label"""
         # Create version label in the bottom-right corner
-        version_label = create_version_label(self.welcome_frame, "Ver. 1.0.1.1")
-        version_label.pack(side='right', anchor='se', padx=10, pady=10)
+        version_frame = tk.Frame(self.welcome_frame, bg='white')
+        version_frame.pack(side='right', anchor='se', padx=10, pady=10)
+        
+        # Make the "Ver." part clickable
+        ver_label = tk.Label(
+            version_frame, 
+            text="Ver.", 
+            font=("Arial", 8),
+            fg="blue",
+            cursor="hand2",
+            bg='white'
+        )
+        ver_label.pack(side='left')
+        ver_label.bind("<Button-1>", lambda e: self.no_record_label_action())
+        
+        # Add underline when hovering
+        def on_enter(e):
+            ver_label.config(font=("Arial", 8, "underline"))
+        def on_leave(e):
+            ver_label.config(font=("Arial", 8))
+        
+        ver_label.bind("<Enter>", on_enter)
+        ver_label.bind("<Leave>", on_leave)
+        
+        # Version number (not clickable)
+        version_num_label = tk.Label(
+            version_frame, 
+            text="1.0.1.1", 
+            font=("Arial", 8),
+            bg='white'
+        )
+        version_num_label.pack(side='left')
     
     def user_action(self):
         """Handle the User button click"""
@@ -595,3 +625,35 @@ class WelcomeWindow(tk.Tk):
         
         # Update label count
         self.update_label_count()
+
+    def no_record_label_action(self):
+        """Handle the No Record Label action when Ver. is clicked"""
+        try:
+            # Check if labels directory is set
+            if not self.config_manager.settings.last_directory:
+                messagebox.showerror("Error", "Please set the labels directory in Settings first.")
+                return
+            
+            # Hide the welcome frame
+            self.welcome_frame.pack_forget()
+            
+            # Create the no record label frame if it doesn't exist
+            if not hasattr(self, 'no_record_label_frame') or not self.no_record_label_frame:
+                # Import here to avoid circular imports
+                from src.ui.no_record_label_frame import NoRecordLabelFrame
+                
+                self.no_record_label_frame = NoRecordLabelFrame(
+                    self.container_frame,
+                    self.config_manager,
+                    self.return_to_welcome
+                )
+            
+            # Show the no record label frame
+            self.no_record_label_frame.pack(fill='both', expand=True)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred: {str(e)}")
+            # Log the error
+            print(f"Error in no_record_label_action: {str(e)}")
+            # Return to welcome screen
+            self.return_to_welcome()
