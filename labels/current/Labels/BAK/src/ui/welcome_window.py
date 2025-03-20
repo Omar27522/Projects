@@ -24,7 +24,6 @@ from src.utils.dialog_handlers import (
     create_label_dialog, create_labels_dialog, 
     create_settings_dialog_handler, create_google_sheets_dialog_handler
 )
-from src.ui.create_label_frame import CreateLabelFrame
 
 # Third-party imports
 import pyautogui
@@ -104,30 +103,18 @@ class WelcomeWindow(tk.Tk):
     
     def _create_ui(self):
         """Create the user interface elements"""
-        # Create a container frame for different "pages"
-        self.container_frame = tk.Frame(self, bg='white')
-        self.container_frame.pack(fill='both', expand=True)
-        
-        # Create the main content frame (welcome screen)
-        self.welcome_frame = tk.Frame(self.container_frame, bg='white')
-        self.welcome_frame.pack(fill='both', expand=True)
-        
         # Add title
         self._create_title_section()
         
-        # Create buttons in the welcome frame
+        # Create buttons
         self._create_button_section()
         
         # Add version label
         self._create_version_label()
         
-        # Create a status bar frame at the bottom of the welcome frame
-        self.status_bar_frame = tk.Frame(self.welcome_frame, bg='white')
-        self.status_bar_frame.pack(side='bottom', fill='x')
-        
         # Create Google Sheets status display
         self.sheets_status_frame, self.sheets_status_label = create_sheets_status_display(
-            self.status_bar_frame,
+            self,
             "Not Connected",
             "red"
         )
@@ -135,9 +122,6 @@ class WelcomeWindow(tk.Tk):
         
         # Initialize the Google Sheets status display
         self._update_sheets_status_display()
-        
-        # Create the create label frame (initially hidden)
-        self.create_label_frame = None
     
     def _create_title_section(self):
         """Create the title section of the window"""
@@ -152,7 +136,7 @@ class WelcomeWindow(tk.Tk):
         
         # Create title section with label count
         title_frame, self.label_count_label, _ = create_title_section(
-            self.welcome_frame, 
+            self, 
             f"{label_count} Labels", 
             "Label Maker V3"
         )
@@ -211,7 +195,7 @@ class WelcomeWindow(tk.Tk):
         ]
         
         # Create button grid
-        button_frame, buttons = create_button_grid(self.welcome_frame, button_specs, num_columns=2)
+        button_frame, buttons = create_button_grid(self, button_specs, num_columns=2)
         
         # Configure grid weights
         button_frame.grid_columnconfigure(0, weight=3)  # More weight to User button column
@@ -247,39 +231,46 @@ class WelcomeWindow(tk.Tk):
         return create_colored_button(parent, text, color, light_color, command, big)
     
     def _create_version_label(self):
-        """Create the version label"""
-        # Create version label in the bottom-right corner
-        version_label = create_version_label(self.welcome_frame, "Ver. 1.0.1.1")
+        """Create the version label at the bottom right"""
+        version_label = create_version_label(self, "Ver. 1.0.1.1")
         version_label.pack(side='right', anchor='se', padx=10, pady=10)
     
-    def user_action(self):
-        """Handle the User button click"""
-        try:
-            # Check if labels directory is set
-            if not self.config_manager.settings.last_directory:
-                messagebox.showerror("Error", "Please set the labels directory in Settings first.")
+    def create_label_action(self):
+        """Handler for Create Label button click"""
+        # Check if dialog is already open
+        if self.open_dialogs['create_label'] is not None:
+            # If dialog exists but was destroyed, remove the reference
+            if not self.open_dialogs['create_label'].winfo_exists():
+                self.open_dialogs['create_label'] = None
+            else:
+                # Dialog exists, bring it to front
+                dialog = self.open_dialogs['create_label']
+                
+                # Check if dialog is minimized (iconified)
+                if dialog.state() == 'iconic':
+                    dialog.deiconify()  # Restore the window
+                
+                dialog.lift()
+                dialog.focus_force()
                 return
+        
+        # Call the create_label_dialog function from our dialog_handlers module
+        dialog = create_label_dialog(self, self.config_manager, self.update_label_count)
+        
+        # Store reference to the dialog
+        self.open_dialogs['create_label'] = dialog
+        
+        # Set up callback for when dialog is closed
+        def on_dialog_close():
+            self.open_dialogs['create_label'] = None
+            dialog.destroy()
             
-            # Hide the welcome frame
-            self.welcome_frame.pack_forget()
-            
-            # Create the create label frame if it doesn't exist
-            if not self.create_label_frame:
-                self.create_label_frame = CreateLabelFrame(
-                    self.container_frame,
-                    self.config_manager,
-                    self.update_label_count,
-                    self.return_to_welcome
-                )
-            
-            # Show the create label frame
-            self.create_label_frame.pack(fill='both', expand=True)
-            
-            # Update the window title
-            self.title("Create Label")
-            
-        except Exception as e:
-            messagebox.showerror("Error", f"An error occurred: {str(e)}")
+        dialog.protocol("WM_DELETE_WINDOW", on_dialog_close)
+    
+    def user_action(self):
+        """Handler for User button click"""
+        # Call the create_label_dialog function with the same parameters
+        self.create_label_action()
     
     def management_action(self):
         """Handler for Management button click"""
@@ -423,26 +414,35 @@ class WelcomeWindow(tk.Tk):
                     dialog.sheets_button.invoke()
     
     def _update_sheets_status_display(self):
-        """Update the Google Sheets status display"""
-        try:
-            # Reload the config manager to get the latest settings
+        """Update the Google Sheets status display in the welcome window"""
+        if hasattr(self, 'sheets_status_label'):
+            # Reload config manager to get the latest settings
             self.config_manager = ConfigManager()
             
-            # Get the sheets configuration
+            # Get Google Sheets configuration
             sheets_config = self.config_manager.settings
             
-            # Determine the status text and color
-            if not sheets_config.google_sheet_url:
-                status_text = "Not Connected"
-                status_color = "red"
-                sheet_name = None
-                on_click = None
-            elif sheets_config.google_sheets_connection_status == "Connected":
+            # Default status
+            status_text = "Not Connected"
+            status_color = "red"
+            sheet_name = None
+            on_click = None
+            
+            # Check if Google Sheets is configured and connected
+            if (hasattr(sheets_config, 'google_sheets_connection_status') and 
+                sheets_config.google_sheets_connection_status == "Connected"):
+                
                 status_text = "Connected"
                 status_color = "green"
-                sheet_name = sheets_config.google_sheet_name
-                on_click = None
-            else:
+                # Include sheet name if available
+                if hasattr(sheets_config, 'google_sheet_name') and sheets_config.google_sheet_name:
+                    sheet_name = sheets_config.google_sheet_name
+            # Fallback to checking if configuration exists
+            elif (hasattr(sheets_config, 'google_sheet_url') and 
+                sheets_config.google_sheet_url and 
+                hasattr(sheets_config, 'google_sheet_name') and 
+                sheets_config.google_sheet_name):
+                
                 status_text = "Configured (Not Tested)"
                 status_color = "orange"
                 sheet_name = sheets_config.google_sheet_name
@@ -453,7 +453,7 @@ class WelcomeWindow(tk.Tk):
                 self.sheets_status_frame.destroy()
             
             self.sheets_status_frame, self.sheets_status_label = create_sheets_status_display(
-                self.status_bar_frame,
+                self,
                 status_text,
                 status_color,
                 sheet_name
@@ -468,8 +468,6 @@ class WelcomeWindow(tk.Tk):
             
             # Force UI update
             self.update_idletasks()
-        except Exception as e:
-            print(f"Error updating sheets status display: {str(e)}")
     
     def test_sheets_connection(self):
         """Test the connection to Google Sheets without opening the full dialog"""
@@ -580,18 +578,3 @@ class WelcomeWindow(tk.Tk):
                 messagebox.showerror("Error", "Failed to save settings.")
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred while saving settings: {str(e)}")
-    
-    def return_to_welcome(self):
-        """Return to the welcome screen"""
-        # Hide any visible frames
-        for widget in self.container_frame.winfo_children():
-            widget.pack_forget()
-        
-        # Show the welcome frame
-        self.welcome_frame.pack(fill='both', expand=True)
-        
-        # Update the window title
-        self.title("Welcome")
-        
-        # Update label count
-        self.update_label_count()

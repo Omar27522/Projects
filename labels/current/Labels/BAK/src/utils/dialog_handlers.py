@@ -84,38 +84,6 @@ def create_label_dialog(parent, config_manager, update_label_count_callback):
     content_frame = tk.Frame(dialog, bg='white', padx=20, pady=20)
     content_frame.pack(fill='both', expand=True)
     
-    # Add a minimize button in the top-right corner
-    minimize_frame = tk.Frame(dialog, bg='white')
-    minimize_frame.place(x=370, y=10)
-    
-    def minimize_parent():
-        # Minimize the parent window
-        parent.iconify()
-    
-    minimize_button = tk.Button(
-        minimize_frame,
-        text="▁",  # Unicode character for a horizontal line
-        font=("Arial", 8, "bold"),
-        bg="#e0e0e0",
-        fg="#333333",
-        relief="flat",
-        width=2,
-        height=1,
-        cursor="hand2",
-        command=minimize_parent
-    )
-    minimize_button.pack()
-    
-    # Add hover effect
-    def on_enter(e):
-        minimize_button['bg'] = '#cccccc'
-    
-    def on_leave(e):
-        minimize_button['bg'] = '#e0e0e0'
-    
-    minimize_button.bind("<Enter>", on_enter)
-    minimize_button.bind("<Leave>", on_leave)
-    
     # Title
     create_title_section(content_frame, "Create New Label")
     
