@@ -50,7 +50,7 @@ Maybe a Variant Dictionary?
 3/17
         Production Testing
 -Create Label does not have a minimize button, I can hide the welcome window behind it, and when I click off the welcome window loses focus, but Create Label stays on top of all other windows, this is ideal for production. but I don't want to change the behavior, this is fine.
-                *-The fix was to scrap the creation of a new window all together, and instead add a                                 frame inside the same Welcome window.
+                *-The fix was to scrap the creation of a new window all together, and instead add a frame inside the same Welcome window.
 
 -Maybe where it says: "Label sent to the printer. Ready for next label" it can be changed to the name, variant, SKU, and last tracking number, maybe another button for the labels, but within the create label.  --design it to make it fit. --
         These are QOL changes, they will be implemented eventually...
