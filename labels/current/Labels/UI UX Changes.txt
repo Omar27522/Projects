@@ -35,7 +35,6 @@ I want to change it, so that when it creates a label, only one line is needed.
 
 
 Inside the View files window
-
         *Add an extra toggle button, that will make the software transparent, and non-transparent, add it to the transparency settings. I'm not sure why the app would need this. 
         *Add an extra toggle button, that will make the software Auto print and manually print after the SKU has been inputted, add it into settings. It can be reversed.
 
