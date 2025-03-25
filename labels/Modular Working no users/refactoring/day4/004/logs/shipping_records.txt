@@ -1,0 +1,4 @@
+2025-03-13 08:58:33 | Tracking: 1Z87FE369090306687 | SKU: 840168713585 | Label: C:/Users/Justin/Documents/Labels\PC LRG No Battery_NEONGRNV1_label_840168713585.png
+2025-03-13 09:27:55 | Tracking: 54165 | SKU: 810194033414 | Label: C:/Users/Justin/Documents/Labels\PC CAR No Battery_WHTV1_label_810194033414.png
+2025-03-13 09:51:46 | Tracking: 1Z87FE369093651969 | SKU: 810194033414 | Label: C:/Users/Justin/Documents/Labels\PC CAR No Battery_WHTV1_label_810194033414.png
+2025-03-13 09:54:15 | Tracking: 1Z87FE369093651969 | SKU: 810194033414 | Label: C:/Users/Justin/Documents/Labels\PC CAR No Battery_WHTV1_label_810194033414.png

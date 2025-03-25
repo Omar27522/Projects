@@ -1,0 +1,194 @@
+{
+  "name": "Label Maker Management Application",
+  "description": "A modular interface for managing the Label Maker application",
+  "version": "1.0.1.2",
+  "author": "Baby Manager",
+  "language": "python",
+  "entrypoint": "main.pyw",
+  "dependencies": {
+    "python": ">=3.6",
+    "pip": [
+      "pywin32>=228",
+      "pyautogui>=0.9.53"
+    ]
+  },
+  "folders": {
+    "source": ["src"],
+    "assets": ["assets"],
+    "logs": ["logs"],
+    "documentation": ["README.md"]
+  },
+  "tasks": {
+    "run": {
+      "command": "python main.pyw",
+      "description": "Run the Label Maker Management Application"
+    },
+    "install": {
+      "command": "pip install -r requirements.txt",
+      "description": "Install dependencies"
+    },
+    "lint": {
+      "command": "pylint src",
+      "description": "Run linting on source code"
+    },
+    "test": {
+      "command": "pytest tests",
+      "description": "Run tests"
+    },
+    "clean-logs": {
+      "command": "powershell -Command \"Remove-Item -Path logs\\* -Recurse -Force\"",
+      "description": "Clean log files"
+    }
+  },
+  "settings": {
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.formatting.provider": "autopep8",
+    "python.analysis.typeCheckingMode": "basic",
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/*.pyc": true,
+      "logs/*.log": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/bower_components": true,
+      "**/*.code-search": true,
+      "**/__pycache__": true
+    }
+  },
+  "extensions": {
+    "recommended": [
+      "ms-python.python",
+      "ms-python.vscode-pylance",
+      "ms-python.black-formatter",
+      "njpwerner.autodocstring",
+      "streetsidesoftware.code-spell-checker",
+      "eamodio.gitlens"
+    ]
+  },
+  "debug": {
+    "configurations": [
+      {
+        "name": "Python: Current File",
+        "type": "python",
+        "request": "launch",
+        "program": "${file}",
+        "console": "integratedTerminal"
+      },
+      {
+        "name": "Python: Main Application",
+        "type": "python",
+        "request": "launch",
+        "program": "${workspaceFolder}/main.pyw",
+        "console": "integratedTerminal"
+      }
+    ]
+  },
+  "environments": {
+    "development": {
+      "variables": {
+        "DEBUG": "true",
+        "LOG_LEVEL": "DEBUG"
+      }
+    },
+    "production": {
+      "variables": {
+        "DEBUG": "false",
+        "LOG_LEVEL": "INFO"
+      }
+    }
+  },
+  "codeNavigation": {
+    "src/ui/welcome_window.py": {
+      "sections": [
+        {
+          "name": "Imports and Documentation",
+          "startLine": 1,
+          "endLine": 48,
+          "description": "Module imports and documentation"
+        },
+        {
+          "name": "WelcomeWindow Class",
+          "startLine": 49,
+          "endLine": 52,
+          "description": "Main window class definition"
+        },
+        {
+          "name": "Initialization",
+          "startLine": 53,
+          "endLine": 77,
+          "description": "Window initialization and setup"
+        },
+        {
+          "name": "UI Creation",
+          "startLine": 78,
+          "endLine": 85,
+          "description": "Main UI creation method"
+        },
+        {
+          "name": "Title Section",
+          "startLine": 86,
+          "endLine": 100,
+          "description": "Title section with label count display"
+        },
+        {
+          "name": "Button Section",
+          "startLine": 101,
+          "endLine": 150,
+          "description": "Button section creation and layout"
+        },
+        {
+          "name": "Button Creation Helper",
+          "startLine": 151,
+          "endLine": 210,
+          "description": "Helper method for creating styled buttons"
+        },
+        {
+          "name": "Version Label",
+          "startLine": 211,
+          "endLine": 225,
+          "description": "Version label creation"
+        },
+        {
+          "name": "User Action",
+          "startLine": 226,
+          "endLine": 350,
+          "description": "Handler for User button click"
+        },
+        {
+          "name": "Management Action",
+          "startLine": 351,
+          "endLine": 450,
+          "description": "Handler for Management button click"
+        },
+        {
+          "name": "Labels Action",
+          "startLine": 451,
+          "endLine": 550,
+          "description": "Handler for Labels button click"
+        },
+        {
+          "name": "Settings Action",
+          "startLine": 551,
+          "endLine": 1050,
+          "description": "Handler for Settings button click and settings dialog"
+        }
+      ],
+      "bookmarks": [
+        {
+          "name": "update_label_count",
+          "line": 65,
+          "description": "Method to update the label count display"
+        },
+        {
+          "name": "select_labels_directory",
+          "line": 1016,
+          "description": "Function to select and update the labels directory"
+        }
+      ]
+    }
+  }
+}

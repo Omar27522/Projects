@@ -1,0 +1,38 @@
+2025-03-13 08:58:33 | Tracking: 1Z87FE369090306687 | SKU: 840168713585 | Label: C:/Users/Justin/Documents/Labels\PC LRG No Battery_NEONGRNV1_label_840168713585.png
+2025-03-13 09:27:55 | Tracking: 54165 | SKU: 810194033414 | Label: C:/Users/Justin/Documents/Labels\PC CAR No Battery_WHTV1_label_810194033414.png
+2025-03-13 09:51:46 | Tracking: 1Z87FE369093651969 | SKU: 810194033414 | Label: C:/Users/Justin/Documents/Labels\PC CAR No Battery_WHTV1_label_810194033414.png
+2025-03-13 09:54:15 | Tracking: 1Z87FE369093651969 | SKU: 810194033414 | Label: C:/Users/Justin/Documents/Labels\PC CAR No Battery_WHTV1_label_810194033414.png
+2025-03-14 14:39:31 | Tracking: B-135-3PL | SKU: 840168718740 | Label: C:/Users/Justin/Documents/Labels\Carry-On 2.0 No Battery_MOLVGV1_label_840168718740.png
+2025-03-14 14:46:32 | Tracking: B-133-3PL | SKU: 840168718740 | Label: C:/Users/Justin/Documents/Labels\Carry-On 2.0 No Battery_MOLVGV1_label_840168718740.png
+2025-03-14 15:29:53 | Tracking: M-193-3PL-01-D5 | SKU: 840168713158 | Label: C:/Users/Justin/Documents/Labels\Everywhere Sling_BLKV1Standard_label_840168713158.png
+2025-03-14 15:41:256 | Tracking: B-133-3PL5 | SKU: 840168713158 | Label: C:/Users/Justin/Documents/Labels\Everywhere Sling_BLKV1Standard_label_840168713158.png
+2025-03-17 08:38:55 | Tracking: 1Z87FE369098940825 | SKU: 840168720156 | Label: C:/Users/Justin/Documents/Labels\Outdoor Backpack 26L_GRNV126L_label_840168720156.png
+2025-03-17 08:48:18 | Tracking: 1Z87FE369097714170 | SKU: 840168722112 | Label: C:/Users/Justin/Documents/Labels\Mini Crossbody_LGRNV1Standard_label_840168722112.png
+2025-03-17 08:57:32 | Tracking: 1Z87FE369096552178 | SKU: 840168714896 | Label: C:/Users/Justin/Documents/Labels\Quilted Everywhere Crossbody_DGRNV1Standard_label_840168714896.png
+2025-03-17 09:01:11 | Tracking: 1Z87FE369091554532 | SKU: 840168722686 | Label: C:/Users/Justin/Documents/Labels\Train Case_SLVV1Standard_label_840168722686.png
+2025-03-17 09:07:38 | Tracking: 1Z87FE369093245201 | SKU: 840168717699 | Label: C:/Users/Justin/Documents/Labels\Cosmetics Bag_MBLUV1Standard_label_840168717699.png
+2025-03-17 09:14:13 | Tracking: 1Z87FE369093043545 | SKU: 840168710003 | Label: C:/Users/Justin/Documents/Labels\Everywhere Bag_MBLUV1Standard_label_840168710003.png
+2025-03-17 09:24:41 | Tracking: 1Z87FE369095494797 | SKU: 840168717613 | Label: C:/Users/Justin/Documents/Labels\Weekender_SLTV1Large_label_840168717613.png
+2025-03-17 09:33:50 | Tracking: 1Z87FE369091871770 | SKU: 840168710003 | Label: C:/Users/Justin/Documents/Labels\Everywhere Bag_MBLUV1Standard_label_840168710003.png
+2025-03-17 09:46:03 | Tracking: 1Z87FE369093426917 | SKU: 840168717668 | Label: C:/Users/Justin/Documents/Labels\Everywhere Tote_SLTV1Standard_label_840168717668.png
+2025-03-17 09:51:06 | Tracking: 1Z87FE369090532521 | SKU: 840168721092 | Label: C:/Users/Justin/Documents/Labels\Featherlight Large Backpack_ABWNV1Large_label_840168721092.png
+2025-03-17 10:04:01 | Tracking: 1Z87FE369091926112 | SKU: 840168709175 | Label: C:/Users/Justin/Documents/Labels\PC Flex LRG No Battery_BLKV1_label_840168709175.png
+2025-03-17 10:12:10 | Tracking: 1Z87FE369094274160 | SKU: 864851000288 | Label: C:/Users/Justin/Documents/Labels\PC LRG No Battery_BLKV1_label_864851000288.png
+2025-03-17 10:18:27 | Tracking: 1Z87FE369094471661 | SKU: 864851000264 | Label: C:/Users/Justin/Documents/Labels\PC MED No Battery_GRNV1_label_864851000264.png
+2025-03-17 10:29:23 | Tracking: 1Z87FE369094536127 | SKU: 840168720934 | Label: C:/Users/Justin/Documents/Labels\Featherlight Large Backpack_SLTV1Large_label_840168720934.png
+2025-03-17 10:29:23 | Tracking: 1Z87FE369094536127 | SKU: 840168720934 | Label: C:/Users/Justin/Documents/Labels\Featherlight Large Backpack_SLTV1Large_label_840168720934.png
+2025-03-17 10:41:14 | Tracking: 1Z87FE369095562034 | SKU: 840168723904 | Label: C:/Users/Justin/Documents/Labels\Featherlight Weekender_ABWNV1Standard_label_840168723904.png
+2025-03-17 10:49:51 | Tracking: 1Z87FE369097672386 | SKU: 840168709427 | Label: C:/Users/Justin/Documents/Labels\Weekender_NVYV1Large_label_840168709427.png
+2025-03-17 10:58:42 | Tracking: 1Z87FE369090802239 | SKU: 840168721214 | Label: C:/Users/Justin/Documents/Labels\Cosmetics Bag_CPNKV1Standard_label_840168721214.png
+2025-03-17 11:04:04 | Tracking: 1Z87FE369099360352 | SKU: 840168720330 | Label: C:/Users/Justin/Documents/Labels\Bigger Carry-On Flex No Battery_MNVYV1_label_840168720330.png
+2025-03-17 11:16:16 | Tracking: 1Z87FE369096109424 | SKU: 840168705894 | Label: C:/Users/Justin/Documents/Labels\Weekender_BLKV1Large_label_840168705894.png
+2025-03-17 11:21:03 | Tracking: 1Z87FE369096604755 | SKU: 858241007735 | Label: C:/Users/Justin/Documents/Labels\PC BCO Battery_PNKV1_label_858241007735.png
+2025-03-17 11:30:16 | Tracking: 1Z87FE369093877029 | SKU: 850496007003 | Label: C:/Users/Justin/Documents/Labels\PC LRG No Battery_BRICKV1_label_850496007003.png
+2025-03-17 11:36:06 | Tracking: 1Z87FE369099977295 | SKU: 840168709199 | Label: C:/Users/Justin/Documents/Labels\PC Flex LRG No Battery_MBLUV1_label_840168709199.png
+2025-03-19 13:41:49 | Tracking: 1Z87FE369093775157 | SKU: 864851000264 | Label: C:/Users/Justin/Documents/Labels\PC MED No Battery_GRNV1_label_864851000264.png
+2025-03-19 14:38:26 | Tracking: 1Z87FE369099199402 | SKU: 840168723270 | Label: C:/Users/Justin/Documents/Labels\Plastic Poolside Tote_PDRFV1Standard_label_840168723270.png
+2025-03-19 14:54:36 | Tracking: 1Z87FE369095276844 | SKU: 810194030581 | Label: C:/Users/Justin/Documents/Labels\PC FP BCO Battery_BLKV1_label_810194030581.png
+2025-03-19 15:33:23 | Tracking: 1Z87FE369094206555 | SKU: 840168720316 | Label: C:/Users/Justin/Documents/Labels\Bigger Carry-On Flex No Battery_MBLKV1_label_840168720316.png
+2025-03-19 15:46:15 | Tracking: 1Z87FE369092842406 | SKU: 840168721139 | Label: C:/Users/Justin/Documents/Labels\Featherlight Small Backpack_ABLUV1Small_label_840168721139.png
+2025-03-19 15:53:10 | Tracking: 840168721139 | SKU: 840168721139 | Label: C:/Users/Justin/Documents/Labels\Featherlight Small Backpack_ABLUV1Small_label_840168721139.png
+2025-03-19 17:11:59 | Tracking: 1Z87FE369094184392 | SKU: 810031470464 | Label: C:/Users/Justin/Documents/Labels\ALM BCO No Battery_ONYXV1_label_810031470464.png

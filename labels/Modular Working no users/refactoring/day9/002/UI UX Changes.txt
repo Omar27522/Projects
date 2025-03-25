@@ -1,0 +1,44 @@
+
+
+WELCOME WINDOW
+Maybe give some metadata? like Name: Variant, SKU times stamp? 
+
+??? Rly… Make a setting for an alert reminder to scan it as reverse inbound [X]
+
+Inside the Create Label window
+	*Make it possible to Ctrl, and add other shortcuts.
+	*Add another button that will search for a label if one is not found, make the search better than 			before????? I'm not sure about this one just yet.
+	*When no label is found, open the Management window to create one.
+
+LABEL MAKER
+Inside the View files window
+
+	*Add an extra toggle button, that will make the software transparent, and non-transparent, add it 		to the transparency settings.
+	*Add an extra toggle button, that will make the software Auto print and manually print after the 		SKU has been inputted, add it into settings.
+	
+Inside Label Maker
+	Add a small toggle button next to the reset button, that will enable or disable the transparency, 			add it to the transparency settings
+
+More features:
+Maybe a Variant Dictionary?
+
+
+
+
+
+3/17
+	Production Testing
+-Create Label does not have a minimize button, I can hide the welcome window behind it, and when I click off the welcome window loses focus, but Create Label stays on top of all other windows, this is ideal for production. but I don't want to change the behavior, this is fine.
+		*-The fix was to scrap the creation of a new window all together, and instead add a 				frame inside the same Welcome window.
+
+-Maybe where it says: "Label sent to the printer. Ready for next label" it can be changed to the name, variant, SKU, and last tracking number, --design it to make it fit. --
+	These are QOL changes that will be implemented eventually
+
+
+-after restarting the app the configuration is lost, but the welcome window, shows the right config, but the Google settings defaults back to the first sheet instead of the active one. XD
+-A module will have to be built that checks the state of the state of sheet connection, every time there is a change, so it can be like real-time updates, but not when the connections have been established, and no changes have been made. perhaps something that starts at the beginning, checks the state and then lets the other functions know. because it looks like right now the update is hardcoded and does not know when a change has been made, until the user restarts the app, and also the settings are lost and the user needs to select a new sheet every time.
+-The create Label window closes and it looks like the sheet settings change. XD.
+-If the next label has the same Tracking number, throw a warning, so that way there is no way to pass the same data several times. Idk how it happened, but I got 3 entries on the same record. XD
+-make the Create label window more compact. it looks like the Google Sheets configuration loses the settings.
+-Also the program hangs after some use, I imagine, there is a memory leak somewhere, or the logs are just way too big, or something odd. A program restart fixes this issue. XD I think is the fact that pressing enter prints the label and makes a record. and perhaps after pressing print it does it again, and it corrupts the workflow, maybe delete the print button? and just tell the user to press enter. lets build a guard rail that will not let you record the same twice, like if enter is pressed several times in a row.
+Pressing enter, sometimes takes a bit long, users might hit the enter key repeatedly. Also, the tracking number cannot be less than 12 chars, so that way we don't pass a tracking number as an SKU.
