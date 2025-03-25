@@ -14,6 +14,7 @@ class Settings:
     mirror_print: bool = False
     enable_advanced_features: bool = False
     default_print_quality: str = "Standard"
+    stay_on_top: bool = False  # New setting for window stay-on-top feature
     # Google Sheets settings
     google_sheet_url: Optional[str] = None
     google_sheet_name: Optional[str] = None
@@ -59,6 +60,7 @@ class ConfigManager:
                     mirror_print=data.get('mirror_print', False),
                     enable_advanced_features=data.get('enable_advanced_features', False),
                     default_print_quality=data.get('default_print_quality', "Standard"),
+                    stay_on_top=data.get('stay_on_top', False),  # Load stay_on_top setting
                     # Google Sheets settings
                     google_sheet_url=data.get('google_sheet_url'),
                     google_sheet_name=data.get('google_sheet_name'),

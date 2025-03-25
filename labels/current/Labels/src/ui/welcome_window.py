@@ -80,6 +80,9 @@ class WelcomeWindow(tk.Tk):
         # Initialize config manager
         self.config_manager = ConfigManager()
         
+        # Initialize stay on top variable
+        self.stay_on_top_var = tk.BooleanVar(value=self.config_manager.settings.stay_on_top if hasattr(self.config_manager.settings, 'stay_on_top') else False)
+        
         # Track open dialogs to prevent duplicates
         self.open_dialogs = {
             'create_label': None,
@@ -100,10 +103,6 @@ class WelcomeWindow(tk.Tk):
         self.attributes('-toolwindow', 1)  # Remove minimize/maximize buttons
         self.attributes('-toolwindow', 0)  # Restore minimize button
         
-        self._create_ui()
-    
-    def _create_ui(self):
-        """Create the user interface elements"""
         # Create a container frame for different "pages"
         self.container_frame = tk.Frame(self, bg='white')
         self.container_frame.pack(fill='both', expand=True)
@@ -290,24 +289,37 @@ class WelcomeWindow(tk.Tk):
                 messagebox.showerror("Error", "Please set the labels directory in Settings first.")
                 return
             
+            # Check if dialog is already open
+            if self.open_dialogs['create_label'] is not None:
+                # Bring to front
+                self.open_dialogs['create_label'].lift()
+                self.open_dialogs['create_label'].focus_force()
+                return
+                
             # Hide the welcome frame
             self.welcome_frame.pack_forget()
             
-            # Create the create label frame if it doesn't exist
-            if not self.create_label_frame:
-                self.create_label_frame = CreateLabelFrame(
-                    self.container_frame,
-                    self.config_manager,
-                    self.update_label_count,
-                    self.return_to_welcome
-                )
+            # Create the Create Label frame
+            create_label_frame = CreateLabelFrame(
+                self.container_frame, 
+                self.config_manager, 
+                self.update_label_count,
+                self.return_to_welcome
+            )
+            create_label_frame.pack(fill='both', expand=True)
             
-            # Show the create label frame
-            self.create_label_frame.pack(fill='both', expand=True)
+            # Store reference to the frame
+            self.open_dialogs['create_label'] = create_label_frame
             
             # Update the window title
             self.title("Create Label")
             
+            # Apply stay-on-top setting if enabled
+            if self.stay_on_top_var.get():
+                self.attributes('-topmost', True)
+                self.lift()
+                self.focus_force()
+                
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred: {str(e)}")
     
@@ -622,6 +634,10 @@ class WelcomeWindow(tk.Tk):
         
         # Update the window title
         self.title("Welcome")
+        
+        # Clear references to open dialogs
+        for key in self.open_dialogs:
+            self.open_dialogs[key] = None
         
         # Update label count
         self.update_label_count()

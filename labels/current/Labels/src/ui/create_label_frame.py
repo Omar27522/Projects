@@ -5,12 +5,13 @@ instead of opening a separate dialog.
 """
 
 import os
+import sys
+import logging
+import datetime
 import tkinter as tk
 from tkinter import ttk, messagebox
-import sys
-import datetime
 import pyautogui
-import logging
+import subprocess
 
 # Add the project root directory to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
@@ -22,20 +23,35 @@ from src.utils.sheets_operations import write_to_google_sheet
 from src.utils.file_utils import directory_exists, file_exists, find_files_by_sku
 
 # Configure logging
+logs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'logs')
+os.makedirs(logs_dir, exist_ok=True)
 logging.basicConfig(
-    filename=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'label_maker.log'),
+    filename=os.path.join(logs_dir, 'label_maker.log'),
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
 def log_shipping_record(tracking_number, sku, status):
-    """Log shipping record information to a file"""
+    """Log shipping record information to a separate file"""
     try:
-        log_message = f"SHIPPING RECORD: Tracking={tracking_number}, SKU={sku}, Status={status}"
-        logging.info(log_message)
+        # Get logs directory
+        logs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'logs')
+        os.makedirs(logs_dir, exist_ok=True)
+        
+        # Create timestamp
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Format the record
+        log_message = f"{timestamp} - Tracking={tracking_number}, SKU={sku}, Status={status}\n"
+        
+        # Write to shipping_records.txt instead of logging to the main log file
+        with open(os.path.join(logs_dir, 'shipping_records.txt'), 'a', encoding='utf-8') as f:
+            f.write(log_message)
+            
         return True
     except Exception as e:
-        logging.error(f"Error logging shipping record: {str(e)}")
+        # Log errors to the main log file
+        logging.error(f"Error recording shipping record: {str(e)}")
         return False
 
 class CreateLabelFrame(tk.Frame):
@@ -64,9 +80,13 @@ class CreateLabelFrame(tk.Frame):
         self.sku_var = tk.StringVar()
         self.mirror_print_var = tk.BooleanVar(value=config_manager.settings.mirror_print if hasattr(config_manager.settings, 'mirror_print') else False)
         self.print_enabled_var = tk.BooleanVar(value=True)  # Print enabled by default
+        self.stay_on_top_var = tk.BooleanVar(value=config_manager.settings.stay_on_top if hasattr(config_manager.settings, 'stay_on_top') else False)
         
         # Create UI
         self._create_ui()
+        
+        # Set focus to tracking number field
+        self._focus_tracking_field()
     
     def _create_ui(self):
         """Create the user interface elements"""
@@ -76,7 +96,7 @@ class CreateLabelFrame(tk.Frame):
         
         # Add a return button in the top-left corner
         return_frame = tk.Frame(content_frame, bg='white')
-        return_frame.pack(anchor='nw', pady=(0, 10))
+        return_frame.pack(fill='x', pady=(0, 5))
         
         return_button = create_colored_button(
             return_frame,
@@ -91,7 +111,51 @@ class CreateLabelFrame(tk.Frame):
             height=1,
             font=("Arial", 10, "bold")
         )
-        return_button.pack()
+        return_button.pack(side='left')
+        
+        # Add a pin button on the right side to toggle stay-on-top
+        def toggle_stay_on_top():
+            current_state = self.stay_on_top_var.get()
+            self.pin_btn.config(
+                bg='#FFD700' if current_state else '#D3D3D3',  # Gold if on, Light Gray if off
+                relief='sunken' if current_state else 'raised'
+            )
+            # Get the root window (Tk instance) and update its topmost state
+            root = self.winfo_toplevel()
+            root.attributes('-topmost', current_state)
+            # Ensure window is lifted and focused when topmost is enabled
+            if current_state:
+                root.lift()
+                root.focus_force()
+            # Save the setting
+            self.config_manager.settings.stay_on_top = current_state
+            self.config_manager.save_settings()
+        
+        # Create pin button with label
+        pin_frame = tk.Frame(return_frame, bg='white')
+        pin_frame.pack(side='right')
+        
+        pin_label = tk.Label(pin_frame, text="Pin:", bg='white', font=('TkDefaultFont', 10))
+        pin_label.pack(side=tk.LEFT, padx=(0, 5))
+        
+        # Set initial button state based on saved setting
+        initial_pin_color = '#FFD700' if self.stay_on_top_var.get() else '#D3D3D3'  # Gold if on, Light Gray if off
+        initial_pin_relief = 'sunken' if self.stay_on_top_var.get() else 'raised'
+        
+        self.pin_btn = tk.Button(pin_frame, text="📌", bg=initial_pin_color, 
+                           relief=initial_pin_relief, width=3,
+                           font=('TkDefaultFont', 14), anchor='center')
+        
+        self.pin_btn.config(
+            command=lambda: [self.stay_on_top_var.set(not self.stay_on_top_var.get()),
+                           toggle_stay_on_top()]
+        )
+        self.pin_btn.pack(side=tk.LEFT, padx=2)
+        
+        # Apply the initial stay-on-top state
+        if self.stay_on_top_var.get():
+            root = self.winfo_toplevel()
+            root.attributes('-topmost', True)
         
         # Title
         self.title_frame = tk.Frame(content_frame, bg='white')
@@ -136,10 +200,19 @@ class CreateLabelFrame(tk.Frame):
         # Add focus to tracking number field
         self.field_widgets["Tracking Number:"]["widget"].focus_set()
         
+        # Initially disable the SKU field until a valid tracking number is entered
+        self.field_widgets["SKU:"]["widget"].config(state="disabled")
+        
         # Add auto-copy and tab functionality for tracking number field
         def on_tracking_enter(event):
             # Get the tracking number
             tracking_number = self.tracking_var.get().strip()
+            
+            # Validate tracking number
+            if not tracking_number:
+                self._update_status("Please enter a tracking number", 'red')
+                messagebox.showerror("Missing Tracking Number", "A tracking number is required.\n\nPlease enter a valid tracking number.")
+                return "break"  # Prevent default Enter behavior
             
             # Validate tracking number length
             if tracking_number and len(tracking_number) <= 12:
@@ -161,7 +234,8 @@ class CreateLabelFrame(tk.Frame):
                 self.clipboard_clear()
                 self.clipboard_append(tracking_number)
                 
-                # Move focus to SKU field
+                # Enable and move focus to SKU field
+                self.field_widgets["SKU:"]["widget"].config(state="normal")
                 self.field_widgets["SKU:"]["widget"].focus_set()
                 
                 # Clear any previous error messages
@@ -174,6 +248,15 @@ class CreateLabelFrame(tk.Frame):
         
         # Add functionality to print label when Enter is pressed in the SKU field
         def on_sku_enter(event):
+            # Verify tracking number is present before proceeding
+            tracking_number = self.tracking_var.get().strip()
+            if not tracking_number:
+                self._update_status("Please enter a tracking number first", 'red')
+                messagebox.showerror("Missing Tracking Number", "A tracking number is required.\n\nPlease enter a valid tracking number.")
+                # Move focus back to tracking number field
+                self.field_widgets["Tracking Number:"]["widget"].focus_set()
+                return "break"  # Prevent default Enter behavior
+            
             # Print the label
             self._print_label()
             return "break"  # Prevent default Enter behavior
@@ -283,69 +366,48 @@ class CreateLabelFrame(tk.Frame):
     
     def _print_label(self):
         """Handle the print label button click"""
-        # Get values from form
+        # Get input values
         tracking_number = self.tracking_var.get().strip()
         sku = self.sku_var.get().strip()
         
-        # Validate tracking number
-        if tracking_number and len(tracking_number) <= 12:
-            self._update_status("Tracking number must be longer than 12 characters", 'red')
+        # Validate tracking number - now required in all cases
+        if not tracking_number:
+            self._update_status("Please enter a tracking number", 'red')
+            messagebox.showerror("Missing Tracking Number", "A tracking number is required.\n\nPlease enter a valid tracking number.")
+            # Move focus back to tracking number field
             self.field_widgets["Tracking Number:"]["widget"].focus_set()
-            return
+            return False, "No tracking number provided"
         
-        # Validate SKU
-        if not sku:
-            self._update_status("Please enter an SKU", 'red')
-            self.field_widgets["SKU:"]["widget"].focus_set()
-            return
+        # Validate tracking number length
+        if len(tracking_number) <= 12:
+            self._update_status("Tracking number must be longer than 12 characters", 'red')
+            messagebox.showerror("Invalid Tracking Number", "Tracking number must be longer than 12 characters.\n\nPlease enter a valid tracking number.")
+            # Move focus back to tracking number field
+            self.field_widgets["Tracking Number:"]["widget"].focus_set()
+            return False, "Invalid tracking number length"
         
-        # Check if labels directory exists
-        labels_dir = self.config_manager.settings.last_directory
-        if not directory_exists(labels_dir):
-            self._update_status(f"Labels directory not found: {labels_dir}", 'red')
-            return
-        
-        # Define a status callback function to update the status label
-        def update_status(message, color):
-            self._update_status(message, color)
-            self.update()
-        
-        # Early validation - Check if the label file exists before proceeding
-        label_exists = False
-        
-        # First check if a file with this SKU exists directly
-        sku_file = os.path.join(labels_dir, f"{sku}.txt")
-        if file_exists(sku_file):
-            label_exists = True
-        else:
-            # If no direct SKU file, check if it exists in the database
-            matching_files = find_files_by_sku(labels_dir, sku, extension='.txt')
-            if matching_files:
-                label_exists = True
-        
-        # If we don't have a tracking number and the label doesn't exist, show error and don't log
-        if not tracking_number and not label_exists:
-            error_message = f"Could not find a label for SKU: {sku}"
-            self._update_status(f"Error: {error_message}", 'red')
-            messagebox.showerror("Error", error_message)
-            self._clear_fields()
-            return
-        
-        # Create a unique filename based on tracking number and date (but don't create the actual file)
-        date_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"{tracking_number}_{date_str}.txt"
-        filepath = os.path.join(labels_dir, filename)
-        
-        # Get mirror print setting from the toggle button
+        # Get configuration
         mirror_print = self.mirror_print_var.get()
-        
-        # Check if printing is disabled
         print_enabled = self.print_enabled_var.get()
         
+        # Get labels directory from configuration
+        labels_dir = self.config_manager.settings.last_directory if hasattr(self.config_manager.settings, 'last_directory') else None
+        
+        # Validate labels directory
+        if not labels_dir or not directory_exists(labels_dir):
+            error_msg = f"Labels directory not configured or does not exist: {labels_dir}"
+            self._update_status(error_msg, 'red')
+            messagebox.showerror("Error", error_msg)
+            return False, error_msg
+        
+        # Create a function to update status
+        def update_status(message, color='black'):
+            self._update_status(message, color)
+        
+        # If print is disabled, just log the information without printing
         if not print_enabled:
-            # We already warned the user when they entered the tracking number, so no need for another warning here
-            # Skip the printing process but still log the info
-            log_shipping_record(tracking_number, sku, "NO_PRINT")
+            # Log the shipping record
+            log_shipping_record(tracking_number, sku, "No print - logging only")
             
             # Write to Google Sheets if configured
             if (hasattr(self.config_manager.settings, 'google_sheet_url') and 
@@ -376,22 +438,32 @@ class CreateLabelFrame(tk.Frame):
             # Define a function to run after successful printing
             def after_print_success():
                 # Log the shipping record ONLY after successful printing
-                log_shipping_record(tracking_number, sku, filepath)
+                log_shipping_record(tracking_number, sku, "Label printed successfully")
                 
                 # Write to Google Sheets ONLY after successful printing
                 if (hasattr(self.config_manager.settings, 'google_sheet_url') and 
                     self.config_manager.settings.google_sheet_url and 
                     hasattr(self.config_manager.settings, 'google_sheet_name') and
                     self.config_manager.settings.google_sheet_name):
-                    write_to_google_sheet(
-                        self.config_manager, 
-                        tracking_number, 
-                        sku, 
-                        update_status
-                    )
+                    # Use a separate thread for Google Sheets to avoid blocking UI
+                    def sheets_task():
+                        try:
+                            write_to_google_sheet(
+                                self.config_manager, 
+                                tracking_number, 
+                                sku, 
+                                update_status
+                            )
+                        except Exception as e:
+                            print(f"Error writing to Google Sheets: {str(e)}")
+                    
+                    import threading
+                    sheets_thread = threading.Thread(target=sheets_task)
+                    sheets_thread.daemon = True
+                    sheets_thread.start()
                 
                 # Show success message in the title
-                self._show_success_message(f"Label for {sku} printed successfully!")
+                self._show_success_message(f"Label for {sku or tracking_number} printed successfully!")
                 
                 # Clear input fields for next label
                 self._clear_fields()
@@ -400,50 +472,44 @@ class CreateLabelFrame(tk.Frame):
                 if self.update_label_count_callback:
                     self.update_label_count_callback()
             
-            # Use a modified approach to find or create the barcode without logging yet
-            if tracking_number:
-                # If we have a tracking number, we'll create a new barcode
-                success, barcode_path, message = self._find_or_create_barcode_without_logging(
-                    tracking_number,
-                    sku,
-                    labels_dir,
-                    mirror_print,
-                    update_status
-                )
-            else:
-                # If we only have an SKU, we'll find an existing barcode
-                success, barcode_path, message = self._find_barcode_by_sku(
-                    sku,
-                    labels_dir,
-                    update_status
-                )
+            # Use the simpler approach from the BAK version
+            from src.utils.barcode_operations import process_barcode
             
-            if not success:
-                self._update_status(f"Error: {message}", 'red')
-                messagebox.showerror("Error", message)
-                self._clear_fields()
-                return False, message
-            
-            # Print the barcode
-            print_success, print_message = print_barcode(barcode_path, mirror_print, update_status)
-            
-            # Only log and send to Google Sheets if printing was successful
-            if print_success:
-                after_print_success()
+            # Check if we have a valid tracking number or SKU
+            if not tracking_number and not sku:
+                error_msg = "Either tracking number or SKU is required"
+                self._update_status(error_msg, 'red')
+                messagebox.showerror("Error", error_msg)
+                return False, error_msg
                 
-                # Use pyautogui to automatically press Enter after a short delay
+            # Use our utility function to process the barcode
+            success, message = process_barcode(
+                tracking_number,
+                sku,
+                labels_dir,
+                mirror_print,
+                update_status,
+                after_print_success
+            )
+            
+            # Use pyautogui to automatically press Enter after a shorter delay
+            if success:
                 try:
-                    # Wait a moment for the print dialog to appear (longer delay)
+                    # Reduced wait time for the print dialog to appear (from 2000ms to 1000ms)
                     print("Waiting for print dialog to appear...")
-                    self.after(2000, lambda: self._press_enter_for_print_dialog())
+                    self.after(1000, lambda: self._press_enter_for_print_dialog())
                 except Exception as e:
                     print(f"Error setting up auto-press Enter: {str(e)}")
             else:
-                self._update_status(f"Error printing: {print_message}", 'red')
-                messagebox.showerror("Error", f"Error printing: {print_message}")
+                # Show error message if process_barcode failed
+                self._update_status(f"Error: {message}", 'red')
+                if message == "Label creation has been disabled":
+                    self._show_create_label_dialog(sku)
+                else:
+                    messagebox.showerror("Error", message)
                 self._clear_fields()
-            
-            return print_success, print_message
+                
+            return success, message
             
         except Exception as e:
             error_msg = str(e)
@@ -451,101 +517,6 @@ class CreateLabelFrame(tk.Frame):
             messagebox.showerror("Error", f"Error processing barcode: {error_msg}")
             self._clear_fields()
             return False, error_msg
-    
-    def _find_or_create_barcode_without_logging(self, tracking_number, sku, directory, mirror_print=False, status_callback=None):
-        """
-        Find an existing barcode file for the given SKU or create a new one for the tracking number,
-        without logging the shipping record.
-        
-        Args:
-            tracking_number: The tracking number to encode in the barcode
-            sku: The SKU to search for existing barcodes
-            directory: The directory to save the barcode image to
-            mirror_print: Whether to create a mirrored version of the barcode
-            status_callback: Optional callback function to update status messages
-            
-        Returns:
-            tuple: (success, barcode_path, message)
-        """
-        try:
-            # Check if the directory exists
-            if not directory_exists(directory):
-                if status_callback:
-                    status_callback(f"Error: Directory not found: {directory}", 'red')
-                return False, None, f"Error: Directory not found: {directory}"
-            
-            # First, try to find an existing file for this SKU
-            sku_file = os.path.join(directory, f"{sku}.txt")
-            if file_exists(sku_file):
-                return True, sku_file, "Found existing barcode file"
-            
-            # If no direct match, try to find files containing the SKU
-            matching_files = find_files_by_sku(directory, sku, extension='.txt')
-            if matching_files:
-                return True, matching_files[0], "Found existing barcode file"
-            
-            # If we have a tracking number, create a new barcode
-            if tracking_number:
-                # Create a unique filename based on tracking number and date
-                date_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-                filename = f"{tracking_number}_{date_str}.txt"
-                filepath = os.path.join(directory, filename)
-                
-                # Create a barcode for the tracking number
-                from src.utils.barcode_operations import create_barcode_for_tracking
-                success, barcode_path, message = create_barcode_for_tracking(
-                    tracking_number, directory, mirror_print, status_callback
-                )
-                
-                if success:
-                    return True, barcode_path, "Created new barcode file"
-                else:
-                    return False, None, message
-            else:
-                return False, None, f"No label file found for SKU: {sku}"
-                
-        except Exception as e:
-            error_msg = str(e)
-            if status_callback:
-                status_callback(f"Error finding or creating barcode: {error_msg}", 'red')
-            return False, None, f"Error finding or creating barcode: {error_msg}"
-    
-    def _find_barcode_by_sku(self, sku, directory, status_callback=None):
-        """
-        Find an existing barcode file for the given SKU.
-        
-        Args:
-            sku: The SKU to search for existing barcodes
-            directory: The directory to search in
-            status_callback: Optional callback function to update status messages
-            
-        Returns:
-            tuple: (success, barcode_path, message)
-        """
-        try:
-            # Check if the directory exists
-            if not directory_exists(directory):
-                if status_callback:
-                    status_callback(f"Error: Directory not found: {directory}", 'red')
-                return False, None, f"Error: Directory not found: {directory}"
-            
-            # First, try to find an existing file for this SKU
-            sku_file = os.path.join(directory, f"{sku}.txt")
-            if file_exists(sku_file):
-                return True, sku_file, "Found existing barcode file"
-            
-            # If no direct match, try to find files containing the SKU
-            matching_files = find_files_by_sku(directory, sku, extension='.txt')
-            if matching_files:
-                return True, matching_files[0], "Found existing barcode file"
-            
-            return False, None, f"No label file found for SKU: {sku}"
-                
-        except Exception as e:
-            error_msg = str(e)
-            if status_callback:
-                status_callback(f"Error finding barcode: {error_msg}", 'red')
-            return False, None, f"Error finding barcode: {error_msg}"
     
     def _press_enter_for_print_dialog(self):
         """Press Enter key to confirm print dialog"""
@@ -560,9 +531,18 @@ class CreateLabelFrame(tk.Frame):
         """Clear all form fields"""
         self.tracking_var.set("")
         self.sku_var.set("")
+        self._update_status("", 'black')
         
-        # Set focus to tracking number field
-        self.field_widgets["Tracking Number:"]["widget"].focus_set()
+        # Disable the SKU field again
+        self.field_widgets["SKU:"]["widget"].config(state="disabled")
+        
+        # Set focus to the tracking number field
+        self._focus_tracking_field()
+    
+    def _focus_tracking_field(self):
+        """Set focus to the tracking number field if it's empty"""
+        if not self.tracking_var.get().strip():
+            self.field_widgets["Tracking Number:"]["widget"].focus_set()
     
     def _update_status(self, message, color='black'):
         """Update the status message"""
@@ -579,3 +559,144 @@ class CreateLabelFrame(tk.Frame):
         
         # Schedule to revert back to original title after 3 seconds
         self.after(3000, lambda: self.title_label.config(text=original_text, fg='#333333'))
+    
+    def _show_create_label_dialog(self, sku):
+        """
+        Show a custom dialog with a 'Create Label' button when a label needs to be created
+        
+        Args:
+            sku: The SKU to pass to the Label Maker application
+        """
+        # Create a custom dialog
+        dialog = tk.Toplevel(self)
+        dialog.title("Error")
+        dialog.geometry("400x150")
+        dialog.resizable(False, False)
+        dialog.transient(self)  # Set to be on top of the parent window
+        dialog.grab_set()  # Modal dialog
+        
+        # Make sure the dialog appears in the center of the parent window
+        dialog.update_idletasks()
+        x = self.winfo_rootx() + (self.winfo_width() - dialog.winfo_width()) // 2
+        y = self.winfo_rooty() + (self.winfo_height() - dialog.winfo_height()) // 2
+        dialog.geometry(f"+{x}+{y}")
+        
+        # Create a frame for the icon and message
+        frame = tk.Frame(dialog, padx=20, pady=20)
+        frame.pack(fill="both", expand=True)
+        
+        # Create and place the error icon
+        try:
+            # Use a standard error icon
+            error_icon = tk.Label(frame, text="❌", font=("Arial", 24), fg="red")
+            error_icon.grid(row=0, column=0, padx=(0, 15), sticky="n")
+        except:
+            # Fallback if custom icon fails
+            error_icon = tk.Label(frame, text="X", font=("Arial", 24), fg="red")
+            error_icon.grid(row=0, column=0, padx=(0, 15), sticky="n")
+        
+        # Create and place the message
+        message = tk.Label(
+            frame, 
+            text="This label needs to be created in Label Maker.",
+            font=("Arial", 10), 
+            justify="left",
+            wraplength=300
+        )
+        message.grid(row=0, column=1, sticky="w")
+        
+        # Create a frame for the buttons
+        button_frame = tk.Frame(dialog, padx=10, pady=10)
+        button_frame.pack(fill="x", side="bottom")
+        
+        # Function to handle the Create Label button click
+        def on_create_label():
+            dialog.destroy()
+            self._launch_label_maker(sku)
+        
+        # Create and place the buttons
+        create_button = tk.Button(
+            button_frame, 
+            text="Create Label", 
+            command=on_create_label,
+            width=15,
+            default="active"  # Make this the default button (activated by Enter)
+        )
+        create_button.pack(side="right", padx=5)
+        
+        cancel_button = tk.Button(
+            button_frame, 
+            text="Cancel", 
+            command=dialog.destroy,
+            width=10
+        )
+        cancel_button.pack(side="right", padx=5)
+        
+        # Set focus to the Create Label button
+        create_button.focus_set()
+        
+        # Bind Enter key to the Create Label button
+        dialog.bind("<Return>", lambda event: on_create_label())
+        
+        # Make the dialog modal
+        dialog.wait_window()
+    
+    def _launch_label_maker(self, sku):
+        """
+        Launch the Label Maker application with the given SKU
+        
+        Args:
+            sku: The SKU to pass to the Label Maker application
+        """
+        try:
+            # Get the root directory
+            root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            
+            # Path to the Label Maker directory
+            label_maker_dir = os.path.join(root_dir, "Label Maker")
+            
+            # Path to main.pyw
+            main_pyw = os.path.join(label_maker_dir, "main.pyw")
+            
+            if not os.path.exists(main_pyw):
+                messagebox.showerror("Error", f"Label Maker application not found at: {main_pyw}")
+                return
+            
+            # Launch the Label Maker application
+            self._update_status(f"Launching Label Maker for SKU: {sku}", 'blue')
+            
+            # Use subprocess to launch the application
+            process = subprocess.Popen(
+                [sys.executable, main_pyw],
+                cwd=label_maker_dir
+            )
+            
+            # Wait a moment for the application to start
+            self.after(2000, lambda: self._fill_upc_field(sku))
+        
+        except Exception as e:
+            error_msg = str(e)
+            self._update_status(f"Error launching Label Maker: {error_msg}", 'red')
+            messagebox.showerror("Error", f"Error launching Label Maker: {error_msg}")
+
+    def _fill_upc_field(self, sku):
+        """
+        Use pyautogui to fill in the UPC code field in the Label Maker application
+        
+        Args:
+            sku: The SKU to enter in the UPC field
+        """
+        try:
+            # First press Tab to focus the UPC field (assuming it's the first field)
+            pyautogui.press('tab')
+            
+            # Clear any existing text and type the SKU
+            pyautogui.hotkey('ctrl', 'a')  # Select all text
+            pyautogui.press('delete')      # Delete selected text
+            pyautogui.write(sku)           # Type the SKU
+            
+            self._update_status(f"SKU {sku} entered in Label Maker", 'green')
+        except Exception as e:
+            error_msg = str(e)
+            self._update_status(f"Error filling UPC field: {error_msg}", 'red')
+            # Don't show an error dialog here as it's not critical

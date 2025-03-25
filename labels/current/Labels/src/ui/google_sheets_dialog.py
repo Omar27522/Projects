@@ -239,6 +239,26 @@ class GoogleSheetsDialog(tk.Toplevel):
         )
         sku_row_entry.pack(side='left', padx=(5, 0))
         
+        # Add a reset button for starting rows
+        reset_rows_frame = tk.Frame(content_frame, bg='white')
+        reset_rows_frame.pack(fill='x', pady=(5, 10))
+        
+        # Create a container to align the button to the right
+        reset_button_container = tk.Frame(reset_rows_frame, bg='white')
+        reset_button_container.pack(side='right')
+        
+        # Add the reset button
+        reset_rows_button = create_button(
+            reset_button_container,
+            text="Reset Rows to Default",
+            command=self._reset_starting_rows,
+            bg='#2196F3',
+            padx=10,
+            pady=5,
+            font=("Arial", 8)
+        )
+        reset_rows_button.pack(side='right')
+        
         # Status Frame
         status_frame = tk.Frame(content_frame, bg='white')
         status_frame.pack(fill='x', pady=(10, 0))
@@ -494,6 +514,31 @@ class GoogleSheetsDialog(tk.Toplevel):
                 
         except Exception as e:
             messagebox.showerror("Error", f"An unexpected error occurred: {str(e)}")
+    
+    def _reset_starting_rows(self):
+        """Reset both starting rows to the default value of 3"""
+        # Set both row variables to 3
+        self.tracking_row_var.set("3")
+        self.sku_row_var.set("3")
+        
+        # Update the settings
+        self.config_manager.settings.google_sheet_tracking_row = 3
+        self.config_manager.settings.google_sheet_sku_row = 3
+        
+        # Save the settings immediately
+        try:
+            # Convert settings to dictionary
+            settings_dict = asdict(self.config_manager.settings)
+            
+            # Save to file
+            with open(self.config_manager.settings_file, 'w') as f:
+                json.dump(settings_dict, f, indent=4)
+                
+            # Call the update callback if it exists
+            if self.update_callback:
+                self.update_callback()
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to save settings: {str(e)}")
     
     def center_window(self):
         """Center the window on the screen"""

@@ -11,7 +11,7 @@ from src.utils.file_utils import ensure_directory_exists, file_exists, find_file
 
 def create_barcode_for_tracking(tracking_number, directory, mirror_print=False, status_callback=None):
     """
-    Create a barcode image for the given tracking number and save it to the specified directory.
+    This function is disabled - no longer creates new barcodes.
     
     Args:
         tracking_number: The tracking number to encode in the barcode
@@ -22,40 +22,9 @@ def create_barcode_for_tracking(tracking_number, directory, mirror_print=False, 
     Returns:
         tuple: (success, barcode_path, message)
     """
-    try:
-        # Check if the directory exists
-        if not directory_exists(directory):
-            if status_callback:
-                status_callback(f"Error: Directory not found: {directory}", 'red')
-            return False, None, f"Error: Directory not found: {directory}"
-        
-        # Create barcode
-        code128 = barcode.get_barcode_class('code128')
-        barcode_image = code128(tracking_number, writer=ImageWriter())
-        
-        # Save barcode to the configured labels directory
-        # Use a simple filename without special characters
-        barcode_filename = f'barcode_{tracking_number.replace("/", "_").replace("\\", "_").replace(":", "_")}.png'
-        barcode_path = os.path.join(directory, barcode_filename)
-        
-        # Log the path for debugging
-        print(f"Saving barcode to: {barcode_path}")
-        
-        barcode_image.save(barcode_path)
-        
-        # Verify the file was created
-        if not file_exists(barcode_path):
-            if status_callback:
-                status_callback(f"Error: Failed to create barcode file at {barcode_path}", 'red')
-            return False, None, f"Error: Failed to create barcode file at {barcode_path}"
-        
-        return True, barcode_path, "Barcode created successfully"
-        
-    except Exception as e:
-        error_msg = str(e)
-        if status_callback:
-            status_callback(f"Error creating barcode: {error_msg}", 'red')
-        return False, None, f"Error creating barcode: {error_msg}"
+    if status_callback:
+        status_callback("Label creation has been disabled by administrator", 'orange')
+    return False, None, "Label creation has been disabled by administrator"
 
 def print_barcode(barcode_path, mirror_print=False, status_callback=None):
     """
@@ -70,32 +39,69 @@ def print_barcode(barcode_path, mirror_print=False, status_callback=None):
         tuple: (success, message)
     """
     try:
+        # First verify the file exists before attempting any operations
+        if not file_exists(barcode_path):
+            error_msg = f"Label file not found: {barcode_path}"
+            if status_callback:
+                status_callback(error_msg, 'red')
+            return False, error_msg
+            
         # If mirror print is enabled, create a mirrored temporary copy
         print_path = barcode_path
         if mirror_print:
             try:
-                img = Image.open(barcode_path)
-                mirrored_img = img.transpose(Image.FLIP_LEFT_RIGHT)
+                # Use a cached temp directory path to avoid repeated calls
                 temp_dir = os.path.join(os.environ.get('TEMP', os.getcwd()), 'labelmaker_temp')
                 ensure_directory_exists(temp_dir)
+                
+                # Use a simpler filename to reduce path complexity
                 temp_path = os.path.join(temp_dir, f'mirror_{os.path.basename(barcode_path)}')
-                mirrored_img.save(temp_path)
-                print_path = temp_path
-                if status_callback:
-                    status_callback("Created mirrored label for printing", 'blue')
+                
+                # Only create mirrored image if it doesn't already exist or source has changed
+                if not file_exists(temp_path) or os.path.getmtime(barcode_path) > os.path.getmtime(temp_path):
+                    # Optimize image handling to reduce delay
+                    img = Image.open(barcode_path)
+                    mirrored_img = img.transpose(Image.FLIP_LEFT_RIGHT)
+                    
+                    # Save with optimized settings
+                    mirrored_img.save(temp_path, optimize=True)
+                    
+                # Use the mirrored path if it exists
+                if file_exists(temp_path):
+                    print_path = temp_path
+                    if status_callback:
+                        status_callback("Using mirrored label for printing", 'blue')
+                else:
+                    # Fall back to original if mirrored file wasn't created
+                    if status_callback:
+                        status_callback("Failed to create mirrored image, using original", 'orange')
+                    print_path = barcode_path
             except Exception as e:
                 if status_callback:
                     status_callback(f"Error creating mirrored image: {str(e)}", 'red')
                 # Continue with original image if mirroring fails
                 print_path = barcode_path
         
-        # Use the default Windows print pictures functionality
+        # Update status before printing to provide immediate feedback
+        if status_callback:
+            status_callback("Sending label to printer...", 'blue')
+        
+        # Use a direct printing approach
         os.startfile(print_path, "print")
         
-        # Return success
+        # Return success immediately without waiting
         if status_callback:
             status_callback("Label sent to printer. Ready for next label.", 'green')
+            
         return True, "Label sent to printer"
+        
+    except FileNotFoundError as e:
+        # Specific handling for file not found errors
+        error_msg = f"Label file not found: {barcode_path}"
+        if status_callback:
+            status_callback(error_msg, 'red')
+        print(f"Error printing barcode: {error_msg}")
+        return False, error_msg
         
     except Exception as e:
         error_msg = str(e)
@@ -105,10 +111,16 @@ def print_barcode(barcode_path, mirror_print=False, status_callback=None):
         
         # Fallback to opening the file if printing fails
         try:
-            os.startfile(barcode_path)
-            if status_callback:
-                status_callback("Printing failed. Opened image for manual printing.", 'orange')
-            return False, "Printing failed. Opened image for manual printing."
+            # Verify file exists before attempting to open
+            if file_exists(barcode_path):
+                os.startfile(barcode_path)
+                if status_callback:
+                    status_callback("Printing failed. Opened image for manual printing.", 'orange')
+                return False, "Printing failed. Opened image for manual printing."
+            else:
+                if status_callback:
+                    status_callback(f"Error: Label file not found: {barcode_path}", 'red')
+                return False, f"Error: Label file not found: {barcode_path}"
         except Exception as e2:
             if status_callback:
                 status_callback(f"Error opening barcode: {str(e2)}", 'red')
@@ -116,7 +128,7 @@ def print_barcode(barcode_path, mirror_print=False, status_callback=None):
 
 def find_or_create_barcode(tracking_number, sku, directory, mirror_print=False, status_callback=None):
     """
-    Find an existing barcode file for the given SKU or create a new one for the tracking number.
+    Find an existing barcode file for the given SKU (creation functionality disabled).
     
     Args:
         tracking_number: The tracking number to encode in the barcode
@@ -140,9 +152,10 @@ def find_or_create_barcode(tracking_number, sku, directory, mirror_print=False, 
             print(f"Using existing label file: {existing_file}")
             return True, existing_file, False, f"Found existing label file for SKU: {sku}"
     
-    # Create a new barcode if no existing file was found
-    success, barcode_path, message = create_barcode_for_tracking(tracking_number, directory, mirror_print, status_callback)
-    return success, barcode_path, True, message
+    # No existing file found and creation is disabled
+    if status_callback:
+        status_callback("Label creation has been disabled", 'orange')
+    return False, None, False, "Label creation has been disabled"
 
 def process_barcode(tracking_number, sku, directory, mirror_print=False, status_callback=None, after_print_callback=None):
     """
@@ -160,13 +173,13 @@ def process_barcode(tracking_number, sku, directory, mirror_print=False, status_
         tuple: (success, message)
     """
     try:
-        # Check if the directory exists
+        # Check if the directory exists - do this once at the beginning
         if not directory_exists(directory):
             if status_callback:
                 status_callback(f"Error: Directory not found: {directory}", 'red')
             return False, f"Error: Directory not found: {directory}"
         
-        # Find or create the barcode
+        # Find existing barcode (creation disabled)
         success, barcode_path, is_new, message = find_or_create_barcode(
             tracking_number, sku, directory, mirror_print, status_callback
         )
@@ -174,14 +187,12 @@ def process_barcode(tracking_number, sku, directory, mirror_print=False, status_
         if not success:
             return False, message
         
-        # Log the shipping record
-        log_shipping_record(tracking_number, sku, barcode_path)
-        
-        # Print the barcode
+        # Print the barcode - we'll log shipping record only on successful print
         print_success, print_message = print_barcode(barcode_path, mirror_print, status_callback)
         
         # Execute the callback if printing was successful and a callback was provided
         if print_success and after_print_callback:
+            # Execute callback which will handle logging and Google Sheets
             after_print_callback()
         
         return print_success, print_message

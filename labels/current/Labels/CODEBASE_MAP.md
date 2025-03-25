@@ -7,6 +7,8 @@ Label Maker/
 ├── src/
 │   ├── ui/                 # User interface components
 │   │   ├── welcome_window.py     # Main welcome window
+│   │   ├── create_label_frame.py # Frame-based label creation
+│   │   ├── no_record_label_frame.py # No-record label creation
 │   │   ├── label_window.py       # Label preview window
 │   │   └── google_sheets_dialog.py # Google Sheets configuration
 │   ├── utils/              # Utility functions
@@ -27,7 +29,7 @@ Label Maker/
 ### 1. Create Label Workflow
 
 1. User clicks "User" or "Create Label" button in welcome_window.py
-2. `create_label_action()` in welcome_window.py calls `create_label_dialog()` from dialog_handlers.py
+2. `create_label_action()` in welcome_window.py calls `create_label_frame()` from create_label_frame.py
 3. User enters tracking number and presses Enter:
    - Tracking number is copied to clipboard
    - Focus moves to SKU field
@@ -50,6 +52,16 @@ Label Maker/
 - Main application window
 - Provides access to all features
 - Displays label count and Google Sheets status
+- Manages stay-on-top window state
+
+### CreateLabelFrame (create_label_frame.py)
+- Frame-based implementation of label creation
+- Includes Pin toggle for stay-on-top functionality
+- Handles tracking number validation and auto-copy
+
+### NoRecordLabelFrame (no_record_label_frame.py)
+- Frame for creating labels without logging
+- Includes Pin toggle for stay-on-top functionality
 
 ### LabelWindow (label_window.py)
 - Displays label preview
@@ -81,3 +93,14 @@ Label Maker/
 3. **Google Sheets Status Updates**
    - Real-time status updates without requiring app restart
    - Clickable status indicator for quick connection testing
+
+4. **Frame-based UI Implementation**
+   - Replaced dialog-based UI with embedded frames
+   - Improved navigation between different views
+   - Enhanced user experience with consistent styling
+
+5. **Stay-on-Top Feature**
+   - Pin toggle button in all frames (except welcome window)
+   - Keeps application window on top of other programs
+   - Remembers user preference in settings
+   - Implemented using tkinter's topmost attribute with lift() and focus_force()

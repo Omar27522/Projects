@@ -10,6 +10,7 @@ from tkinter import ttk, messagebox
 import sys
 import datetime
 import pyautogui
+import time
 
 # Add the project root directory to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
@@ -41,6 +42,7 @@ class NoRecordLabelFrame(tk.Frame):
         # Initialize variables
         self.sku_var = tk.StringVar()
         self.mirror_print_var = tk.BooleanVar(value=config_manager.settings.mirror_print if hasattr(config_manager.settings, 'mirror_print') else False)
+        self.stay_on_top_var = tk.BooleanVar(value=config_manager.settings.stay_on_top if hasattr(config_manager.settings, 'stay_on_top') else False)
         
         # Create UI
         self._create_ui()
@@ -57,7 +59,7 @@ class NoRecordLabelFrame(tk.Frame):
         
         # Add a return button in the top-left corner
         return_frame = tk.Frame(self, bg='white')
-        return_frame.pack(anchor='nw', padx=20, pady=10)
+        return_frame.pack(fill='x', padx=10, pady=5)
         
         return_button = tk.Button(
             return_frame,
@@ -69,7 +71,51 @@ class NoRecordLabelFrame(tk.Frame):
             width=10,
             height=1
         )
-        return_button.pack()
+        return_button.pack(side='left')
+        
+        # Add a pin button on the right side to toggle stay-on-top
+        def toggle_stay_on_top():
+            current_state = self.stay_on_top_var.get()
+            self.pin_btn.config(
+                bg='#FFD700' if current_state else '#D3D3D3',  # Gold if on, Light Gray if off
+                relief='sunken' if current_state else 'raised'
+            )
+            # Get the root window (Tk instance) and update its topmost state
+            root = self.winfo_toplevel()
+            root.attributes('-topmost', current_state)
+            # Ensure window is lifted and focused when topmost is enabled
+            if current_state:
+                root.lift()
+                root.focus_force()
+            # Save the setting
+            self.config_manager.settings.stay_on_top = current_state
+            self.config_manager.save_settings()
+        
+        # Create pin button with label
+        pin_frame = tk.Frame(return_frame, bg='white')
+        pin_frame.pack(side='right')
+        
+        pin_label = tk.Label(pin_frame, text="Pin:", bg='white', font=('TkDefaultFont', 10))
+        pin_label.pack(side=tk.LEFT, padx=(0, 5))
+        
+        # Set initial button state based on saved setting
+        initial_pin_color = '#FFD700' if self.stay_on_top_var.get() else '#D3D3D3'  # Gold if on, Light Gray if off
+        initial_pin_relief = 'sunken' if self.stay_on_top_var.get() else 'raised'
+        
+        self.pin_btn = tk.Button(pin_frame, text="📌", bg=initial_pin_color, 
+                           relief=initial_pin_relief, width=3,
+                           font=('TkDefaultFont', 14), anchor='center')
+        
+        self.pin_btn.config(
+            command=lambda: [self.stay_on_top_var.set(not self.stay_on_top_var.get()),
+                           toggle_stay_on_top()]
+        )
+        self.pin_btn.pack(side=tk.LEFT, padx=2)
+        
+        # Apply the initial stay-on-top state
+        if self.stay_on_top_var.get():
+            root = self.winfo_toplevel()
+            root.attributes('-topmost', True)
         
         # Create a frame for the content with padding
         content_frame = tk.Frame(self, bg='white', padx=20, pady=20)
@@ -230,6 +276,17 @@ class NoRecordLabelFrame(tk.Frame):
             
             # Print the barcode if we found it
             if barcode_file:
+                # Pre-configure the Enter key press before starting the print process
+                # This helps catch the dialog as soon as it appears
+                print("Setting up print dialog handling...")
+                
+                # Schedule multiple Enter key presses with staggered timing
+                # This increases the chance of catching the dialog as soon as it appears
+                self.after(300, lambda: pyautogui.press('enter'))
+                self.after(600, lambda: pyautogui.press('enter'))
+                self.after(900, lambda: pyautogui.press('enter'))
+                
+                # Now start the print process
                 success, message = print_barcode(
                     barcode_file,
                     mirror_print,
@@ -237,10 +294,6 @@ class NoRecordLabelFrame(tk.Frame):
                 )
                 
                 if success:
-                    # Use pyautogui to automatically press Enter after a short delay
-                    print("Waiting for print dialog to appear...")
-                    self.after(2000, lambda: self._press_enter_for_print_dialog())
-                    
                     # Show success message
                     self._show_success_message(f"Label for {sku} printed successfully!")
                     
@@ -259,8 +312,13 @@ class NoRecordLabelFrame(tk.Frame):
     def _press_enter_for_print_dialog(self):
         """Press Enter to confirm the print dialog"""
         try:
-            pyautogui.press('enter')
-            print("Enter key pressed for print dialog")
+            # More aggressive approach to pressing Enter
+            # Press Enter multiple times in rapid succession
+            for _ in range(3):
+                pyautogui.press('enter')
+                time.sleep(0.05)  # Very short delay between presses
+            
+            print("Multiple Enter keys pressed for print dialog")
         except Exception as e:
             print(f"Error pressing Enter: {str(e)}")
     
