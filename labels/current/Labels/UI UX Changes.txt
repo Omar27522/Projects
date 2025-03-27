@@ -83,3 +83,32 @@ Maybe a Variant Dictionary?
     *-Fixed*-
      
 ༼ つ ◕_◕ ༽つ—(╯°□°)╯︵ ┻━┻ ¬(ツ)_ -ಠ_ಠ-
+3/27
+					Production Testing
+	It works as intended. 
+
+Future implementations 
+Create label frame
+
+When the tracking number is incorrect the program should highlight the input After the user clicks "OK" inside Invalid Tracking Number dialog window.
+
+Text fields should have copy/paste option on right click
+
+-When the window is out of focus, make it transparent.
+
+When print is disabled, give an extra option to not show the warning message after the 4th time the warning Print Disabled message appears. 
+
+--Next to return button,  add a button that displays the returns data. I want to preview the printed labels. Here.
+
+Add a link next to the toggle buttons that preview the last printed label, with some Metadata from the Returns Data dialog.
+
+The toggle buttons should have no text, add a tool-tip and place an icon inside the buttons.
+
+Welcome window
+
+Add a link to "V3" that will reset the sheet to the default for the start of day.
+		Use the same function as the button inside
+		the settings?
+
+
+ 
