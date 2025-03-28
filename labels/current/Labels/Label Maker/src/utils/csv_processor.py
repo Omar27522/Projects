@@ -21,8 +21,16 @@ def sanitize_filename(name: str) -> str:
 
 def process_product_name(full_name: str) -> Tuple[str, str, str]:
     """Process product name into name_line1, name_line2, and variant"""
-    # Split by the last dash to separate variant
-    name_parts = full_name.rsplit('-', 1)
+    # First try with spaces around double dash
+    if ' -- ' in full_name:
+        name_parts = full_name.split(' -- ', 1)
+    # Then try without spaces
+    elif '--' in full_name:
+        name_parts = full_name.split('--', 1)
+    # No fallback to single dash - if no double dash is found, there's no variant
+    else:
+        name_parts = [full_name]
+        
     base_name = name_parts[0].strip()
     variant = name_parts[1].strip() if len(name_parts) > 1 else ""
     
@@ -83,8 +91,8 @@ def is_valid_barcode(barcode: str) -> bool:
 def create_batch_labels(csv_path: str, main_window):
     """Create labels in batch from a CSV file"""
     try:
-        # Read the CSV file
-        df = pd.read_csv(csv_path)
+        # Read the CSV file with numeric columns as strings to preserve leading zeros and prevent float conversion
+        df = pd.read_csv(csv_path, dtype={'Goods Barcode': str})
         
         # Get save directory from settings or use default
         save_dir = main_window.config_manager.settings.last_directory
@@ -99,6 +107,11 @@ def create_batch_labels(csv_path: str, main_window):
         for _, row in df.iterrows():
             barcode = str(row['Goods Barcode'])
             
+            # Remove any decimal part (e.g., ".0") that might be present
+            if '.' in barcode:
+                barcode = barcode.split('.')[0]
+                logger.info(f"Removed decimal part from barcode: {barcode}")
+            
             # Skip if barcode is invalid
             if not is_valid_barcode(barcode):
                 skipped_labels += 1
@@ -109,6 +122,12 @@ def create_batch_labels(csv_path: str, main_window):
             
             # Process the product name
             name_line1, name_line2, variant = process_product_name(full_name)
+            
+            # Log the product name processing results
+            logger.info(f"Full product name: {full_name}")
+            logger.info(f"Extracted name_line1: {name_line1}")
+            logger.info(f"Extracted name_line2: {name_line2}")
+            logger.info(f"Extracted variant: {variant}")
             
             # Create label data
             label_data = LabelData(
@@ -126,10 +145,17 @@ def create_batch_labels(csv_path: str, main_window):
                 safe_name2 = sanitize_filename(name_line2) if name_line2 else ""
                 safe_variant = sanitize_filename(variant)
                 
+                # For debugging
+                logger.info(f"Original variant: {variant}")
+                logger.info(f"Sanitized variant: {safe_variant}")
+                logger.info(f"Barcode: {barcode}")
+                
                 if safe_name2:
-                    filename = f"{safe_name1} {safe_name2}_{safe_variant}_label_{barcode}.png"
+                    filename = f"{safe_name1} {safe_name2} - {safe_variant}_label_{barcode}.png"
                 else:
-                    filename = f"{safe_name1}_{safe_variant}_label_{barcode}.png"
+                    filename = f"{safe_name1} - {safe_variant}_label_{barcode}.png"
+                
+                logger.info(f"Generated filename: {filename}")
                 
                 filepath = os.path.join(save_dir, filename)
                 label_image.save(filepath)

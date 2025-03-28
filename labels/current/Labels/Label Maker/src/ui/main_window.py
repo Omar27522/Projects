@@ -899,14 +899,11 @@ class MainWindow(tk.Tk):
             return True
         
         def validate_variant(action, value_if_allowed):
-            """Prevent numbers at the start of variant field"""
+            """Validate variant field - now allowing numbers at the start"""
             if action == '0':  # This is a delete action
                 return True
             if not value_if_allowed:  # Empty value
                 return True
-            # Check if the first character is a digit
-            if value_if_allowed[0].isdigit():
-                return False
             return True
         
         for idx, (label_text, key) in enumerate(labels):
