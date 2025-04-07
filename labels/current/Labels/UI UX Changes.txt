@@ -1,3 +1,15 @@
+4/7
+Production Testing. 
+	DONE	--------	I tried to include the APPS script with the Python code but I can't get it to work. I will have to write into a 3rd cell that will mimic the function of the script. and have both for redundancy because it does not want to work.
+
+	Then All QOL changes will have to be implemented as well, such as:
+		 Create Label Dialog: 
+			Make it transparent when out of focus, and regain opaqueness once in focus.
+			When tracking# is too small, select the inputted text so it's easier to scan over the number.
+		Welcome window:
+			Reset rows to default when clicking on "connected".
+
+
 <No dream is too big, no dreamer too small> Integration with the Warehouse Manager System ¦ Reverse Inbound, and Recieve (container card, SKU, quantity, completion).
 
 WELCOME WINDOW

@@ -20,8 +20,10 @@ class Settings:
     google_sheet_name: Optional[str] = None
     google_sheet_tracking_column: str = "D"
     google_sheet_tracking_row: int = 3
-    google_sheet_sku_column: str = "F"
+    google_sheet_sku_column: str = "E"
     google_sheet_sku_row: int = 3
+    google_sheet_steps_column: str = "F"  # New setting for Steps value column
+    google_sheet_steps_row: int = 3  # New setting for Steps value row
     google_sheets_connection_status: str = "Not Connected"
 
 class ConfigManager:
@@ -68,6 +70,8 @@ class ConfigManager:
                     google_sheet_tracking_row=data.get('google_sheet_tracking_row', 3),
                     google_sheet_sku_column=data.get('google_sheet_sku_column', 'F'),
                     google_sheet_sku_row=data.get('google_sheet_sku_row', 3),
+                    google_sheet_steps_column=data.get('google_sheet_steps_column', 'H'),
+                    google_sheet_steps_row=data.get('google_sheet_steps_row', 3),
                     google_sheets_connection_status=data.get('google_sheets_connection_status', "Not Connected")
                 )
                 return settings

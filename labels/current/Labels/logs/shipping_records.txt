@@ -98,3 +98,17 @@
 2025-03-27 16:17:03 - Tracking=1Z87FE369098608462, SKU=810194033407, Status=Label printed successfully
 2025-03-27 16:18:53 - Tracking=1Z87FE369098608462, SKU=810194033407, Status=No print - logging only
 2025-03-27 16:18:59 - Tracking=1Z87FE369098608462, SKU=810194033407, Status=No print - logging only
+2025-04-07 08:50:43 - Tracking=1Z87FE369092835003, SKU=840168720248, Status=No print - logging only
+2025-04-07 08:58:14 - Tracking=1Z975F199000032968, SKU=840168723652, Status=Label printed successfully
+2025-04-07 09:08:46 - Tracking=1Z975F199018059479, SKU=840168710997, Status=Label printed successfully
+2025-04-07 09:17:29 - Tracking=1Z87FE369090499649, SKU=810194034046, Status=Label printed successfully
+2025-04-07 09:29:46 - Tracking=1Z87FE369094081725, SKU=864851000257, Status=Label printed successfully
+2025-04-07 09:34:10 - Tracking=1Z975F199023068673, SKU=840168720231, Status=No print - logging only
+2025-04-07 09:45:28 - Tracking=1Z87FE369095313008, SKU=810194034022, Status=No print - logging only
+2025-04-07 13:58:48 - Tracking=1Z975F199030248492, SKU=840168717675, Status=Label printed successfully
+2025-04-07 14:22:14 - Tracking=1Z87FE369096995351, SKU=840168711215, Status=Label printed successfully
+2025-04-07 14:36:30 - Tracking=1Z87FE369097264915, SKU=865924000211, Status=Label printed successfully
+2025-04-07 14:50:05 - Tracking=1Z975F199005870259, SKU=840168723577, Status=Label printed successfully
+2025-04-07 14:54:03 - Tracking=1Z975F199014080603, SKU=840168705894, Status=Label printed successfully
+2025-04-07 15:04:15 - Tracking=1Z975F199036648398, SKU=840168719624, Status=No print - logging only
+2025-04-07 15:11:00 - Tracking=1Z87FE369094531051, SKU=840168711246, Status=Label printed successfully

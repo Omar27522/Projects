@@ -155,7 +155,7 @@ class GoogleSheetsDialog(tk.Toplevel):
             textvariable=self.sheet_var, 
             state="readonly", 
             font=("Arial", 10),
-            width=45  # Increased width to accommodate longer sheet names with special characters
+            width=30
         )
         self.sheet_dropdown.pack(side='left')
         
@@ -236,7 +236,7 @@ class GoogleSheetsDialog(tk.Toplevel):
         sku_input_frame = tk.Frame(sku_frame, bg='white')
         sku_input_frame.pack(fill='x', pady=(5, 0))
         
-        self.sku_col_var = tk.StringVar(value=self.config_manager.settings.google_sheet_sku_column or "E")
+        self.sku_col_var = tk.StringVar(value=self.config_manager.settings.google_sheet_sku_column or "F")
         sku_col_entry = tk.Entry(
             sku_input_frame, 
             textvariable=self.sku_col_var, 
@@ -295,7 +295,7 @@ class GoogleSheetsDialog(tk.Toplevel):
         steps_input_frame = tk.Frame(steps_frame, bg='white')
         steps_input_frame.pack(fill='x', pady=(5, 0))
         
-        self.steps_col_var = tk.StringVar(value=self.config_manager.settings.google_sheet_steps_column or "F")
+        self.steps_col_var = tk.StringVar(value=self.config_manager.settings.google_sheet_steps_column or "H")
         steps_col_entry = tk.Entry(
             steps_input_frame, 
             textvariable=self.steps_col_var, 
@@ -441,12 +441,7 @@ class GoogleSheetsDialog(tk.Toplevel):
                 return
                 
             # Get sheet names
-            success, result = get_sheet_names(result)
-            if not success:
-                messagebox.showerror("Error", result)
-                return
-                
-            sheet_names = result
+            sheet_names = get_sheet_names(result)
             if not sheet_names:
                 messagebox.showerror("Error", "No sheets found in the Google Sheet")
                 return
@@ -459,7 +454,6 @@ class GoogleSheetsDialog(tk.Toplevel):
             if saved_sheet_name and saved_sheet_name in sheet_names:
                 self.sheet_var.set(saved_sheet_name)
             else:
-                # Default to the first sheet
                 self.sheet_var.set(sheet_names[0] if sheet_names else "")
             
         except Exception as e:
