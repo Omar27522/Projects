@@ -483,7 +483,7 @@ class WelcomeWindow(tk.Tk):
                 status_text = "Connected"
                 status_color = "green"
                 sheet_name = sheets_config.google_sheet_name
-                on_click = None
+                on_click = self._reset_google_sheets_rows
             else:
                 status_text = "Configured (Not Tested)"
                 status_color = "orange"
@@ -502,16 +502,47 @@ class WelcomeWindow(tk.Tk):
             )
             self.sheets_status_frame.pack(side='left', anchor='sw', padx=10, pady=10)
             
-            # Make the label clickable if it's the orange "Configured (Not Tested)" status
-            if status_text == "Configured (Not Tested)" and on_click:
+            # Make the label clickable if it has an on_click function
+            if on_click:
                 self.sheets_status_label.bind("<Button-1>", lambda e: on_click())
                 self.sheets_status_label.bind("<Enter>", lambda e: self.sheets_status_label.config(cursor="hand2", font=("Arial", 8, "underline")))
                 self.sheets_status_label.bind("<Leave>", lambda e: self.sheets_status_label.config(cursor="", font=("Arial", 8)))
             
+        
             # Force UI update
             self.update_idletasks()
         except Exception as e:
             print(f"Error updating sheets status display: {str(e)}")
+    
+    def _reset_google_sheets_rows(self):
+        """Reset Google Sheets rows to default values"""
+        # Show confirmation dialog
+        confirm = messagebox.askyesno("Reset Google Sheets rows", "Reset Google Sheets rows to default values?")
+        
+        if not confirm:
+            return
+            
+        try:
+            # Reload the config manager to get the latest settings
+            self.config_manager = ConfigManager()
+            
+            # Set all row values to 3
+            self.config_manager.settings.google_sheet_tracking_row = 3
+            self.config_manager.settings.google_sheet_sku_row = 3
+            self.config_manager.settings.google_sheet_steps_row = 3
+            
+            # Save the settings
+            from dataclasses import asdict
+            import json
+            settings_dict = asdict(self.config_manager.settings)
+            with open(self.config_manager.settings_file, 'w') as f:
+                json.dump(settings_dict, f, indent=4)
+                
+            # Update the display
+            self._update_sheets_status_display()
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to reset rows: {str(e)}")
     
     def test_sheets_connection(self):
         """Test the connection to Google Sheets without opening the full dialog"""

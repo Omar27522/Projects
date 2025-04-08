@@ -91,16 +91,63 @@ def write_to_google_sheet(config_manager, tracking_number, sku, status_callback=
             # If any error occurs during format detection, use the default format
             existing_format = "time"
         
-        # Format the value based on detected format
-        if existing_format == "datetime":
-            steps_value = now.strftime("%m/%d/%Y %H:%M:%S")  # Full date and time
-        else:
-            steps_value = now.strftime("%H:%M:%S")  # Time only
-        
-        # Always show time only in the status message
-        time_only = now.strftime("%H:%M:%S")
-        if status_callback:
-            status_callback(f"Using current time: {time_only}", 'green')
+        # Get the date and time from cells Q1 and R1 in the Steps sheet
+        try:
+            # Try to get date from Q1 and time from R1
+            date_from_sheet = None
+            time_from_sheet = None
+            
+            try:
+                # Get the Steps❗️ sheet specifically
+                steps_sheet = None
+                for sheet in worksheet.spreadsheet.worksheets():
+                    if sheet.title == "Steps❗️":
+                        steps_sheet = sheet
+                        break
+                
+                if steps_sheet:
+                    # Get the date from Q1 on the Steps❗️ sheet
+                    date_cell = steps_sheet.acell("Q1").value
+                    if date_cell and date_cell != "12/30/1899":
+                        date_from_sheet = date_cell
+                        if status_callback:
+                            status_callback(f"Found date in Steps❗️!Q1: {date_from_sheet}", 'green')
+                    
+                    # Get the time from R1 on the Steps❗️ sheet
+                    time_cell = steps_sheet.acell("R1").value
+                    if time_cell:
+                        time_from_sheet = time_cell
+                        if status_callback:
+                            status_callback(f"Found time in Steps❗️!R1: {time_from_sheet}", 'green')
+                else:
+                    if status_callback:
+                        status_callback("Could not find Steps❗️ sheet", 'orange')
+            except Exception as e:
+                if status_callback:
+                    status_callback(f"Error accessing Steps❗️ sheet: {str(e)}", 'orange')
+            
+            # Get the current time
+            time_only = now.strftime("%H:%M:%S")
+            
+            # Check if we have a date from the sheet (not the default date)
+            if date_from_sheet and date_from_sheet != "12/30/1899":
+                # Use the date from the sheet with the current time
+                steps_value = f"{date_from_sheet} {time_only}"
+            else:
+                # Use current date with current time
+                date_only = now.strftime("%m/%d/%Y")
+                steps_value = f"{date_only} {time_only}"
+            
+            # Only display the time in the status message
+            if status_callback:
+                status_callback(f"Using current time: {time_only}", 'green')
+        except Exception as e:
+            # If anything goes wrong, use current date and time
+            date_only = now.strftime("%m/%d/%Y")
+            time_only = now.strftime("%H:%M:%S")
+            steps_value = f"{date_only} {time_only}"
+            if status_callback:
+                status_callback(f"Error reading from sheet, using current time: {time_only}", 'orange')
         
         # Write tracking number
         worksheet.update_acell(f"{tracking_col}{tracking_row}", tracking_number)
@@ -108,8 +155,11 @@ def write_to_google_sheet(config_manager, tracking_number, sku, status_callback=
         # Write SKU
         worksheet.update_acell(f"{sku_col}{sku_row}", sku)
         
-        # Write Steps value
+        # Write Steps value as a string
         worksheet.update_acell(f"{steps_col}{steps_row}", steps_value)
+        
+        if status_callback:
+            status_callback(f"Time written to cell {steps_col}{steps_row}", 'green')
         
         # Increment row numbers for next entry
         config_manager.settings.google_sheet_tracking_row += 1
