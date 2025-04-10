@@ -7,6 +7,7 @@ from tkinter import ttk, filedialog, messagebox
 
 from src.config.config_manager import ConfigManager
 from src.utils.ui_utils import center_window, create_button, make_window_modal
+from src.ui.log_migration_dialog import show_log_migration_dialog
 
 def create_settings_dialog(parent, config_manager, update_label_count_callback, open_sheets_dialog_callback, save_settings_callback):
     """
@@ -35,9 +36,45 @@ def create_settings_dialog(parent, config_manager, update_label_count_callback, 
     # Center the dialog
     center_window(settings_dialog)
     
-    # Create a frame for the content
-    content_frame = tk.Frame(settings_dialog, bg='white', padx=20, pady=20)
-    content_frame.pack(fill='both', expand=True)
+    # Create a main frame to hold the canvas and scrollbar
+    main_frame = tk.Frame(settings_dialog, bg='white')
+    main_frame.pack(fill='both', expand=True)
+    
+    # Create a canvas for scrolling
+    canvas = tk.Canvas(main_frame, bg='white', highlightthickness=0)
+    canvas.pack(side='left', fill='both', expand=True)
+    
+    # Add a scrollbar to the canvas
+    scrollbar = tk.Scrollbar(main_frame, orient='vertical', command=canvas.yview)
+    scrollbar.pack(side='right', fill='y')
+    
+    # Configure the canvas to use the scrollbar
+    canvas.configure(yscrollcommand=scrollbar.set)
+    
+    # Create a frame inside the canvas to hold the content
+    content_frame = tk.Frame(canvas, bg='white', padx=20, pady=20)
+    
+    # Create a window inside the canvas to hold the content frame
+    canvas_window = canvas.create_window((0, 0), window=content_frame, anchor='nw')
+    
+    # Function to update the scrollregion when the content frame changes size
+    def on_frame_configure(event):
+        canvas.configure(scrollregion=canvas.bbox('all'))
+    
+    # Function to update the canvas window size when the canvas changes size
+    def on_canvas_configure(event):
+        canvas.itemconfig(canvas_window, width=event.width)
+    
+    # Bind events to update the scrollregion and canvas window size
+    content_frame.bind('<Configure>', on_frame_configure)
+    canvas.bind('<Configure>', on_canvas_configure)
+    
+    # Bind mousewheel events for scrolling
+    def on_mousewheel(event):
+        canvas.yview_scroll(int(-1 * (event.delta / 120)), 'units')
+    
+    # Bind mousewheel for Windows
+    canvas.bind_all('<MouseWheel>', on_mousewheel)
     
     # Title
     title_label = tk.Label(
@@ -97,6 +134,60 @@ def create_settings_dialog(parent, config_manager, update_label_count_callback, 
     
     # Update label count
     update_label_count_callback(directory_var.get())
+    
+    # Transparency Settings Section
+    transparency_section = tk.LabelFrame(content_frame, text="Transparency Settings", font=("Arial", 12, "bold"), bg='white', padx=10, pady=10)
+    transparency_section.pack(fill='x', pady=(0, 15))
+    
+    # Transparency enabled checkbox
+    transparency_enabled_var = tk.BooleanVar(value=config_manager.settings.transparency_enabled)
+    transparency_enabled_cb = tk.Checkbutton(
+        transparency_section,
+        text="Enable transparency when window is inactive",
+        variable=transparency_enabled_var,
+        font=("Arial", 10),
+        bg='white'
+    )
+    transparency_enabled_cb.pack(anchor='w', pady=(5, 10))
+    
+    # Transparency level frame
+    transparency_level_frame = tk.Frame(transparency_section, bg='white')
+    transparency_level_frame.pack(fill='x', pady=(0, 5))
+    
+    # Transparency level label
+    tk.Label(
+        transparency_level_frame,
+        text="Transparency Level (1-10):",
+        font=("Arial", 10),
+        bg='white'
+    ).pack(side='left')
+    
+    # Convert transparency level from 0.0-1.0 to 1-10 for display
+    current_transparency = config_manager.settings.transparency_level
+    display_value = int(current_transparency * 10)
+    if display_value < 1: display_value = 1
+    if display_value > 10: display_value = 10
+    
+    # Transparency level spinbox
+    transparency_level_var = tk.StringVar(value=str(display_value))
+    transparency_spinbox = tk.Spinbox(
+        transparency_level_frame,
+        from_=1,
+        to=10,
+        width=5,
+        textvariable=transparency_level_var,
+        font=("Arial", 10)
+    )
+    transparency_spinbox.pack(side='left', padx=(10, 0))
+    
+    # Helper text
+    tk.Label(
+        transparency_section,
+        text="(1 = Most transparent, 10 = Least transparent)",
+        font=("Arial", 8, "italic"),
+        fg='gray',
+        bg='white'
+    ).pack(anchor='w', pady=(0, 5))
     
     # Google Sheets Section
     sheets_section = tk.LabelFrame(content_frame, text="Google Sheets Integration", font=("Arial", 12, "bold"), bg='white', padx=10, pady=10)
@@ -196,6 +287,32 @@ def create_settings_dialog(parent, config_manager, update_label_count_callback, 
     # Store reference to the button for external access
     settings_dialog.sheets_button = configure_button
     
+    # Add Log Management Section
+    log_section = tk.LabelFrame(content_frame, text="Log Management", font=("Arial", 12, "bold"), bg='white', padx=10, pady=10)
+    log_section.pack(fill='x', pady=(0, 15))
+    
+    # Description
+    log_desc = tk.Label(
+        log_section,
+        text="Manage shipping logs and migrate from legacy systems to the new centralized log database.",
+        font=("Arial", 10),
+        bg='white',
+        wraplength=450,
+        justify='left'
+    )
+    log_desc.pack(pady=(5, 10), fill='x')
+    
+    # Log Management Button
+    log_button = create_button(
+        log_section,
+        text="Open Log Management",
+        command=lambda: show_log_migration_dialog(settings_dialog),
+        bg='#2196F3',
+        padx=10,
+        pady=5
+    )
+    log_button.pack(pady=(0, 5))
+    
     # Button Frame
     button_frame = tk.Frame(content_frame, bg='white')
     button_frame.pack(fill='x', pady=(10, 0))
@@ -204,7 +321,12 @@ def create_settings_dialog(parent, config_manager, update_label_count_callback, 
     save_button = create_button(
         button_frame,
         text="Save",
-        command=lambda: save_settings_callback(settings_dialog, directory_var.get()),
+        command=lambda: save_settings_callback(
+            settings_dialog, 
+            directory_var.get(),
+            transparency_enabled_var.get(),
+            float(transparency_level_var.get()) / 10.0  # Convert from 1-10 to 0.1-1.0
+        ),
         bg='#4CAF50',
         padx=15,
         pady=5

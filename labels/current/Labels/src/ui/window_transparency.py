@@ -12,7 +12,7 @@ class TransparencyManager:
     Makes the window transparent when inactive and opaque when active.
     """
     
-    def __init__(self, window, opacity=0.3, enabled=True):
+    def __init__(self, window, opacity=0.7, enabled=True):
         """
         Initialize the transparency manager.
         

@@ -128,10 +128,27 @@ def create_settings_dialog_handler(parent, config_manager, update_label_count_ca
         The created settings dialog
     """
     # Function to handle saving settings
-    def save_settings(dialog, directory):
+    def save_settings(dialog, directory, transparency_enabled=None, transparency_level=None):
         # Save the directory to settings
         config_manager.settings.last_directory = directory
+        
+        # Save transparency settings if provided
+        if transparency_enabled is not None:
+            config_manager.settings.transparency_enabled = transparency_enabled
+        
+        if transparency_level is not None:
+            # Ensure the transparency level is within valid range (0.1 to 1.0)
+            config_manager.settings.transparency_level = max(0.1, min(1.0, transparency_level))
+        
+        # Save all settings
         config_manager.save_settings()
+        
+        # Update transparency for all windows if transparency settings changed
+        if transparency_enabled is not None or transparency_level is not None:
+            # Update transparency for the main window
+            if hasattr(parent, 'transparency_manager'):
+                parent.transparency_manager.set_enabled(config_manager.settings.transparency_enabled)
+                parent.transparency_manager.set_opacity(config_manager.settings.transparency_level)
         
         # Close the dialog
         dialog.destroy()

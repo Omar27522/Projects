@@ -16,7 +16,7 @@ class Settings:
     default_print_quality: str = "Standard"
     stay_on_top: bool = False  # New setting for window stay-on-top feature
     transparency_enabled: bool = True  # Setting for window transparency feature
-    transparency_level: float = 0.3  # Level of transparency when inactive (0.0 to 1.0)
+    transparency_level: float = 0.7  # Level of transparency when inactive (0.0 to 1.0)
     # Google Sheets settings
     google_sheet_url: Optional[str] = None
     google_sheet_name: Optional[str] = None

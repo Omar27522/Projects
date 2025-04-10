@@ -10,6 +10,7 @@ import logging
 import datetime
 import tkinter as tk
 from tkinter import ttk, messagebox
+
 import pyautogui
 import subprocess
 
@@ -20,10 +21,10 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 from src.utils.ui_components import create_title_section, create_colored_button, create_form_field_group
 from src.utils.barcode_operations import process_barcode
 from src.utils.sheets_operations import write_to_google_sheet
-from src.utils.file_utils import directory_exists, file_exists, find_files_by_sku
+from src.utils.file_utils import get_central_log_file_path, ensure_directory_exists, directory_exists, file_exists, find_files_by_sku
+from src.utils.log_manager import log_shipping_event
 from src.utils.text_context_menu import add_context_menu
 from src.ui.window_transparency import TransparencyManager, create_transparency_toggle_button
-from src.utils.database_operations import add_shipping_record
 
 # Configure logging
 logs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'logs')
@@ -212,15 +213,6 @@ class CreateLabelFrame(tk.Frame):
                 messagebox.showerror("Invalid Tracking Number", "Tracking number must be longer than 12 characters.\n\nPlease enter a valid tracking number.")
                 return "break"  # Prevent default Enter behavior
             
-            # Check if printing is disabled and warn the user early
-            if tracking_number and not self.print_enabled_var.get():
-                if not messagebox.askyesno("Print Disabled", 
-                                         "The Print toggle button is disabled. The label information will be logged but no label will be printed.\n\nDo you want to continue?"):
-                    # User canceled, clear the tracking number field
-                    self.tracking_var.set("")
-                    self._update_status("Operation cancelled by user", 'red')
-                    return "break"
-            
             # Copy to clipboard
             if tracking_number:
                 self.clipboard_clear()
@@ -244,9 +236,22 @@ class CreateLabelFrame(tk.Frame):
             tracking_number = self.tracking_var.get().strip()
             if not tracking_number:
                 self._update_status("Please enter a tracking number first", 'red')
-                messagebox.showerror("Missing Tracking Number", "A tracking number is required.\n\nPlease enter a valid tracking number.")
-                # Move focus back to tracking number field
-                self.field_widgets["Tracking Number:"]["widget"].focus_set()
+                error_dialog = messagebox.showerror("Missing Tracking Number", "A tracking number is required.\n\nPlease enter a valid tracking number.")
+            
+                # Get a reference to the tracking field
+                tracking_field = self.field_widgets["Tracking Number:"]["widget"]
+            
+                # Define a function to handle the dialog close event
+                def on_dialog_close(event=None):
+                    # Focus and select all text in the tracking field
+                    tracking_field.focus_set()
+                    tracking_field.select_range(0, 'end')
+                    tracking_field.icursor('end')
+            
+                # Schedule multiple attempts to ensure selection works
+                self.after(50, on_dialog_close)
+                self.after(100, on_dialog_close)
+                self.after(200, on_dialog_close)
                 return "break"  # Prevent default Enter behavior
             
             # Print the label
@@ -296,10 +301,46 @@ class CreateLabelFrame(tk.Frame):
         # Print toggle
         def toggle_print_enabled():
             current_state = self.print_enabled_var.get()
+            
+            # Update button appearance
             self.print_btn.config(
                 bg='#90EE90' if current_state else '#C71585',  # Green if on, Pink if off
                 relief='sunken' if current_state else 'raised'
             )
+            
+            # Update text color in input fields
+            tracking_field = self.field_widgets["Tracking Number:"]["widget"]
+            sku_field = self.field_widgets["SKU:"]["widget"]
+            
+            # Royal blue (#4169E1) when printing is disabled, black when enabled
+            text_color = 'black' if current_state else '#4169E1'  # Royal Blue
+            
+            tracking_field.config(fg=text_color)
+            sku_field.config(fg=text_color)
+            
+            # Update title label with strikethrough when printing is disabled
+            if current_state:
+                # Normal font without strikethrough
+                self.title_label.config(font=("Arial", 16, "bold"))
+            else:
+                # Add strikethrough to the title
+                self.title_label.config(font=("Arial", 16, "bold", "overstrike"))
+            
+            # Update the Print Label button
+            if current_state:
+                # Normal print mode
+                self.print_button.config(
+                    text="Print Label",
+                    bg="#4CAF50",  # Green
+                    activebackground="#A5D6A7"  # Light Green
+                )
+            else:
+                # Logging only mode
+                self.print_button.config(
+                    text="Send Label",
+                    bg="#006400",  # Dark Green
+                    activebackground="#228B22"  # Forest Green
+                )
         
         # Create print button with label
         print_label = tk.Label(options_frame, text="Print:", bg='white', font=('TkDefaultFont', 10))
@@ -314,6 +355,13 @@ class CreateLabelFrame(tk.Frame):
                            toggle_print_enabled()]
         )
         self.print_btn.pack(side=tk.LEFT, padx=2)
+        
+        # Initialize the Print Label button based on the initial print state
+        initial_print_state = self.print_enabled_var.get()
+        if not initial_print_state:
+            # If printing is initially disabled, update the button appearance
+            # This will be called after the print_button is created
+            self.after(100, lambda: self._initialize_disabled_print_state())
         
         # Add a spacer
         spacer2 = tk.Frame(options_frame, width=20, bg='white')
@@ -357,7 +405,7 @@ class CreateLabelFrame(tk.Frame):
         button_frame.pack(fill='x', pady=(20, 0))
         
         # Create Print Button
-        print_button = create_colored_button(
+        self.print_button = create_colored_button(
             button_frame,
             text="Print Label",
             color="#4CAF50",  # Green
@@ -365,7 +413,7 @@ class CreateLabelFrame(tk.Frame):
             command=self._print_label,
             big=True
         )
-        print_button.pack(side='left', padx=(0, 10))
+        self.print_button.pack(side='left', padx=(0, 10))
         
         # Create Clear Button
         clear_button = create_colored_button(
@@ -402,17 +450,25 @@ class CreateLabelFrame(tk.Frame):
         # Validate tracking number - now required in all cases
         if not tracking_number:
             self._update_status("Please enter a tracking number", 'red')
+            # Show the error dialog
             messagebox.showerror("Missing Tracking Number", "A tracking number is required.\n\nPlease enter a valid tracking number.")
-            # Move focus back to tracking number field
-            self.field_widgets["Tracking Number:"]["widget"].focus_set()
+            
+            # Use keyboard shortcut to select all text after dialog closes
+            tracking_field = self.field_widgets["Tracking Number:"]["widget"]
+            tracking_field.focus_set()
+            self.after(100, lambda: self._select_all_with_keyboard(tracking_field))
             return False, "No tracking number provided"
         
         # Validate tracking number length
         if len(tracking_number) <= 12:
             self._update_status("Tracking number must be longer than 12 characters", 'red')
+            # Show the error dialog
             messagebox.showerror("Invalid Tracking Number", "Tracking number must be longer than 12 characters.\n\nPlease enter a valid tracking number.")
-            # Move focus back to tracking number field
-            self.field_widgets["Tracking Number:"]["widget"].focus_set()
+            
+            # Use keyboard shortcut to select all text after dialog closes
+            tracking_field = self.field_widgets["Tracking Number:"]["widget"]
+            tracking_field.focus_set()
+            self.after(100, lambda: self._select_all_with_keyboard(tracking_field))
             return False, "Invalid tracking number length"
         
         # Get configuration
@@ -435,8 +491,14 @@ class CreateLabelFrame(tk.Frame):
         
         # If print is disabled, just log the information without printing
         if not print_enabled:
-            # Log the shipping record
-            log_shipping_record(tracking_number, sku, "No print - logging only")
+            # Log the shipping record using the new logging system
+            log_shipping_event(
+                tracking_number=tracking_number,
+                sku=sku,
+                action="log_only",
+                status="success",
+                details="No print - logging only"
+            )
             
             # Write to Google Sheets if configured
             if (hasattr(self.config_manager.settings, 'google_sheet_url') and 
@@ -466,8 +528,14 @@ class CreateLabelFrame(tk.Frame):
         try:
             # Define a function to run after successful printing
             def after_print_success():
-                # Log the shipping record to the database ONLY after successful printing
-                add_shipping_record(tracking_number, sku, "Label printed successfully")
+                # Log the shipping record using the new logging system ONLY after successful printing
+                log_shipping_event(
+                    tracking_number=tracking_number,
+                    sku=sku,
+                    action="print",
+                    status="success",
+                    details="Label printed successfully"
+                )
                 
                 # Write to Google Sheets ONLY after successful printing
                 if (hasattr(self.config_manager.settings, 'google_sheet_url') and 
@@ -577,17 +645,134 @@ class CreateLabelFrame(tk.Frame):
         """Update the status message"""
         self.status_var.set(message)
         self.status_label.config(fg=color)
+        
+    def _initialize_disabled_print_state(self):
+        """Initialize the UI elements when printing is disabled"""
+        # Update the Print Label button
+        self.print_button.config(
+            text="Send Label",
+            bg="#006400",  # Dark Green
+            activebackground="#228B22"  # Forest Green
+        )
+        
+        # Update text color in input fields
+        tracking_field = self.field_widgets["Tracking Number:"]["widget"]
+        sku_field = self.field_widgets["SKU:"]["widget"]
+        tracking_field.config(fg='#4169E1')  # Royal Blue
+        sku_field.config(fg='#4169E1')  # Royal Blue
+        
+        # Add strikethrough to the title
+        self.title_label.config(font=("Arial", 16, "bold", "overstrike"))
     
     def _show_success_message(self, message):
-        """Show a success message in the title and revert back after a delay"""
+        """Show a success message with marquee effect in the title and revert back after a delay"""
         # Save the original text
         original_text = self.title_label.cget("text")
+        original_font = self.title_label.cget("font")
         
-        # Change the title to the success message with green color
-        self.title_label.config(text=message, fg='#4CAF50')
+        # Change the title to the success message with green color and bold font
+        self.title_label.config(text=message, fg='#4CAF50', font=("Arial", 14, "bold"))
         
-        # Schedule to revert back to original title after 3 seconds
-        self.after(3000, lambda: self.title_label.config(text=original_text, fg='#333333'))
+        # Create marquee effect variables
+        self.marquee_active = True
+        self.marquee_text = message
+        self.marquee_position = 0
+        self.marquee_direction = 1  # 1 for right, -1 for left
+        
+        # Start the marquee animation
+        self._update_marquee()
+        
+        # Schedule to stop the marquee and revert back to original title after 8 seconds
+        self.after(8000, lambda: self._stop_marquee(original_text, original_font))
+    
+    def _update_marquee(self):
+        """Update the marquee animation frame"""
+        if not hasattr(self, 'marquee_active') or not self.marquee_active:
+            return
+            
+        # Get current text
+        text = self.marquee_text
+        
+        # Add some padding
+        padded_text = " " * 5 + text + " " * 5
+        
+        # Calculate the display window (what part of the text to show)
+        display_length = min(len(padded_text), 30)  # Limit display length
+        
+        # Update position based on direction
+        self.marquee_position += self.marquee_direction
+        
+        # Reverse direction if we hit the edges
+        if self.marquee_position >= len(padded_text) - display_length:
+            self.marquee_direction = -1
+        elif self.marquee_position <= 0:
+            self.marquee_direction = 1
+        
+        # Extract the visible portion
+        visible_text = padded_text[self.marquee_position:self.marquee_position + display_length]
+        
+        # Update the label
+        self.title_label.config(text=visible_text)
+        
+        # Schedule the next update
+        self.after(100, self._update_marquee)
+    
+    def _stop_marquee(self, original_text, original_font):
+        """Stop the marquee animation and restore the original text"""
+        self.marquee_active = False
+        self.title_label.config(text=original_text, fg='#333333', font=original_font)
+        
+    def _select_all_text(self, entry_widget):
+        """Select all text in an Entry widget"""
+        # Multiple attempts to ensure selection works
+        def select_text():
+            entry_widget.focus_set()
+            entry_widget.selection_range(0, 'end')
+            entry_widget.icursor('end')
+            
+        # Schedule multiple attempts with increasing delays
+        self.after(50, select_text)
+        self.after(100, select_text)
+        self.after(200, select_text)
+        
+    def _select_all_with_keyboard(self, widget):
+        """Select all text using keyboard shortcut simulation"""
+        # Force focus to the widget
+        self.focus_force()
+        widget.focus_set()
+        
+        # Use pyautogui to simulate Ctrl+A (select all)
+        try:
+            # First ensure the widget has focus
+            self.update_idletasks()
+            
+            # Use pyautogui to simulate Ctrl+A
+            pyautogui.hotkey('ctrl', 'a')
+            
+            # As a backup, also try the normal selection method
+            widget.selection_range(0, 'end')
+            widget.icursor('end')
+            
+            # Make another attempt after a delay
+            self.after(200, lambda: self._select_all_backup(widget))
+        except Exception as e:
+            print(f"Error selecting text: {str(e)}")
+            # Fall back to the standard method
+            widget.selection_range(0, 'end')
+            widget.icursor('end')
+    
+    def _select_all_backup(self, widget):
+        """Backup attempt to select all text"""
+        try:
+            # Try to ensure the widget has focus
+            widget.focus_set()
+            
+            # Try both methods again
+            widget.selection_range(0, 'end')
+            widget.icursor('end')
+            pyautogui.hotkey('ctrl', 'a')
+        except:
+            pass
     
     def _show_create_label_dialog(self, sku):
         """

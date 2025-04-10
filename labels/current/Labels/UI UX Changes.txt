@@ -1,5 +1,21 @@
-4/10
-Labels Tab is now active. We just need to to add a better search.
+4/10 Live Testing
+
+		RETURNS DATA Dialog
+	Delete the import Data Dialog	
+	Labels Tab is now active. Add a better search function/method for Returns Data.
+	
+		SETTINGS
+	Make a setting for the transparency.
+		Set transparency to .7 by default. 
+
+		CREATE LABEL
+	---FIXED---	It doesn't send data by default when print is toggled off.
+Maybe DELETE the number instead of selecting it?--**--**--NOT WORKING -- MOVING ON**		Select the Tracking number after the invalid Tracking Number Error
+	***When Print is toggled off ***
+		DONE	--------	Delete the Print disabled message
+		DONE	--------	Change the input Text color of the Tracking number and SKU to Royal Blue, and the "Create New Label" text have strikethrough
+		DONE	--------	Change the color Print Label Button to Dark Green.
+	
 
 
 
@@ -126,3 +142,5 @@ Production Testing.
 			DONE	--------	When tracking# is too small, select the inputted text so it's easier to scan over the number.
 		Welcome window:
 			DONE	--------	Reset rows to default when clicking on "connected". 
+
+༼ つ ◕_◕ ༽つ—(╯°□°)╯︵ ┻━┻ ¬(ツ)_ -ಠ_ಠ-|| [°] (^‿^) | [°]| (0‿0) | [°]
