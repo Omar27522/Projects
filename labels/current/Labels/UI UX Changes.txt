@@ -1,13 +1,6 @@
-4/7
-Production Testing. 
-	DONE	--------	I tried to include the APPS script with the Python code but I can't get it to work. I will have to write into a 3rd cell that will mimic the function of the script. and have both for redundancy because it does not want to work.
+4/10
+Labels Tab is now active. We just need to to add a better search.
 
-	Then All QOL changes will have to be implemented as well, such as:
-		 Create Label Dialog: 
-			Make it transparent when out of focus, and regain opaqueness once in focus.
-			When tracking# is too small, select the inputted text so it's easier to scan over the number.
-		Welcome window:
-			Reset rows to default when clicking on "connected".
 
 
 <No dream is too big, no dreamer too small> Integration with the Warehouse Manager System ¦ Reverse Inbound, and Recieve (container card, SKU, quantity, completion).
@@ -122,5 +115,14 @@ Add a link to "V3" that will reset the sheet to the default for the start of day
 		Use the same function as the button inside
 		the settings?
 
+༼ つ ◕_◕ ༽つ—(╯°□°)╯︵ ┻━┻ ¬(ツ)_ -ಠ_ಠ-|| [°] (^‿^) | [°]| (0‿0) | [°]
+4/7-4/8
+Production Testing. 
+	DONE	--------	I tried to include the APPS script with the Python code but I can't get it to work. I will have to write into a 3rd cell that will mimic the function of the script. and have both for redundancy because it does not want to work.
 
- 
+	Then All QOL changes will have to be implemented as well, such as:
+		 Create Label Dialog: 
+			DONE	--------	Make it transparent when out of focus, and regain opaqueness once in focus.
+			DONE	--------	When tracking# is too small, select the inputted text so it's easier to scan over the number.
+		Welcome window:
+			DONE	--------	Reset rows to default when clicking on "connected". 

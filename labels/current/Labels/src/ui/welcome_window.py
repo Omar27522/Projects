@@ -21,10 +21,10 @@ from src.utils.sheets_operations import write_to_google_sheet, create_google_she
 from src.utils.returns_operations import load_returns_data, update_log_file, create_returns_dialog, create_edit_dialog
 from src.utils.settings_operations import create_settings_dialog, update_sheets_status_display
 from src.utils.dialog_handlers import (
-    create_labels_dialog, 
     create_settings_dialog_handler, create_google_sheets_dialog_handler
 )
 from src.ui.create_label_frame import CreateLabelFrame
+from src.ui.returns_data_dialog import create_returns_data_dialog
 
 # Third-party imports
 import pyautogui
@@ -376,17 +376,13 @@ class WelcomeWindow(tk.Tk):
             else:
                 # Dialog exists, bring it to front
                 dialog = self.open_dialogs['returns_data']
-                
-                # Check if dialog is minimized (iconified)
-                if dialog.state() == 'iconic':
-                    dialog.deiconify()  # Restore the window
-                
+                dialog.deiconify()
                 dialog.lift()
                 dialog.focus_force()
                 return
         
-        # Call the create_labels_dialog function from our dialog_handlers module
-        dialog, _ = create_labels_dialog(self)
+        # Create the Returns Data dialog using our new SQLite-based implementation
+        dialog = create_returns_data_dialog(self, self.config_manager)
         
         # Store reference to the dialog
         self.open_dialogs['returns_data'] = dialog

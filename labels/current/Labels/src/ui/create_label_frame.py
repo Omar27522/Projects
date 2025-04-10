@@ -21,6 +21,9 @@ from src.utils.ui_components import create_title_section, create_colored_button,
 from src.utils.barcode_operations import process_barcode
 from src.utils.sheets_operations import write_to_google_sheet
 from src.utils.file_utils import directory_exists, file_exists, find_files_by_sku
+from src.utils.text_context_menu import add_context_menu
+from src.ui.window_transparency import TransparencyManager, create_transparency_toggle_button
+from src.utils.database_operations import add_shipping_record
 
 # Configure logging
 logs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'logs')
@@ -30,29 +33,6 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
-
-def log_shipping_record(tracking_number, sku, status):
-    """Log shipping record information to a separate file"""
-    try:
-        # Get logs directory
-        logs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'logs')
-        os.makedirs(logs_dir, exist_ok=True)
-        
-        # Create timestamp
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
-        # Format the record
-        log_message = f"{timestamp} - Tracking={tracking_number}, SKU={sku}, Status={status}\n"
-        
-        # Write to shipping_records.txt instead of logging to the main log file
-        with open(os.path.join(logs_dir, 'shipping_records.txt'), 'a', encoding='utf-8') as f:
-            f.write(log_message)
-            
-        return True
-    except Exception as e:
-        # Log errors to the main log file
-        logging.error(f"Error recording shipping record: {str(e)}")
-        return False
 
 class CreateLabelFrame(tk.Frame):
     """Frame-based implementation of the Create Label functionality"""
@@ -81,9 +61,17 @@ class CreateLabelFrame(tk.Frame):
         self.mirror_print_var = tk.BooleanVar(value=config_manager.settings.mirror_print if hasattr(config_manager.settings, 'mirror_print') else False)
         self.print_enabled_var = tk.BooleanVar(value=True)  # Print enabled by default
         self.stay_on_top_var = tk.BooleanVar(value=config_manager.settings.stay_on_top if hasattr(config_manager.settings, 'stay_on_top') else False)
+        self.transparency_var = tk.BooleanVar(value=config_manager.settings.transparency_enabled if hasattr(config_manager.settings, 'transparency_enabled') else True)
         
         # Create UI
         self._create_ui()
+        
+        # Initialize transparency manager
+        self.transparency_manager = TransparencyManager(
+            self.winfo_toplevel(),  # Use the top-level window
+            opacity=config_manager.settings.transparency_level,
+            enabled=self.transparency_var.get()
+        )
         
         # Set focus to tracking number field
         self._focus_tracking_field()
@@ -196,6 +184,10 @@ class CreateLabelFrame(tk.Frame):
         # Store references to the variables
         self.tracking_var = self.field_widgets["Tracking Number:"]["var"]
         self.sku_var = self.field_widgets["SKU:"]["var"]
+        
+        # Add context menus to text fields
+        add_context_menu(self.field_widgets["Tracking Number:"]["widget"])
+        add_context_menu(self.field_widgets["SKU:"]["widget"])
         
         # Add focus to tracking number field
         self.field_widgets["Tracking Number:"]["widget"].focus_set()
@@ -323,6 +315,43 @@ class CreateLabelFrame(tk.Frame):
         )
         self.print_btn.pack(side=tk.LEFT, padx=2)
         
+        # Add a spacer
+        spacer2 = tk.Frame(options_frame, width=20, bg='white')
+        spacer2.pack(side=tk.LEFT)
+        
+        # Transparency toggle
+        def toggle_transparency():
+            current_state = self.transparency_var.get()
+            
+            # Update the transparency manager
+            self.transparency_manager.set_enabled(current_state)
+            
+            # Update button appearance
+            self.transparency_btn.config(
+                bg='#90EE90' if current_state else '#C71585',  # Green if on, Pink if off
+                relief='sunken' if current_state else 'raised'
+            )
+            
+            # Save the setting
+            self.config_manager.settings.transparency_enabled = current_state
+            self.config_manager.save_settings()
+        
+        # Create transparency button with label
+        transparency_label = tk.Label(options_frame, text="Tr:", bg='white', font=('TkDefaultFont', 10))
+        transparency_label.pack(side=tk.LEFT, padx=(0, 5))
+        
+        initial_state = self.transparency_var.get()
+        self.transparency_btn = tk.Button(options_frame, text=" ", 
+                               bg='#90EE90' if initial_state else '#C71585',  # Green if on, Pink if off
+                               relief='sunken' if initial_state else 'raised', width=3,
+                               font=('TkDefaultFont', 14), anchor='center')
+        
+        self.transparency_btn.config(
+            command=lambda: [self.transparency_var.set(not self.transparency_var.get()),
+                           toggle_transparency()]
+        )
+        self.transparency_btn.pack(side=tk.LEFT, padx=2)
+        
         # Create button frame
         button_frame = tk.Frame(content_frame, bg='white')
         button_frame.pack(fill='x', pady=(20, 0))
@@ -437,8 +466,8 @@ class CreateLabelFrame(tk.Frame):
         try:
             # Define a function to run after successful printing
             def after_print_success():
-                # Log the shipping record ONLY after successful printing
-                log_shipping_record(tracking_number, sku, "Label printed successfully")
+                # Log the shipping record to the database ONLY after successful printing
+                add_shipping_record(tracking_number, sku, "Label printed successfully")
                 
                 # Write to Google Sheets ONLY after successful printing
                 if (hasattr(self.config_manager.settings, 'google_sheet_url') and 
