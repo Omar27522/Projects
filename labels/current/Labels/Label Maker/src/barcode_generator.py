@@ -99,6 +99,43 @@ class BarcodeGenerator:
             print(f"Error generating barcode: {e}")
             return None
 
+    def process_camel_case(self, text):
+        """
+        Process text to add spaces after capital letters that are followed by lowercase letters.
+        Example: 'RedShirt' becomes 'Red Shirt'
+        
+        Args:
+            text (str): The text to process
+            
+        Returns:
+            str: Processed text with spaces added after capital letters
+        """
+        import re
+        
+        # Handle edge cases
+        if not text or not isinstance(text, str):
+            return text
+            
+        # This is a more comprehensive approach that handles multiple occurrences
+        result = text
+        
+        # Handle special case for names that are all uppercase
+        if result.isupper() and len(result) > 3:
+            # Don't process all uppercase names
+            return result
+            
+        # Process camelCase (lowercase followed by uppercase)
+        result = re.sub(r'([a-z])([A-Z])', r'\1 \2', result)
+        
+        # Process PascalCase (capital letters at start of words)
+        result = re.sub(r'(^|\s)([A-Z][a-z]+)([A-Z])', r'\1\2 \3', result)
+        
+        # Handle consecutive capital letters (like "HTML") - don't split these
+        # But do split if a capital is followed by lowercase (like "HTMLFile" -> "HTML File")
+        result = re.sub(r'([A-Z])([A-Z][a-z])', r'\1 \2', result)
+        
+        return result
+    
     def generate_label(self, data: LabelData) -> Optional[Image.Image]:
         """Generate complete label with text and barcode"""
         try:
@@ -109,21 +146,27 @@ class BarcodeGenerator:
             # Configure default colors
             text_color = (0, 0, 0)  # Black color for text
             
+            # Process the text to handle camelCase/PascalCase
+            # This ensures the text is properly formatted on the label
+            name_line1 = self.process_camel_case(data.name_line1)
+            name_line2 = self.process_camel_case(data.name_line2)
+            variant = self.process_camel_case(data.variant)
+            
             # Draw text elements
             # Name Line 1 (fixed position at 20,20)
-            if data.name_line1:
-                draw.text((20, 20), data.name_line1, font=self.font_large, fill=text_color)
+            if name_line1:
+                draw.text((20, 20), name_line1, font=self.font_large, fill=text_color)
             
             # Name Line 2 (position depends on Name Line 1)
-            if data.name_line2:
-                name1_height = draw.textbbox((0, 0), data.name_line1 if data.name_line1 else "", font=self.font_large)[3]
-                draw.text((20, 20 + name1_height), data.name_line2, font=self.font_large, fill=text_color)
+            if name_line2:
+                name1_height = draw.textbbox((0, 0), name_line1 if name_line1 else "", font=self.font_large)[3]
+                draw.text((20, 20 + name1_height), name_line2, font=self.font_large, fill=text_color)
 
             # Variant text position
-            if data.variant:
-                text_width = draw.textlength(data.variant, font=self.font_medium)
+            if variant:
+                text_width = draw.textlength(variant, font=self.font_medium)
                 x = (self.settings.LABEL_WIDTH - text_width) // 2
-                draw.text((x, 165), data.variant, font=self.font_medium, fill=text_color)
+                draw.text((x, 165), variant, font=self.font_medium, fill=text_color)
 
             # Generate barcode
             barcode_image = self.generate_barcode_image(data.upc_code)

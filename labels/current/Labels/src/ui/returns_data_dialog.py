@@ -26,8 +26,7 @@ from src.utils.database_operations import (
     get_record_count,
     update_shipping_record,
     delete_shipping_record,
-    export_to_csv,
-    import_from_text_log
+    export_to_csv
 )
 
 class ReturnsDataDialog(tk.Toplevel):
@@ -80,9 +79,6 @@ class ReturnsDataDialog(tk.Toplevel):
         
         # Load initial data
         self._load_data()
-        
-        # Check if we should import from text log
-        self._check_import_from_text_log()
     
     def _create_ui(self):
         """Create the user interface elements"""
@@ -561,26 +557,7 @@ class ReturnsDataDialog(tk.Toplevel):
         else:
             messagebox.showerror("Error", "Failed to export data")
     
-    def _check_import_from_text_log(self):
-        """Check if we should import from text log"""
-        # Get the database record count
-        count = get_record_count()
-        
-        # If database is empty, offer to import from text log
-        if count == 0:
-            confirm = messagebox.askyesno(
-                "Import Data",
-                "Would you like to import existing shipping records from the text log file?"
-            )
-            
-            if confirm:
-                success, imported_count = import_from_text_log()
-                
-                if success:
-                    messagebox.showinfo("Success", f"Successfully imported {imported_count} records")
-                    self._load_data()  # Reload data to show imported records
-                else:
-                    messagebox.showerror("Error", "Failed to import records")
+
 
 def create_returns_data_dialog(parent, config_manager):
     """

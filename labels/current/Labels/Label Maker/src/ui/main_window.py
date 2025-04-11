@@ -983,6 +983,42 @@ class MainWindow(tk.Tk):
         )
         view_files_btn.pack(side=tk.LEFT, padx=2)
 
+    def process_camel_case(self, text):
+        """
+        Process text to add spaces after capital letters that are followed by lowercase letters.
+        Example: 'RedShirt' becomes 'Red Shirt'
+        
+        Args:
+            text (str): The text to process
+            
+        Returns:
+            str: Processed text with spaces added after capital letters
+        """
+        import re
+        
+        # Handle edge cases
+        if not text or not isinstance(text, str):
+            return text
+            
+        # Debug: Print what we're processing
+        print(f"Processing: '{text}'")
+        
+        # This is a more comprehensive approach that handles multiple occurrences
+        result = text
+        
+        # First pass: Add spaces between lowercase followed by uppercase
+        result = re.sub(r'([a-z])([A-Z])', r'\1 \2', result)
+        
+        # Also handle PascalCase (first letter is capital)
+        # This regex finds capital letters at the start of a word that are followed by
+        # at least one lowercase letter, and then another capital
+        result = re.sub(r'(^|\s)([A-Z][a-z]+)([A-Z])', r'\1\2 \3', result)
+        
+        # Debug: Print the result
+        print(f"Result: '{result}'")
+        
+        return result
+        
     def upload_csv(self):
         """Handle CSV file upload"""
         try:
@@ -1047,6 +1083,17 @@ class MainWindow(tk.Tk):
                         raise ValueError(f"Missing required columns in CSV: {', '.join(missing_columns)}\n"
                                       f"CSV must contain columns: {', '.join(required_columns)}")
                     
+                    # Debug: Print the first few product names before processing
+                    print("\nOriginal product names:")
+                    for i, name in enumerate(df['Goods Name'].head()):
+                        print(f"  {i+1}: '{name}'")
+                    
+                    # We'll let process_product_name handle the camelCase processing
+                    # Debug: Print the first few product names
+                    print("\nProduct names from CSV:")
+                    for i, name in enumerate(df['Goods Name'].head()):
+                        print(f"  {i+1}: '{name}'")
+                    
                     total_rows = len(df)
                     
                     # Get save directory from settings or use default
@@ -1076,6 +1123,8 @@ class MainWindow(tk.Tk):
                             skipped_labels += 1
                             continue
                             
+                        # Get the product name directly from CSV
+                        # process_product_name will handle camelCase processing
                         full_name = str(row['Goods Name'])
                         
                         # Process the product name

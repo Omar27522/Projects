@@ -211,6 +211,8 @@ class CreateLabelFrame(tk.Frame):
             if tracking_number and len(tracking_number) <= 12:
                 self._update_status("Tracking number must be longer than 12 characters", 'red')
                 messagebox.showerror("Invalid Tracking Number", "Tracking number must be longer than 12 characters.\n\nPlease enter a valid tracking number.")
+                # Clear the invalid tracking number
+                self.tracking_var.set("")
                 return "break"  # Prevent default Enter behavior
             
             # Copy to clipboard
@@ -324,7 +326,7 @@ class CreateLabelFrame(tk.Frame):
                 self.title_label.config(font=("Arial", 16, "bold"))
             else:
                 # Add strikethrough to the title
-                self.title_label.config(font=("Arial", 16, "bold", "overstrike"))
+                self.title_label.config(font=("Verdana", 20, "bold", "overstrike"))
             
             # Update the Print Label button
             if current_state:
@@ -338,7 +340,7 @@ class CreateLabelFrame(tk.Frame):
                 # Logging only mode
                 self.print_button.config(
                     text="Send Label",
-                    bg="#006400",  # Dark Green
+                    bg="#4169E1",  # Dark Green
                     activebackground="#228B22"  # Forest Green
                 )
         
@@ -500,6 +502,10 @@ class CreateLabelFrame(tk.Frame):
                 details="No print - logging only"
             )
             
+            # Also add to the original shipping_records database to ensure records appear in the Records tab
+            from src.utils.database_operations import add_shipping_record
+            add_shipping_record(tracking_number, sku, "No print - logging only")
+            
             # Write to Google Sheets if configured
             if (hasattr(self.config_manager.settings, 'google_sheet_url') and 
                 self.config_manager.settings.google_sheet_url and 
@@ -536,6 +542,10 @@ class CreateLabelFrame(tk.Frame):
                     status="success",
                     details="Label printed successfully"
                 )
+                
+                # Also add to the original shipping_records database to ensure records appear in the Records tab
+                from src.utils.database_operations import add_shipping_record
+                add_shipping_record(tracking_number, sku, "Label printed successfully")
                 
                 # Write to Google Sheets ONLY after successful printing
                 if (hasattr(self.config_manager.settings, 'google_sheet_url') and 

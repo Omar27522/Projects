@@ -276,22 +276,18 @@ class NoRecordLabelFrame(tk.Frame):
             
             # Print the barcode if we found it
             if barcode_file:
-                # Pre-configure the Enter key press before starting the print process
-                # This helps catch the dialog as soon as it appears
-                print("Setting up print dialog handling...")
+                print("Starting print process...")
                 
-                # Schedule multiple Enter key presses with staggered timing
-                # This increases the chance of catching the dialog as soon as it appears
-                self.after(300, lambda: pyautogui.press('enter'))
-                self.after(600, lambda: pyautogui.press('enter'))
-                self.after(900, lambda: pyautogui.press('enter'))
-                
-                # Now start the print process
+                # First start the print process
                 success, message = print_barcode(
                     barcode_file,
                     mirror_print,
                     update_status
                 )
+                
+                # Wait longer before trying to handle the print dialog
+                # This ensures the dialog is fully loaded before we try to interact with it
+                self.after(1000, self._press_enter_for_print_dialog)
                 
                 if success:
                     # Show success message
@@ -312,13 +308,11 @@ class NoRecordLabelFrame(tk.Frame):
     def _press_enter_for_print_dialog(self):
         """Press Enter to confirm the print dialog"""
         try:
-            # More aggressive approach to pressing Enter
-            # Press Enter multiple times in rapid succession
-            for _ in range(3):
-                pyautogui.press('enter')
-                time.sleep(0.05)  # Very short delay between presses
-            
-            print("Multiple Enter keys pressed for print dialog")
+            # Just press Enter once to confirm the print dialog
+            # This simpler approach may prevent confusing the dialog
+            print("Pressing Enter to confirm print dialog...")
+            pyautogui.press('enter')
+            print("Enter key pressed for print dialog")
         except Exception as e:
             print(f"Error pressing Enter: {str(e)}")
     

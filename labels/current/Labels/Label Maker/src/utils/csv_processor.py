@@ -21,15 +21,44 @@ def sanitize_filename(name: str) -> str:
 
 def process_product_name(full_name: str) -> Tuple[str, str, str]:
     """Process product name into name_line1, name_line2, and variant"""
+    import re
+    
+    # Print the input for debugging
+    print(f"Processing product name: '{full_name}'")
+    
+    # First process camelCase/PascalCase in the full name
+    processed_name = full_name
+    
+    # Handle special case for names that are all uppercase
+    if processed_name.isupper() and len(processed_name) > 3:
+        # Don't process all uppercase names
+        pass
+    else:
+        # Process camelCase (lowercase followed by uppercase)
+        processed_name = re.sub(r'([a-z])([A-Z])', r'\1 \2', processed_name)
+        
+        # Process PascalCase (capital letters at start of words)
+        # This regex looks for capital letters that start a word and are followed by
+        # at least one lowercase letter, then another capital
+        processed_name = re.sub(r'(^|\s)([A-Z][a-z]+)([A-Z])', r'\1\2 \3', processed_name)
+        
+        # Handle consecutive capital letters (like "HTML") - don't split these
+        # But do split if a capital is followed by lowercase (like "HTMLFile" -> "HTML File")
+        processed_name = re.sub(r'([A-Z])([A-Z][a-z])', r'\1 \2', processed_name)
+    
+    # Print the processed name for debugging
+    print(f"Processed to: '{processed_name}'")
+    
+    # Now continue with normal processing using the processed name
     # First try with spaces around double dash
-    if ' -- ' in full_name:
-        name_parts = full_name.split(' -- ', 1)
+    if ' -- ' in processed_name:
+        name_parts = processed_name.split(' -- ', 1)
     # Then try without spaces
-    elif '--' in full_name:
-        name_parts = full_name.split('--', 1)
+    elif '--' in processed_name:
+        name_parts = processed_name.split('--', 1)
     # No fallback to single dash - if no double dash is found, there's no variant
     else:
-        name_parts = [full_name]
+        name_parts = [processed_name]
         
     base_name = name_parts[0].strip()
     variant = name_parts[1].strip() if len(name_parts) > 1 else ""

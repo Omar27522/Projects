@@ -95,15 +95,7 @@ class LabelsSettingsDialog(tk.Toplevel):
         )
         import_button.pack(fill='x', pady=5)
         
-        # Export button
-        export_button = create_colored_button(
-            buttons_frame,
-            text="Export Data to CSV",
-            color="#2196F3",
-            hover_color="#0b7dda",
-            command=self._export_results
-        )
-        export_button.pack(fill='x', pady=5)
+
         
         # Separator
         ttk.Separator(main_frame).pack(fill='x', pady=15)
@@ -177,54 +169,7 @@ class LabelsSettingsDialog(tk.Toplevel):
         messagebox.showerror("Import Error", f"Error importing data: {error_msg}")
         self.status_var.set("Ready")
     
-    def _export_results(self):
-        """Export label data to CSV"""
-        # Get file path
-        file_path = filedialog.asksaveasfilename(
-            defaultextension=".csv",
-            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
-            title="Export Results"
-        )
-        
-        if not file_path:
-            return
-        
-        # Update status
-        self.status_var.set("Exporting data...")
-        self.update_idletasks()
-        
-        try:
-            # Get all records (no pagination)
-            from src.utils.label_database import search_labels
-            records = search_labels("", None, limit=10000, offset=0)
-            
-            # Write to CSV
-            with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
-                # Define fieldnames
-                fieldnames = [
-                    "id", "upc", "item_variant_number", "department", "category",
-                    "color", "website_color", "website_name", "label_name", "sku"
-                ]
-                
-                # Create CSV writer
-                import csv
-                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-                
-                # Write header
-                writer.writeheader()
-                
-                # Write records
-                for record in records:
-                    writer.writerow(record)
-            
-            # Show success message
-            messagebox.showinfo("Export Complete", f"Successfully exported {len(records)} records to {file_path}")
-        except Exception as e:
-            # Show error message
-            messagebox.showerror("Export Error", f"Error exporting data: {str(e)}")
-        
-        # Update status
-        self.status_var.set("Ready")
+
 
 def create_labels_settings_dialog(parent, config_manager, callback=None):
     """

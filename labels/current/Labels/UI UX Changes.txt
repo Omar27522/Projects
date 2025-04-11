@@ -1,21 +1,9 @@
-4/10 Live Testing
+ Live/Production Testing
 
 		RETURNS DATA Dialog
-	Delete the import Data Dialog	
-	Labels Tab is now active. Add a better search function/method for Returns Data.
-	
-		SETTINGS
-	Make a setting for the transparency.
-		Set transparency to .7 by default. 
+			Labels Tab.
+	Add a better search function/method for Returns Data.
 
-		CREATE LABEL
-	---FIXED---	It doesn't send data by default when print is toggled off.
-Maybe DELETE the number instead of selecting it?--**--**--NOT WORKING -- MOVING ON**		Select the Tracking number after the invalid Tracking Number Error
-	***When Print is toggled off ***
-		DONE	--------	Delete the Print disabled message
-		DONE	--------	Change the input Text color of the Tracking number and SKU to Royal Blue, and the "Create New Label" text have strikethrough
-		DONE	--------	Change the color Print Label Button to Dark Green.
-	
 
 
 
@@ -144,3 +132,44 @@ Production Testing.
 			DONE	--------	Reset rows to default when clicking on "connected". 
 
 ༼ つ ◕_◕ ༽つ—(╯°□°)╯︵ ┻━┻ ¬(ツ)_ -ಠ_ಠ-|| [°] (^‿^) | [°]| (0‿0) | [°]
+4/10 Live Testing
+
+		RETURNS DATA Dialog
+	DONE	--------	Delete the import Data Dialog
+	The Labels are better now. 	
+	Labels Tab is now active. Add a better search function/method for Returns Data.
+	
+		SETTINGS
+	Make a setting for the transparency.
+		DONE	--------	Set transparency to .7 by default. 
+
+		CREATE LABEL
+	---FIXED---	It doesn't send data by default when print is toggled off.
+		DONE	--------	DELETE Tracking number after the invalid Tracking Number Error
+	***When Print is toggled off ***
+		DONE	--------	DELETE the Print disabled message
+		DONE	--------	Change the input Text color of the Tracking number and SKU to Royal Blue, and the "Create New Label" text have strikethrough
+		DONE	--------	Change the color Print Label Button to Dark Green.
+
+༼ つ ◕_◕ ༽つ—(╯°□°)╯︵ ┻━┻ ¬(ツ)_ -ಠ_ಠ-|| [°] (^‿^) | [°]| (0‿0) | [°]
+4/11 Production Testing
+
+		RETURNS DATA Dialog
+			Labels Tab.
+	Add a better search function/method for Returns Data.
+	*-FIXED-*	--------	Settings ->This is an exception: when importing CSV data, treat names as separate words only if they contain capital letters within a single word. Add a space after each capital letter.
+	
+		SETTINGS
+	
+
+		CREATE LABEL
+	TRIED, IS OK--------------When the print is toggled off, make the process of sending data a bit faster, there is a delay.
+
+		NO RECORD LABEL
+		*-FIXED-*	--------	fix the print dialog, there is a "Are you sure you want to cancel printing" Windows OS dialog that appears.
+
+LABEL MAKER
+	Settings Upload CSV file
+		*-FIXED-*	--------	This is an exception: when importing CSV data, treat names as separate words only if they contain capital letters within a single word. Add a space after each capital letter.
+	
+	

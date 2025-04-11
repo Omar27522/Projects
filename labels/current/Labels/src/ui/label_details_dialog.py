@@ -98,12 +98,13 @@ class LabelDetailsDialog(tk.Toplevel):
         details_frame = ttk.Frame(main_frame)
         details_frame.pack(fill='both', expand=True)
         
-        # Left column - Label information
-        info_frame = ttk.LabelFrame(details_frame, text="Label Information")
-        info_frame.pack(side='left', fill='both', expand=True, padx=(0, 10))
+        # Left column - Label information (make it thinner)
+        info_frame = ttk.LabelFrame(details_frame, text="Label Information", width=300)
+        info_frame.pack(side='left', fill='both', expand=False, padx=(0, 10))
+        info_frame.pack_propagate(False)  # Prevent the frame from shrinking to fit its contents
         
         # Create a canvas with scrollbar for the info frame
-        canvas = tk.Canvas(info_frame)
+        canvas = tk.Canvas(info_frame, width=280)
         scrollbar = ttk.Scrollbar(info_frame, orient="vertical", command=canvas.yview)
         scrollable_frame = ttk.Frame(canvas)
         
@@ -118,11 +119,11 @@ class LabelDetailsDialog(tk.Toplevel):
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         
-        # Add field labels and values
-        field_mappings = [
-            ("Item Variant", "item_variant_number"),
+        # Add label information fields
+        fields = [
             ("UPC", "upc"),
-            ("Label Name", "label_name"),
+            ("Item Variant Number", "item_variant_number"),
+            ("SKU", "sku"),
             ("Department", "department"),
             ("Category", "category"),
             ("Color", "color"),
@@ -130,47 +131,50 @@ class LabelDetailsDialog(tk.Toplevel):
             ("Website Name", "website_name")
         ]
         
-        for i, (label_text, field_name) in enumerate(field_mappings):
+        # Add each field to the scrollable frame
+        for i, (label_text, field_name) in enumerate(fields):
+            # Create frame for this field
+            field_frame = ttk.Frame(scrollable_frame)
+            field_frame.pack(fill='x', padx=10, pady=5)
+            
             # Label
-            label = ttk.Label(scrollable_frame, text=f"{label_text}:", font=('Arial', 10, 'bold'))
-            label.grid(row=i, column=0, sticky='w', padx=5, pady=5)
+            label = ttk.Label(field_frame, text=f"{label_text}:", width=15, anchor='e')
+            label.pack(side='left', padx=(0, 10))
             
             # Value
-            value = self.record.get(field_name, "N/A")
-            value_label = ttk.Label(scrollable_frame, text=value, wraplength=200)
-            value_label.grid(row=i, column=1, sticky='w', padx=5, pady=5)
+            value = self.record.get(field_name, "")
+            value_label = ttk.Label(field_frame, text=value, wraplength=150)
+            value_label.pack(side='left', fill='x', expand=True)
         
-        # Right column - Label files
-        files_frame = ttk.LabelFrame(details_frame, text="Label Files")
-        files_frame.pack(side='right', fill='both', expand=True)
+        # Right column - Label Preview (replacing the files list)
+        preview_frame = ttk.LabelFrame(details_frame, text="Label")
+        preview_frame.pack(side='right', fill='both', expand=True)
         
-        # Create listbox for files
-        self.files_listbox = tk.Listbox(files_frame, selectmode=tk.SINGLE)
-        self.files_listbox.pack(side='left', fill='both', expand=True)
+        # Create a frame for the image preview
+        self.image_frame = ttk.Frame(preview_frame)
+        self.image_frame.pack(fill='both', expand=True, padx=10, pady=10)
         
-        # Add scrollbar to listbox
-        files_scrollbar = ttk.Scrollbar(files_frame, orient="vertical", command=self.files_listbox.yview)
-        files_scrollbar.pack(side="right", fill="y")
-        self.files_listbox.configure(yscrollcommand=files_scrollbar.set)
+        # Create a label for the image
+        self.image_label = ttk.Label(self.image_frame)
+        self.image_label.pack(fill='both', expand=True)
         
-        # Bind double-click to open file
-        self.files_listbox.bind("<Double-1>", self._open_selected_file)
+        # Create a label for showing when no image is available
+        self.no_image_label = ttk.Label(
+            self.image_frame, 
+            text="No label image available",
+            font=("Arial", 12),
+            foreground="gray"
+        )
         
-        # Add a placeholder item
-        self.files_listbox.insert(tk.END, "Searching for label files...")
+        # Add buttons for actions
+        buttons_frame = ttk.Frame(preview_frame)
+        buttons_frame.pack(fill='x', padx=10, pady=(0, 10))
         
-        # Separator
-        ttk.Separator(main_frame).pack(fill='x', pady=15)
-        
-        # Bottom buttons frame
-        buttons_frame = ttk.Frame(main_frame)
-        buttons_frame.pack(fill='x', pady=(10, 0))
-        
-        # Open file button
+        # Open button
         open_button = create_colored_button(
             buttons_frame,
-            text="Open Selected File",
-            color="#4CAF50",
+            text="Open",
+            color="#4CAF50", 
             hover_color="#45a049",
             command=self._open_selected_file
         )
@@ -179,24 +183,28 @@ class LabelDetailsDialog(tk.Toplevel):
         # Print button
         print_button = create_colored_button(
             buttons_frame,
-            text="Print Selected File",
-            color="#2196F3",
+            text="Print",
+            color="#2196F3", 
             hover_color="#0b7dda",
             command=self._print_selected_file
         )
-        print_button.pack(side='left', padx=(0, 5))
+        print_button.pack(side='left', padx=5)
         
         # Mirror print checkbox
-        mirror_frame = ttk.Frame(buttons_frame)
-        mirror_frame.pack(side='left', padx=(5, 0))
-        
         mirror_check = ttk.Checkbutton(
-            mirror_frame,
+            buttons_frame,
             text="Mirror Print",
             variable=self.mirror_print,
             command=self._toggle_mirror_print
         )
-        mirror_check.pack(side='left')
+        mirror_check.pack(side='right')
+        
+        # Separator
+        ttk.Separator(main_frame).pack(fill='x', pady=15)
+        
+        # Bottom buttons frame
+        buttons_frame = ttk.Frame(main_frame)
+        buttons_frame.pack(fill='x', pady=(10, 0))
         
         # Close button
         close_button = ttk.Button(
@@ -214,75 +222,159 @@ class LabelDetailsDialog(tk.Toplevel):
         status_label.pack(side='left')
     
     def _load_label_files(self):
-        """Load label files in a background thread"""
+        """Load label files in a background thread and display the first one"""
         def find_files_thread():
             try:
-                # Get SKU
-                sku = self.record.get('sku', '')
+                # Get SKU from record
+                sku = self.record.get('sku') or self.record.get('item_variant_number')
                 if not sku:
-                    self.after(0, lambda: self._update_status("No SKU available to search for files"))
+                    self.after(0, lambda: self._update_status("No SKU available to find label files"))
+                    self.after(0, self._show_no_image)
                     return
                 
-                # Find files
-                # We need to search for label files in the last used directory
-                labels_dir = self.config_manager.settings.last_directory if hasattr(self.config_manager, 'settings') and hasattr(self.config_manager.settings, 'last_directory') else None
+                # Update status
+                self.after(0, lambda: self._update_status(f"Searching for label files with SKU: {sku}"))
                 
-                if not labels_dir or not os.path.exists(labels_dir):
-                    self.after(0, lambda: self._update_status("No valid labels directory found"))
-                    return
-                
-                # Find files in the labels directory
+                # Find files by SKU
+                label_dirs = []
                 try:
-                    self.label_files = find_files_by_sku(labels_dir, sku)
+                    # Try to get label directories from config
+                    if hasattr(self.config_manager, 'settings') and hasattr(self.config_manager.settings, 'label_directories'):
+                        label_dirs = self.config_manager.settings.label_directories
+                    # Fallback to last_directory if label_directories is not available
+                    elif hasattr(self.config_manager, 'settings') and hasattr(self.config_manager.settings, 'last_directory'):
+                        last_dir = self.config_manager.settings.last_directory
+                        if last_dir and os.path.exists(last_dir):
+                            label_dirs = [last_dir]
                 except Exception as e:
-                    self.after(0, lambda: self._update_status(f"Error searching for files: {str(e)}"))
+                    print(f"Error accessing config settings: {e}")
+                
+                if not label_dirs:
+                    self.after(0, lambda: self._update_status("No label directories configured"))
+                    self.after(0, self._show_no_image)
                     return
                 
-                # Update UI from main thread
-                self.after(0, self._update_files_list)
+                # Search for label files
+                found_files = []
+                for directory in label_dirs:
+                    if os.path.exists(directory):
+                        files = find_files_by_sku(directory, sku)
+                        found_files.extend(files)
+                
+                # Store the found files
+                self.label_files = found_files
+                
+                # Update the UI
+                if found_files:
+                    self.after(0, lambda: self._display_label_image(found_files[0]))
+                    self.after(0, lambda: self._update_status(f"Found {len(found_files)} label files"))
+                else:
+                    self.after(0, self._show_no_image)
+                    self.after(0, lambda: self._update_status("No label files found for this SKU"))
+                
             except Exception as e:
-                # Handle errors
-                error_message = f"Error finding files: {str(e)}"
-                self.after(0, lambda msg=error_message: self._update_status(msg))
+                print(f"Error finding label files: {e}")
+                self.after(0, lambda: self._update_status(f"Error: {str(e)}"))
+                self.after(0, self._show_no_image)
         
         # Start thread
         threading.Thread(target=find_files_thread).start()
     
-    def _update_files_list(self):
-        """Update the files listbox with found files"""
-        # Clear listbox
-        self.files_listbox.delete(0, tk.END)
-        
-        if not self.label_files:
-            self.files_listbox.insert(tk.END, "No label files found")
-            self._update_status("No label files found for this SKU")
-            return
-        
-        # Add files to listbox
-        for file_path in self.label_files:
-            # Display just the filename, not the full path
-            filename = os.path.basename(file_path)
-            self.files_listbox.insert(tk.END, filename)
-        
-        # Select the first item by default
-        if len(self.label_files) > 0:
-            self.files_listbox.selection_set(0)
-            self.files_listbox.see(0)
-            self.files_listbox.activate(0)
-            self.files_listbox.focus_set()
-        
-        self._update_status(f"Found {len(self.label_files)} label files")
+    def _display_label_image(self, file_path):
+        """Display the label image in the preview panel"""
+        try:
+            # Check if file exists
+            if not os.path.exists(file_path):
+                self._show_no_image()
+                self._update_status(f"File not found: {file_path}")
+                return
+            
+            # Check file extension
+            _, ext = os.path.splitext(file_path)
+            if ext.lower() not in ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff']:
+                self._show_no_image()
+                self._update_status(f"File is not a supported image format: {file_path}")
+                return
+                
+            # Check if file is an image
+            try:
+                # Open the image file
+                image = Image.open(file_path)
+                
+                # Calculate the size to fit in the frame while maintaining aspect ratio
+                frame_width = self.image_frame.winfo_width() - 20  # Subtract padding
+                frame_height = self.image_frame.winfo_height() - 20  # Subtract padding
+                
+                # If frame hasn't been drawn yet, use reasonable defaults
+                if frame_width <= 0:
+                    frame_width = 400
+                if frame_height <= 0:
+                    frame_height = 400
+                
+                # Calculate the resize ratio
+                img_width, img_height = image.size
+                width_ratio = frame_width / img_width
+                height_ratio = frame_height / img_height
+                ratio = min(width_ratio, height_ratio)
+                
+                # Calculate new dimensions
+                new_width = int(img_width * ratio)
+                new_height = int(img_height * ratio)
+                
+                # Resize the image - handle different versions of PIL/Pillow
+                try:
+                    # For newer versions of Pillow
+                    resized_image = image.resize((new_width, new_height), Image.LANCZOS)
+                except AttributeError:
+                    try:
+                        # For older versions of Pillow
+                        resized_image = image.resize((new_width, new_height), Image.ANTIALIAS)
+                    except AttributeError:
+                        # Fallback for very old versions
+                        resized_image = image.resize((new_width, new_height))
+                
+                # Convert to PhotoImage
+                self.photo_image = ImageTk.PhotoImage(resized_image)
+                
+                # Hide the no image label if it's visible
+                self.no_image_label.pack_forget()
+                
+                # Update the image label
+                self.image_label.configure(image=self.photo_image)
+                self.image_label.pack(fill='both', expand=True)
+                
+                # Update status
+                self._update_status(f"Displaying label image: {os.path.basename(file_path)}")
+                
+            except Exception as e:
+                print(f"Error loading image: {e}")
+                self._show_no_image()
+                self._update_status(f"Error loading image: {str(e)}")
+                
+        except Exception as e:
+            print(f"Error displaying image: {e}")
+            self._show_no_image()
+            self._update_status(f"Error displaying image: {str(e)}")
+    
+    def _show_no_image(self):
+        """Show the 'no image available' message"""
+        try:
+            # Hide the image label
+            self.image_label.pack_forget()
+            
+            # Show the no image label
+            self.no_image_label.pack(fill='both', expand=True)
+        except Exception as e:
+            print(f"Error showing no image message: {e}")
     
     def _open_selected_file(self, event=None):
-        """Open the selected file"""
-        # Get selected index
-        selected_idx = self.files_listbox.curselection()
-        if not selected_idx or not self.label_files:
-            messagebox.showinfo("No File Selected", "Please select a file to open")
+        """Open the first label file"""
+        if not self.label_files:
+            messagebox.showinfo("No Files Found", "No label files were found for this SKU")
             return
         
-        # Get file path
-        file_path = self.label_files[selected_idx[0]]
+        # Get the first file path
+        file_path = self.label_files[0]
         
         try:
             # Open file with default application
@@ -292,15 +384,13 @@ class LabelDetailsDialog(tk.Toplevel):
             messagebox.showerror("Error Opening File", f"Could not open file: {str(e)}")
             
     def _print_selected_file(self):
-        """Print the selected file"""
-        # Get selected index
-        selected_idx = self.files_listbox.curselection()
-        if not selected_idx or not self.label_files:
-            messagebox.showinfo("No File Selected", "Please select a file to print")
+        """Print the first label file"""
+        if not self.label_files:
+            messagebox.showinfo("No Files Found", "No label files were found for this SKU")
             return
         
-        # Get file path
-        file_path = self.label_files[selected_idx[0]]
+        # Get the first file path
+        file_path = self.label_files[0]
         
         try:
             # Print the file using the barcode_operations utility

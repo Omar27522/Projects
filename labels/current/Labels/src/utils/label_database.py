@@ -117,6 +117,10 @@ def import_csv(file_path, replace_existing=False):
             records = []
             
             for row in csv_reader:
+                # Skip entries that contain only "--"
+                if row.get('Label Name', '').strip() == "--" or row.get('Website Name', '').strip() == "--":
+                    continue
+                
                 # Extract SKU from the item variant number or label name
                 sku = row.get('Item Variant Number ', '').strip()
                 if not sku:
