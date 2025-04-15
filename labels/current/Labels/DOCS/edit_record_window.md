@@ -2,34 +2,83 @@
 
 ## Overview
 
-The Edit Record window is a key component of the Returns Data management system in the Label Maker application. It provides an interface for editing shipping record details such as tracking numbers, SKUs, and timestamps. Recent improvements have significantly enhanced its usability, making it more robust and user-friendly.
+The Edit Record window is a core part of the Records Tab within the Returns Data dialog (`src/ui/returns_data_dialog.py`). It provides a robust, user-friendly interface for editing shipping record details (tracking numbers, SKUs, timestamps, status, and notes). The design is modular, allowing for future extensibility and integration with other record management features. All edits are performed directly on the main shipping records database (`database/shipping_records.db`) via utility functions in `src/utils/database_operations.py`.
 
 ## Key Features
 
-1. **Scrollable Interface**: Vertically scrollable content area with fixed header and footer
-2. **Form Validation**: Proper validation for required fields
-3. **User Feedback**: Success/error messages when saving records
-4. **Improved Button Design**: Enhanced visibility and layout
-5. **Error Handling**: Robust error handling for various scenarios
+1. **File Location & Architecture**
+   - Main logic: `src/ui/returns_data_dialog.py` (class `ReturnsDataDialog`)
+   - Database logic: `src/utils/database_operations.py`
+   - Edits, deletes, and exports operate directly on `database/shipping_records.db`
+
+2. **Modular, Frame-Based & Tabbed Design**
+   - Integrated as a tab in the Returns Data dialog for easy access and maintainability
+   - Clean separation of UI and database logic
+
+3. **Editing Workflow**
+   - Double-click a record in the table to open the Edit Record dialog
+   - Edit fields: tracking number, SKU, status, notes
+   - Save button validates and persists changes to the database instantly
+   - Cancel button closes the dialog without saving
+   - Success/error messages shown for all operations
+
+4. **Batch Operations & Deletion**
+   - Select multiple records and delete in one action (with confirmation)
+   - Batch deletes update the UI and database immediately
+
+5. **Exporting & Filtering**
+   - Export current filtered records to CSV (via Save As dialog)
+   - Filtering/search and date range supported for export and viewing
+
+6. **Pagination & Sorting**
+   - Pagination controls for navigating large datasets
+   - Change records per page dynamically
+   - Columns sortable by clicking headers (if enabled)
+
+7. **Validation & Error Handling**
+   - Required fields (SKU, Status) must be filled; clear error messages if not
+   - Robust error handling for database failures or invalid data
+
+8. **User Feedback & Accessibility**
+   - Status messages for all save/delete/export actions
+   - Visual cues for invalid input
+   - Keyboard navigation (Tab/Enter) between fields and buttons
+   - Mouse wheel support for scrolling records
+
+9. **Live Sync & Instant Updates**
+   - All changes are reflected instantly in the Records Tab and underlying database
+   - No need to restart or reload the dialog to see edits
+
+10. **Extensibility**
+    - Easily extendable for new fields or workflow enhancements
+    - Designed for maintainability and future features
 
 ## Window Structure
 
-The Edit Record window is organized into three main sections:
+The Edit Record dialog is structured for clarity and usability, with the following main sections:
 
 ```
-Edit Record Dialog
-├── Title Section (Fixed at top)
-│   └── "Edit Record" title
-├── Scrollable Content Area
-│   └── Form Fields
-│       ├── Timestamp (required)
-│       ├── Tracking Number (required)
-│       ├── SKU (required)
-│       └── Label (read-only)
-└── Button Section (Fixed at bottom)
-    ├── Save Button
-    └── Cancel Button
+Edit Record Dialog (tk.Toplevel)
+├── Title Section (fixed at top)
+│   └── "Edit Record" window title
+├── Scrollable Content Area (main frame)
+│   ├── Form Fields (vertical layout)
+│   │   ├── Tracking Number (entry)
+│   │   ├── SKU (entry)
+│   │   ├── Status (entry or dropdown)
+│   │   └── Notes (multi-line text box)
+├── Button Section (fixed at bottom)
+│   ├── Save Button (bold, colored, always visible)
+│   └── Cancel Button (always visible)
 ```
+
+**Details:**
+- The dialog opens as a modal window over the main Returns Data dialog.
+- The content area contains labeled input fields for all editable record properties.
+- The Notes field is a multi-line text box for additional information.
+- The Save and Cancel buttons are placed at the bottom in a fixed button frame, styled for visibility and accessibility.
+- The window is resizable, and supports keyboard navigation (Tab/Enter) and mouse wheel scrolling for the content area.
+- Error and success messages are shown as pop-ups when saving or cancelling.
 
 ## Implementation Details
 

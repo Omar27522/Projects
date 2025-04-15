@@ -8,30 +8,34 @@ This documentation provides detailed information about the Label Maker applicati
 
 ### Core Components
 
-- [Welcome Window](welcome_window.md): Documentation for the main welcome window interface
-- [UI Components](ui_components.md): Documentation for the standardized UI components
-- [Returns Operations](returns_operations.md): Documentation for the returns data management
-- [Google Sheets Integration](google_sheets_integration.md): Documentation for the Google Sheets integration
+- [Welcome Window](welcome_window.md): Main welcome interface
+- [UI Components](ui_components.md): Standardized UI elements
+- [Returns Operations](returns_operations.md): Returns data and record management
+- [Google Sheets Integration](google_sheets_integration.md): Sheets API integration
 
 ### Configuration
 
-- [Configuration Management](configuration.md): Details about how application settings are managed and persisted
-- [Settings Operations](settings_operations.md): Documentation for the settings dialog and operations
+- [Configuration Management](configuration.md): Application settings management
+- [Settings Operations](settings_operations.md): Settings dialog and persistence
 
 ### User Interface
 
-- [Window State Management](window_state.md): Information about how window state is tracked and managed
-- [Button Styling](button_styling.md): Details about the Material Design-inspired button styling
-- [Form Components](form_components.md): Documentation for form field creation and validation
-- [Edit Record Window](edit_record_window.md): Documentation for the scrollable edit record interface
-- [Create Label Window](create_label_window.md): Documentation for the label creation interface with auto-copy and tab functionality
+- [Window State Management](window_state.md): Tracking and restoring window state
+- [Button Styling](button_styling.md): Material-inspired button styles
+- [Form Components](form_components.md): Form field creation and validation
+- [Edit Record Window](edit_record_window.md): Scrollable, paginated, and accessible record editing
+- [Create Label Window](create_label_window.md): Label creation interface with print and Sheets features
+- [Labels Tab](labels_tab.md): Comprehensive label search, import, export, and management tab
+- [Label Details Dialog](label_details_dialog.md): Visual label preview, metadata, and enhanced controls
 
 ### Features
 
-- [Label Count Display](label_count.md): Information about the dynamic label count feature
-- [Directory Management](directory_management.md): How label directories are selected and managed
-- [Returns Data Management](returns_data.md): How shipping records are managed and edited
-- [Google Sheets Tracking](sheets_tracking.md): How tracking information is synchronized with Google Sheets
+- [Label Count Display](label_count.md): Dynamic label count in UI
+- [Directory Management](directory_management.md): Selecting and managing label directories
+- [Returns Data Management](returns_data.md): Managing and editing shipping records
+- [Google Sheets Tracking](sheets_tracking.md): Syncing tracking info with Google Sheets
+- [Application Windows Map](application_windows_map.md): Overview of all major windows and dialogs
+- [Codebase Map](CODEBASE_MAP.md): Up-to-date map of all modules and files
 
 ## Development
 
@@ -44,7 +48,7 @@ This documentation provides detailed information about the Label Maker applicati
 
 ### Adding New Features
 
-1. Create appropriate documentation in the `docs/` directory
+1. Create appropriate documentation in the `DOCS/` directory
 2. Add comprehensive docstrings to your code
 3. Update the README.md with information about the new feature
 4. Follow the existing code style and structure

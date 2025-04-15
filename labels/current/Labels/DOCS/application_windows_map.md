@@ -9,15 +9,130 @@ This document provides a comprehensive map of all windows and dialogs in the Lab
 ### 1. Welcome Window
 **File Location:** `src/ui/welcome_window.py`
 **Class:** `WelcomeWindow`
-**Purpose:** Main entry point of the application that provides access to all features.
+**Purpose:** Main entry point of the application; provides access to all features.
 
 **Key Features:**
-- Displays label count in the title section
-- Shows Google Sheets connection status
-- Provides buttons for all major functions:
-  - User (Opens Create Label dialog)
-  - Create Label (Opens Create Label dialog)
-  - Management
+- Dynamic label count in title
+- Google Sheets connection status (clickable for testing)
+- Buttons for:
+  - User / Create Label (opens Create Label Frame)
+  - Management (opens file viewer)
+  - Settings (opens configuration dialogs)
+  - Returns Data (opens Returns Data dialog)
+- Hidden feature: Click "Ver." for No Record Label window
+
+---
+
+### 2. Create Label Frame
+**File Location:** `src/ui/create_label_frame.py`
+**Class:** `CreateLabelFrame`
+**Purpose:** Main interface for creating and printing labels with tracking number and SKU.
+
+**Key Features:**
+- Frame-based (not a popup dialog)
+- Tracking number/SKU entry fields
+- Print toggle, Mirror Print toggle
+- Auto-copy tracking number, keyboard shortcuts
+- Error handling, status messages
+
+---
+
+### 3. No Record Label Frame
+**File Location:** `src/ui/no_record_label_frame.py`
+**Class:** `NoRecordLabelFrame`
+**Purpose:** Print labels for existing SKUs without logging (hidden/quick access window).
+
+**Key Features:**
+- SKU-only entry
+- Mirror Print toggle
+- No logging or Google Sheets integration
+- Error/status messages
+
+---
+
+### 4. Returns Data Dialog
+**File Location:** `src/ui/returns_data_dialog.py`
+**Class:** `ReturnsDataDialog`
+**Purpose:** Tabbed interface for managing shipping records and labels.
+
+**Key Features:**
+- Two tabs:
+  - Records Tab: View/edit shipping records (scrollable, form validation)
+  - Labels Tab: See below
+- Modular design; easy to extend
+
+---
+
+### 5. Labels Tab
+**File Location:** `src/ui/labels_tab.py`
+**Class:** `LabelsTab`
+**Purpose:** Advanced label management and search.
+
+**Key Features:**
+- SQLite-backed label database
+- CSV import/export (threaded for UI responsiveness)
+- Flexible search across all fields, pagination
+- Double-click to view label details
+- Delete/export label records
+
+---
+
+### 6. Label Details Dialog
+**File Location:** `src/ui/label_details_dialog.py`
+**Class:** `LabelDetailsDialog`
+**Purpose:** Shows detailed label info and image preview.
+
+**Key Features:**
+- Image preview (auto-resize, multiple formats)
+- Thin info panel, reorganized controls
+- Robust error handling
+
+---
+
+### 7. Google Sheets Dialog
+**File Location:** `src/ui/google_sheets_dialog.py`
+**Class:** `GoogleSheetsDialog`
+**Purpose:** Configure and test Google Sheets integration.
+
+**Key Features:**
+- Sheet selection, URL validation
+- Connection status test
+- Remembers last selected sheet
+
+---
+
+### 8. Labels Settings Dialog
+**File Location:** `src/ui/labels_settings_dialog.py`
+**Class:** `LabelsSettingsDialog`
+**Purpose:** Configure label-related settings (directories, options).
+
+---
+
+### 9. Log Migration Dialog
+**File Location:** `src/ui/log_migration_dialog.py`
+**Class:** `LogMigrationDialog`
+**Purpose:** Migrate or update log files as needed.
+
+---
+
+### 10. Window Transparency Dialog
+**File Location:** `src/ui/window_transparency.py`
+**Class:** `TransparencyManager`
+**Purpose:** Manage window transparency settings.
+
+---
+
+## Relationships & Navigation
+- The Welcome Window is always the entry point
+- All major actions open new frames/dialogs from the welcome window
+- Returns Data dialog is the hub for record/label management
+- Labels Tab and dialogs are modular for easy future expansion
+
+## Notes
+- All windows use Tkinter for UI
+- Modular design: each dialog/frame in its own file/class
+- Hidden/advanced windows (like No Record Label) are accessible via UI shortcuts
+
   - Labels (Opens Returns Data dialog)
   - Settings
 

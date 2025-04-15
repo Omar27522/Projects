@@ -3,22 +3,65 @@
 ## Core Architecture
 
 ```
-Label Maker/
-├── src/
-│   ├── ui/                 # User interface components
-│   │   ├── welcome_window.py     # Main welcome window
-│   │   ├── create_label_frame.py # Frame-based label creation
-│   │   ├── no_record_label_frame.py # No-record label creation
-│   │   ├── label_window.py       # Label preview window
-│   │   └── google_sheets_dialog.py # Google Sheets configuration
-│   ├── utils/              # Utility functions
-│   │   ├── barcode_operations.py # Barcode generation and printing
-│   │   ├── dialog_handlers.py    # Dialog creation functions
-│   │   ├── file_utils.py         # File system operations
-│   │   ├── returns_operations.py # Returns data management
-│   │   ├── sheets_operations.py  # Google Sheets operations
-│   │   └── ui_components.py      # Reusable UI components
-│   └── config/             # Configuration management
+welcome_window/
+├── assets/                      # Application icons and images
+│   ├── icon_64.png
+│   ├── icon_642.png
+│   ├── returnsdata_64.png
+│   └── settings_64.png
+├── database/                    # SQLite databases
+│   ├── labels.db                # Label metadata
+│   └── shipping_records.db      # Shipping records
+├── DOCS/                        # Documentation and developer guides
+│   ├── CODEBASE_MAP.md
+│   ├── application_windows_map.md
+│   ├── GOOGLE_SHEETS_SETUP.md
+│   └── ...
+├── logs/                        # Log files
+├── src/                         # Source code
+│   ├── config/
+│   │   └── config_manager.py    # Settings/configuration
+│   ├── ui/                      # User interface components
+│   │   ├── welcome_window.py            # Main welcome window
+│   │   ├── create_label_frame.py        # Frame-based label creation
+│   │   ├── no_record_label_frame.py     # No-record label creation
+│   │   ├── returns_data_dialog.py       # Returns Data (tabbed: Records, Labels)
+│   │   ├── labels_tab.py                # Labels Tab (advanced label management)
+│   │   ├── label_details_dialog.py      # Label Details dialog (image preview)
+│   │   ├── labels_settings_dialog.py    # Label settings dialog
+│   │   ├── google_sheets_dialog.py      # Google Sheets configuration dialog
+│   │   ├── log_migration_dialog.py      # Log migration dialog
+│   │   ├── window_state.py              # Window state management
+│   │   ├── window_transparency.py       # Transparency controls
+│   │   └── __init__.py
+│   ├── utils/                   # Utility modules
+│   │   ├── app_logger.py
+│   │   ├── barcode_operations.py        # Barcode generation/printing
+│   │   ├── barcode_utils.py
+│   │   ├── config_utils.py
+│   │   ├── database_operations.py
+│   │   ├── dialog_handlers.py
+│   │   ├── file_utils.py
+│   │   ├── label_database.py           # Label metadata DB ops
+│   │   ├── log_manager.py
+│   │   ├── logger.py
+│   │   ├── returns_operations.py
+│   │   ├── settings_operations.py
+│   │   ├── sheets_operations.py        # Google Sheets API
+│   │   ├── sheets_utils.py
+│   │   ├── text_context_menu.py
+│   │   ├── ui_components.py            # Reusable UI widgets
+│   │   ├── ui_utils.py
+│   │   └── window_utils.py
+├── label_maker_settings.json           # App settings
+├── main.pyw                            # Application entry point
+├── README.md
+├── credentials.json
+├── credentials_template.json
+├── .gitignore
+├── .windsurf
+```
+
 │       └── config_manager.py     # Settings handling
 ├── main.pyw               # Application entry point
 └── start_label_maker.pyw  # Launcher script

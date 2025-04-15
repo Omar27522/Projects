@@ -137,31 +137,49 @@ app.center_window()  # Center the window on the screen
 app.mainloop()
 ```
 
-## File Structure
+## File Structure & Responsibilities
 
 ```
 welcome_window.py
 ├── Class: WelcomeWindow
-│   ├── __init__()
-│   ├── _create_ui()
-│   ├── _create_title_section()
-│   ├── update_label_count()
-│   ├── _create_button_section()
-│   ├── _create_version_label()
-│   ├── _update_sheets_status_display()
-│   ├── user_action()
-│   ├── management_action()
-│   ├── labels_action()
-│   └── settings_action()
+│   ├── __init__()                # Initialize window, layout, and state
+│   ├── _create_ui()              # Build all UI sections using modular components
+│   ├── _create_title_section()   # Add application title/header
+│   ├── update_label_count()      # Dynamically update label count display
+│   ├── _create_button_section()  # Add main navigation buttons
+│   ├── _create_version_label()   # Show app version info
+│   ├── _update_sheets_status_display() # Show Google Sheets sync status
+│   ├── user_action()             # Handle user workflow navigation
+│   ├── management_action()       # Handle management workflow navigation
+│   ├── labels_action()           # Open Labels tab or related label management
+│   └── settings_action()         # Open settings/config window
 ```
 
-## Refactoring Notes
+## Modular Design & Integration
 
-The welcome window has been refactored to use standardized UI components from the `ui_components` module:
-- Title sections are created using `create_title_section()`
-- Buttons are created using `create_colored_button()`
-- Button grids are created using `create_button_grid()`
-- Version labels are created using `create_version_label()`
-- Sheets status displays are created using `create_sheets_status_display()`
+- **Standardized UI Components:**
+  - Uses `ui_components` module for all major UI elements (titles, buttons, grids, version/status labels)
+  - Ensures consistent styling, easier theme changes, and maintainability
+- **Navigation & Integration:**
+  - Central hub for accessing core features: Records, Labels Tab, Management, and Settings
+  - Integrates with Google Sheets (status indicator), and launches the modular Labels Tab
+- **User Feedback & Usability:**
+  - Real-time label count updates
+  - Status messages for Sheets integration and other operations
+  - Buttons are styled for clarity and accessibility
+  - Window is centered and resizable for user convenience
+- **Single-Instance Enforcement:**
+  - Ensures only one instance of the application runs at a time (see `main.pyw`)
 
-This refactoring improves code organization and maintainability by centralizing UI component creation logic.
+## Recent Enhancements
+
+- Refactored to maximize modularity and separation of concerns
+- Improved user feedback and error handling for Sheets and label operations
+- Enhanced navigation and button layout for clarity
+- All UI logic centralized in `ui_components` for rapid iteration and future-proofing
+
+## Developer Notes
+
+- The Welcome Window acts as the entry point and navigation hub for the entire application
+- All major features and dialogs are launched from here, following a modular and extensible architecture
+- To add new features or buttons, extend the relevant section in `_create_button_section()` and use standardized components

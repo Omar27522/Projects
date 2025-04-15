@@ -6,16 +6,45 @@ The Create Label window provides a user interface for creating and printing barc
 
 ## Implementation
 
-The Create Label window is implemented in the `dialog_handlers.py` file through the `create_label_dialog()` function. This function creates a modal dialog with input fields for tracking number and SKU, along with buttons for printing and canceling.
+The Create Label window is implemented as a modular frame in `src/ui/create_label_frame.py` via the `CreateLabelFrame` class. It is embedded directly in the main application window, providing a seamless, integrated experience (not a modal dialog).
 
 ### Key Features
 
-1. **Input Fields**: 
+1. **Input Fields**
    - Tracking Number field
    - SKU field
-   - Auto-focus on the Tracking Number field when the dialog opens
+   - Auto-focus on the Tracking Number field when the window opens
+   - Keyboard shortcuts: Enter copies tracking number and moves focus to SKU
 
-2. **Automatic Copy and Tab**:
+2. **Automatic Copy and Focus**
+   - Pressing Enter in the Tracking Number field copies it to clipboard and moves focus to SKU
+
+3. **Printing Options**
+   - Print toggle: Enable/disable physical label printing (logs only if disabled)
+   - Mirror Print toggle: Print mirrored labels for special use cases
+   - Status messages and error handling for print operations
+
+4. **Google Sheets Integration**
+   - Automatically logs successful label prints to Google Sheets if configured
+   - Only logs successful prints (errors prevent logging)
+
+5. **Transparency and Pin**
+   - Window transparency control (optional)
+   - Pin button to keep window on top
+
+6. **Frame-Based Modular Design**
+   - Embedded as a frame, not a modal dialog
+   - Allows easy navigation and integration with the rest of the UI
+   - Consistent look and feel with other application windows
+
+7. **Enhanced Error Handling**
+   - Detects and warns about missing label files or invalid SKUs
+   - Provides clear user feedback for all operations
+
+8. **Additional Features**
+   - Auto-clear fields after successful print
+   - Visual feedback for print state (toggle color, status text)
+   - Integrated with application-wide configuration and logging
    - When the user presses Enter after typing a tracking number, it is automatically copied to the clipboard
    - Focus automatically moves to the SKU field
    - This streamlines the workflow when the tracking number needs to be pasted into the SKU field
