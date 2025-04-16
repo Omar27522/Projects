@@ -2,7 +2,10 @@ Date: Testing/Purpose
 
 		RETURNS DATA Dialog
 			Labels Tab.
-	Add a more practical search function for Returns Data.
+	DONE	--------	Add a more practical search function for Returns Data.
+
+		CREATE LABEL
+	Open the Labels Tab from the frame
 
 
 
