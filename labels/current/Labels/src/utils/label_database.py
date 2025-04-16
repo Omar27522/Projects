@@ -215,12 +215,19 @@ def search_labels(search_term=None, field=None, limit=100, offset=0):
             cursor.execute(query, params)
         else:
             # No search term, return all records
-            query = '''
-            SELECT * FROM label_metadata 
-            ORDER BY label_name 
-            LIMIT ? OFFSET ?
-            '''
-            cursor.execute(query, (limit, offset))
+            if limit is not None:
+                query = '''
+                SELECT * FROM label_metadata 
+                ORDER BY label_name 
+                LIMIT ? OFFSET ?
+                '''
+                cursor.execute(query, (limit, offset))
+            else:
+                query = '''
+                SELECT * FROM label_metadata 
+                ORDER BY label_name
+                '''
+                cursor.execute(query)
         
         # Fetch the results
         results = [dict(row) for row in cursor.fetchall()]

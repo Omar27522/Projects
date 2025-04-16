@@ -1,9 +1,8 @@
- Live/Production Testing
+Date: Testing/Purpose
 
 		RETURNS DATA Dialog
 			Labels Tab.
-	Add a better search function/method for Returns Data.
-
+	Add a more practical search function for Returns Data.
 
 
 
@@ -171,5 +170,3 @@ Production Testing.
 LABEL MAKER
 	Settings Upload CSV file
 		*-FIXED-*	--------	This is an exception: when importing CSV data, treat names as separate words only if they contain capital letters within a single word. Add a space after each capital letter.
-	
-	
