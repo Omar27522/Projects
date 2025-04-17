@@ -17,7 +17,7 @@ class ProductDataManager:
                     reader = csv.DictReader(f)
                     for row in reader:
                         sku = row.get('Legacy SKU', '') or row.get('SKU', '')
-                        variant = row.get('Item Variant Number ', '') or row.get('Item Variant Number', '')
+                        variant = row.get('Variant ', '') or row.get('Variant', '')
                         prefix = variant[:6] if variant and len(variant) >= 6 else ''
                         mapped_website_name = get_website_name_for_prefix(prefix)
                         manual = MANUAL_ADDITIONS.get(prefix, {})

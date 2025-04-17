@@ -63,6 +63,7 @@ def initialize_database():
             website_name TEXT,
             label_name TEXT,
             sku TEXT,
+            user_notes TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         ''')
@@ -121,8 +122,8 @@ def import_csv(file_path, replace_existing=False):
                 if row.get('Label Name', '').strip() == "--" or row.get('Website Name', '').strip() == "--":
                     continue
                 
-                # Extract SKU from the item variant number or label name
-                sku = row.get('Item Variant Number ', '').strip()
+                # Extract SKU from the Variant or label name
+                sku = row.get('Variant ', '').strip()
                 if not sku:
                     # Try to extract from label name
                     label_name = row.get('Label Name', '')
@@ -132,7 +133,7 @@ def import_csv(file_path, replace_existing=False):
                 # Prepare the record
                 record = (
                     row.get('Upc', '').strip(),
-                    row.get('Item Variant Number ', '').strip(),
+                    row.get('Variant ', '').strip(),
                     row.get('Department', '').strip(),
                     row.get('Category', '').strip(),
                     row.get('Color', '').strip(),
@@ -196,38 +197,63 @@ def search_labels(search_term=None, field=None, limit=100, offset=0):
             '''
             cursor.execute(query, (f'%{search_term}%', limit, offset))
         elif search_term:
-            # Search in all fields
-            query = '''
-            SELECT * FROM label_metadata 
-            WHERE upc LIKE ? 
-            OR item_variant_number LIKE ? 
-            OR department LIKE ? 
-            OR category LIKE ? 
-            OR color LIKE ? 
-            OR website_color LIKE ? 
-            OR website_name LIKE ? 
-            OR label_name LIKE ? 
-            OR sku LIKE ? 
-            ORDER BY label_name 
-            LIMIT ? OFFSET ?
-            '''
-            params = tuple([f'%{search_term}%'] * 9 + [limit, offset])
-            cursor.execute(query, params)
-        else:
-            # No search term, return all records
-            if limit is not None:
+            # Split search term into words for multi-word search
+            search_words = search_term.strip().split()
+            
+            if search_words:
+                # Create conditions for each word
+                word_conditions = []
+                params = []
+                
+                # Define all searchable fields
+                fields = [
+                    "upc", "item_variant_number", "department", "category",
+                    "color", "website_color", "website_name", "label_name", "sku"
+                ]
+                
+                # For each word, create a condition that checks all fields
+                for word in search_words:
+                    word_clauses = []
+                    for field_name in fields:
+                        word_clauses.append(f"{field_name} LIKE ?")
+                        params.append(f"%{word}%")
+                    
+                    # Join the field conditions with OR (word appears in any field)
+                    word_condition = "(" + " OR ".join(word_clauses) + ")"
+                    word_conditions.append(word_condition)
+                
+                # Join the word conditions with AND (all words must match)
+                where_clause = " AND ".join(word_conditions)
+                
+                # Build the final query
+                query = f'''
+                SELECT * FROM label_metadata 
+                WHERE {where_clause} 
+                ORDER BY label_name 
+                LIMIT ? OFFSET ?
+                '''
+                
+                # Add limit and offset to params
+                params.extend([limit, offset])
+                
+                # Execute the query
+                cursor.execute(query, params)
+            else:
+                # Empty search term after splitting, return all records
                 query = '''
                 SELECT * FROM label_metadata 
                 ORDER BY label_name 
                 LIMIT ? OFFSET ?
                 '''
                 cursor.execute(query, (limit, offset))
-            else:
-                query = '''
-                SELECT * FROM label_metadata 
-                ORDER BY label_name
-                '''
-                cursor.execute(query)
+        else:
+            # No search term, return all records
+            query = '''
+            SELECT * FROM label_metadata 
+            ORDER BY label_name 
+            LIMIT ? OFFSET ?
+            '''
+            cursor.execute(query, (limit, offset))
         
         # Fetch the results
         results = [dict(row) for row in cursor.fetchall()]
@@ -354,4 +380,64 @@ def delete_label(label_id):
         return True
     except Exception as e:
         print(f"Error deleting label: {e}")
+        return False
+
+def update_label_notes(label_id, notes, sync_by_prefix=True):
+    """
+    Update the user notes for a label record and optionally sync across all items with the same prefix.
+    
+    Args:
+        label_id (int): ID of the label to update
+        notes (str): User notes to save
+        sync_by_prefix (bool): If True, sync notes to all items with the same variant prefix
+        
+    Returns:
+        bool: True if update was successful, False otherwise
+    """
+    try:
+        # Connect to the database
+        conn = sqlite3.connect(get_database_path())
+        cursor = conn.cursor()
+        
+        # Check if the user_notes column exists
+        cursor.execute("PRAGMA table_info(label_metadata)")
+        columns = [column[1] for column in cursor.fetchall()]
+        
+        # Add the user_notes column if it doesn't exist
+        if 'user_notes' not in columns:
+            cursor.execute('ALTER TABLE label_metadata ADD COLUMN user_notes TEXT')
+        
+        if sync_by_prefix:
+            # Get the variant number for this label
+            cursor.execute('SELECT item_variant_number FROM label_metadata WHERE id = ?', (label_id,))
+            result = cursor.fetchone()
+            
+            if result and result[0]:
+                variant_number = result[0]
+                # Extract the prefix (first 6 characters)
+                prefix = variant_number[:6] if len(variant_number) >= 6 else variant_number
+                
+                # Update all records with the same prefix
+                cursor.execute(
+                    'UPDATE label_metadata SET user_notes = ? WHERE item_variant_number LIKE ?', 
+                    (notes, f"{prefix}%")
+                )
+                updated_count = cursor.rowcount
+                print(f"Updated notes for {updated_count} items with prefix {prefix}")
+            else:
+                # If we can't get the variant number, just update this record
+                cursor.execute('UPDATE label_metadata SET user_notes = ? WHERE id = ?', (notes, label_id))
+        else:
+            # Update only this record
+            cursor.execute('UPDATE label_metadata SET user_notes = ? WHERE id = ?', (notes, label_id))
+        
+        # Commit the changes
+        conn.commit()
+        
+        # Close the connection
+        conn.close()
+        
+        return True
+    except Exception as e:
+        print(f"Error updating label notes: {e}")
         return False

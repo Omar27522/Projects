@@ -5,7 +5,6 @@ from typing import Optional
 
 @dataclass
 class Settings:
-    label_tab_column_widths: dict = None  # Stores column widths for LabelsTab
     """Data class for application settings"""
     font_size_large: int = 14
     font_size_medium: int = 12
@@ -57,7 +56,6 @@ class ConfigManager:
                 
                 # Create Settings object from loaded data
                 settings = Settings(
-                    label_tab_column_widths=data.get('label_tab_column_widths', {}),
                     font_size_large=data.get('font_size_large', 14),
                     font_size_medium=data.get('font_size_medium', 12),
                     barcode_width=data.get('barcode_width', 300),

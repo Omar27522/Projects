@@ -106,24 +106,31 @@ def find_file_by_content(directory_path, content_str):
     return [os.path.join(directory_path, f) for f in os.listdir(directory_path) 
             if os.path.isfile(os.path.join(directory_path, f)) and content_str in f]
 
-def find_files_by_sku(directory_path, sku, extension='.png'):
+def normalize_filename_for_match(s):
+    """Normalize a string for robust SKU/filename matching (remove dashes, underscores, spaces, lowercase)."""
+    return s.replace('-', '').replace('_', '').replace(' ', '').lower()
+
+def find_files_by_sku(directory_path, sku, extensions=('.png', '.jpg', '.jpeg', '.bmp', '.gif', '.tiff')):
     """
-    Find files containing a specific SKU in their filename with the given extension.
-    
+    Find files containing a specific SKU in their filename, supporting multiple extensions and flexible matching.
     Args:
         directory_path (str): Path to the directory
         sku (str): SKU to search for in filenames
-        extension (str): File extension to filter by (default: '.png')
-        
+        extensions (tuple): File extensions to filter by (default: common image types)
     Returns:
-        list: List of file paths containing the SKU and matching the extension
+        list: List of file paths containing the SKU (normalized) and matching the extension
     """
     if not directory_path or not directory_exists(directory_path) or not sku:
         return []
-    
-    return [os.path.join(directory_path, f) for f in os.listdir(directory_path) 
-            if os.path.isfile(os.path.join(directory_path, f)) and 
-            sku in f and f.endswith(extension)]
+    norm_sku = normalize_filename_for_match(sku)
+    files = []
+    for f in os.listdir(directory_path):
+        if os.path.isfile(os.path.join(directory_path, f)):
+            name, ext = os.path.splitext(f)
+            if ext.lower() in extensions and norm_sku in normalize_filename_for_match(name):
+                files.append(os.path.join(directory_path, f))
+    return files
+
 
 def get_central_log_file_path():
     """

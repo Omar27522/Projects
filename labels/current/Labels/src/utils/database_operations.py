@@ -152,8 +152,10 @@ def get_shipping_records(limit=100, offset=0, search_term=None, start_date=None,
         where_clauses = []
         
         if search_term:
-            where_clauses.append("(tracking_number LIKE ? OR sku LIKE ?)")
-            params.extend([f"%{search_term}%", f"%{search_term}%"])
+            # Use the enhanced search functionality
+            search_clause, params = _build_enhanced_search_conditions(search_term, params)
+            if search_clause:
+                where_clauses.append(search_clause)
         
         if start_date:
             where_clauses.append("timestamp >= ?")
@@ -218,8 +220,10 @@ def get_record_count(search_term=None, start_date=None, end_date=None):
         where_clauses = []
         
         if search_term:
-            where_clauses.append("(tracking_number LIKE ? OR sku LIKE ?)")
-            params.extend([f"%{search_term}%", f"%{search_term}%"])
+            # Use the enhanced search functionality
+            search_clause, params = _build_enhanced_search_conditions(search_term, params)
+            if search_clause:
+                where_clauses.append(search_clause)
         
         if start_date:
             where_clauses.append("timestamp >= ?")
@@ -432,6 +436,52 @@ def import_from_text_log():
     except Exception as e:
         logging.error(f"Error importing from text log: {str(e)}")
         return False, 0
+
+def _build_enhanced_search_conditions(search_term, params):
+    """
+    Build enhanced search conditions for Google-like searches across multiple fields.
+    Supports partial word matching and multi-word searches.
+    
+    Args:
+        search_term (str): The search term to process
+        params (list): The list of parameters to extend with search values
+        
+    Returns:
+        tuple: (where_clause, updated_params)
+    """
+    if not search_term or not search_term.strip():
+        return None, params
+    
+    # Split search term into individual words for more flexible searching
+    search_words = search_term.strip().split()
+    
+    if not search_words:
+        return None, params
+    
+    # Define all searchable fields
+    fields = ["tracking_number", "sku", "status", "notes"]
+    
+    # Create a list of conditions for each word
+    word_conditions = []
+    
+    for word in search_words:
+        # Create a list of conditions for each field for this word
+        field_conditions = []
+        
+        for field in fields:
+            # Add conditions for each field - partial word matching
+            field_conditions.append(f"{field} LIKE ?")
+            params.append(f"%{word}%")
+        
+        # Join the field conditions with OR (word appears in any field)
+        word_condition = "(" + " OR ".join(field_conditions) + ")"
+        word_conditions.append(word_condition)
+    
+    # Join the word conditions with OR (any word can match)
+    # This is more flexible than AND, which requires all words to match
+    where_clause = "(" + " OR ".join(word_conditions) + ")"
+    
+    return where_clause, params
 
 def export_to_csv(file_path, search_term=None, start_date=None, end_date=None):
     """

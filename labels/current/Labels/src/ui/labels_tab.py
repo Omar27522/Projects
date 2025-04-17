@@ -24,7 +24,6 @@ from src.utils.label_database import (
 from src.utils.file_utils import find_files_by_sku
 from src.ui.labels_settings_dialog import create_labels_settings_dialog
 from src.ui.label_details_dialog import create_label_details_dialog
-from src.product_data.product_data_manager import ProductDataManager
 
 class LabelsTab(ttk.Frame):
     """Tab for viewing and managing label metadata"""
@@ -55,9 +54,6 @@ class LabelsTab(ttk.Frame):
         
         # Status variable
         self.status_var = tk.StringVar(value="Initializing...")
-        
-        # --- Product Data Manager for enrichment ---
-        self.product_manager = ProductDataManager('search')
         
         # Create UI
         self._create_ui()
@@ -185,27 +181,17 @@ class LabelsTab(ttk.Frame):
         self.tree.heading("website_color", text="Website Color")
         self.tree.heading("department", text="Department")
         
-        # Set column widths from settings if available
-        col_widths = getattr(self.config_manager.settings, 'label_tab_column_widths', {}) or {}
-        default_widths = {
-            "id": 0, "upc": 120, "website_name": 150, "item_variant_number": 120,
-            "label_name": 200, "color": 100, "category": 100, "website_color": 120, "department": 100
-        }
-        for col in columns:
-            width = col_widths.get(col, default_widths.get(col, 100))
-            minwidth = 0 if col == "id" else 80
-            stretch = False if col == "id" else True
-            self.tree.column(col, width=width, minwidth=minwidth, stretch=stretch)
-
-        # Bind to column resize event to save widths
-        self.tree.bind("<ButtonRelease-1>", self._on_column_resize)
-
-    def _on_column_resize(self, event):
-        # Save current column widths to settings
-        col_widths = {col: self.tree.column(col)['width'] for col in self.tree['columns']}
-        self.config_manager.settings.label_tab_column_widths = col_widths
-        self.config_manager.save_settings()
-
+        # Define column widths - set id column width to 0 to hide it
+        self.tree.column("id", width=0, minwidth=0, stretch=False)
+        self.tree.column("upc", width=120, minwidth=80)
+        self.tree.column("website_name", width=150, minwidth=100)
+        self.tree.column("item_variant_number", width=120, minwidth=100)
+        self.tree.column("label_name", width=200, minwidth=120)
+        self.tree.column("color", width=100, minwidth=80)
+        self.tree.column("category", width=100, minwidth=80)
+        self.tree.column("website_color", width=120, minwidth=100)
+        self.tree.column("department", width=100, minwidth=80)
+        
         # Bind double-click to view label
         self.tree.bind("<Double-1>", self._view_label)
         
@@ -273,65 +259,36 @@ class LabelsTab(ttk.Frame):
         self.update_idletasks()
         
         try:
-            # (get_label_count removed -- count is now in-memory)
-            # Pagination and record count are set after filtering below
-            # Update pagination controls will be called after filtering
-            pass
-
+            # Get total count for pagination
+            self.total_records = get_label_count(search_term, field)
+            self.total_pages = max(1, (self.total_records + self.records_per_page - 1) // self.records_per_page)
+            
+            # Adjust current page if needed
+            if self.current_page > self.total_pages:
+                self.current_page = self.total_pages
+                offset = (self.current_page - 1) * self.records_per_page
+            
+            # Update pagination controls
+            self._update_pagination()
+            
+            # Update record count
+            self.record_count_var.set(f"{self.total_records} records found")
+            
             try:
-                # Get all records (not paginated yet)
-                all_records = search_labels(
-                    "",     # no search term
-                    None,   # no field filter
-                    limit=None,
-                    offset=0
+                # Get records for current page
+                records = search_labels(
+                    search_term, 
+                    field, 
+                    limit=self.records_per_page, 
+                    offset=offset
                 )
                 
-                # Enrich all records with product info
-                enriched_records = [self.product_manager.enrich_label_record(r) for r in all_records]
-
-                # Filter enriched records by search term across all fields (label + product enrichment)
-                query = search_term.strip().lower()
-                if query:
-                    words = query.split()
-                    def matches_all_words(rec):
-                        # Gather all searchable strings from label and product info
-                        values = [str(v).lower() for v in rec.values() if isinstance(v, str)]
-                        prod = rec.get('product_info')
-                        if prod:
-                            values += [str(v).lower() for v in prod.values() if isinstance(v, str)]
-                        for k in ('mapped_website_name', 'manual_notes'):
-                            v = rec.get(k)
-                            if isinstance(v, str):
-                                values.append(v.lower())
-                        if rec.get('has_battery') is not None:
-                            values.append(str(rec['has_battery']).lower())
-                        # Each word must appear in at least one value
-                        return all(any(word in val for val in values) for word in words)
-                    filtered = [r for r in enriched_records if matches_all_words(r)]
-                else:
-                    filtered = enriched_records
-
-                # Pagination
-                self.total_records = len(filtered)
-                self.total_pages = max(1, (self.total_records + self.records_per_page - 1) // self.records_per_page)
-                if self.current_page > self.total_pages:
-                    self.current_page = self.total_pages
-                start = (self.current_page - 1) * self.records_per_page
-                end = start + self.records_per_page
-                page_records = filtered[start:end]
-                self._last_enriched_results = page_records  # Store for export or backend use
-
-                # Update pagination controls and record count label
-                self._update_pagination()
-                self.record_count_var.set(f"{self.total_records} records found")
-
                 # Clear existing items
                 for item in self.tree.get_children():
                     self.tree.delete(item)
                 
-                # Insert new records (UI only shows original fields)
-                for record in page_records:
+                # Insert new records
+                for record in records:
                     values = (
                         record["id"],
                         record["upc"],

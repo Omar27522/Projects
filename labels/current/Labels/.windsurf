@@ -1,7 +1,7 @@
 {
   "name": "Label Maker V3",
   "description": "A modular interface for managing the Label Maker application",
-  "version": "1.0.1.4",
+  "version": "1.0.1.5",
   "author": "Baby Manager",
   "language": "python",
   "entrypoint": "main.pyw",
@@ -109,13 +109,19 @@
     "Centralized configuration management",
     "Comprehensive logging",
     "Single-instance mechanism",
-    "Google Sheets integration",
-    "Returns Data management",
+    "Google Sheets integration with persistent connection status",
+    "Returns Data management with tabbed interface",
     "Auto-copy functionality for tracking numbers",
     "Print toggle for logging without physical printing",
     "Mirror Print option for label orientation",
     "Frame-based UI implementation",
-    "Stay-on-top window functionality"
+    "Stay-on-top window functionality",
+    "Labels tab with search and metadata management",
+    "Label details dialog with image preview",
+    "No Record Label functionality for printing without logging",
+    "Enhanced error handling for missing label files",
+    "Scrollable Edit Record window in Returns Data",
+    "Dynamic label count display in welcome window"
   ],
   "codeNavigation": {
     "src/ui/welcome_window.py": {
@@ -273,13 +279,54 @@
         {
           "name": "Imports and Documentation",
           "startLine": 1,
-          "endLine": 20
+          "endLine": 36
         },
         {
           "name": "CreateLabelFrame Class",
-          "startLine": 21,
-          "endLine": 200,
-          "description": "Frame-based implementation of label creation with Pin toggle for stay-on-top functionality"
+          "startLine": 37,
+          "endLine": 77,
+          "description": "Frame-based implementation of label creation with auto-copy functionality"
+        },
+        {
+          "name": "UI Creation",
+          "startLine": 79,
+          "endLine": 443,
+          "description": "Create the user interface with Print toggle and Mirror Print options"
+        },
+        {
+          "name": "Label Printing",
+          "startLine": 445,
+          "endLine": 625,
+          "description": "Methods for printing labels with enhanced error handling for missing files"
+        },
+        {
+          "name": "Utility Methods",
+          "startLine": 627,
+          "endLine": 784,
+          "description": "Helper methods for UI interaction and text selection"
+        },
+        {
+          "name": "Label Creation Dialog",
+          "startLine": 786,
+          "endLine": 925,
+          "description": "Dialog for creating new labels when files are missing"
+        }
+      ],
+      "bookmarks": [
+        {
+          "name": "_print_label",
+          "line": 445,
+          "description": "Method to handle label printing with enhanced error handling"
+        },
+        {
+          "name": "on_tracking_enter",
+          "line": 199,
+          "description": "Handler for Enter key in tracking field to copy value and move to SKU field"
+        },
+        {
+          "name": "toggle_print_enabled",
+          "line": 303,
+          "description": "Method to toggle print functionality on/off"
         }
       ]
     },
@@ -347,6 +394,51 @@
         }
       ]
     },
+    "src/product_data/product_data_manager.py": {
+      "sections": [
+        {
+          "name": "Imports and Documentation",
+          "startLine": 1,
+          "endLine": 4
+        },
+        {
+          "name": "ProductDataManager Class",
+          "startLine": 5,
+          "endLine": 10,
+          "description": "Class for managing product data from CSV files"
+        },
+        {
+          "name": "Data Loading",
+          "startLine": 12,
+          "endLine": 32,
+          "description": "Methods for loading product data from CSV files"
+        },
+        {
+          "name": "Data Retrieval",
+          "startLine": 34,
+          "endLine": 42,
+          "description": "Methods for searching and retrieving product data"
+        },
+        {
+          "name": "Label Enrichment",
+          "startLine": 44,
+          "endLine": 58,
+          "description": "Methods for enriching label records with product data"
+        }
+      ],
+      "bookmarks": [
+        {
+          "name": "load_all",
+          "line": 12,
+          "description": "Method to load all product data from CSV files"
+        },
+        {
+          "name": "enrich_label_record",
+          "line": 44,
+          "description": "Method to enrich label records with additional product information"
+        }
+      ]
+    },
     "src/utils/ui_components.py": {
       "sections": [
         {
@@ -404,6 +496,74 @@
           "name": "create_sheets_status_display",
           "line": 310,
           "description": "Function to create Google Sheets status display"
+        }
+      ]
+    },
+    "src/ui/labels_tab.py": {
+      "sections": [
+        {
+          "name": "Imports and Documentation",
+          "startLine": 1,
+          "endLine": 26
+        },
+        {
+          "name": "LabelsTab Class",
+          "startLine": 27,
+          "endLine": 61,
+          "description": "Tab for viewing and managing label metadata"
+        },
+        {
+          "name": "Database Initialization",
+          "startLine": 63,
+          "endLine": 81,
+          "description": "Initialize the database and load initial data"
+        },
+        {
+          "name": "UI Creation",
+          "startLine": 83,
+          "endLine": 245,
+          "description": "Create the user interface elements"
+        },
+        {
+          "name": "Data Loading",
+          "startLine": 247,
+          "endLine": 315,
+          "description": "Load data into the treeview based on current filters"
+        },
+        {
+          "name": "Pagination",
+          "startLine": 317,
+          "endLine": 337,
+          "description": "Pagination control methods"
+        },
+        {
+          "name": "Label Viewing",
+          "startLine": 348,
+          "endLine": 421,
+          "description": "Methods for viewing label details"
+        },
+        {
+          "name": "Record Management",
+          "startLine": 423,
+          "endLine": 468,
+          "description": "Methods for managing label records"
+        }
+      ],
+      "bookmarks": [
+        {
+          "name": "_load_data",
+          "line": 247,
+          "description": "Method to load and filter label data"
+        },
+        {
+          "name": "_view_label",
+          "line": 348,
+          "description": "Method to view label details"
+        },
+        {
+          "name": "_delete_selected",
+          "line": 433,
+          "description": "Method to delete selected label records"
         }
       ]
     },

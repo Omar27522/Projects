@@ -40,6 +40,8 @@ class LabelDetailsDialog(tk.Toplevel):
         self.config_manager = config_manager
         self.label_files = []
         
+
+        
         # Mirror print setting
         self.mirror_print = tk.BooleanVar(value=False)
         if hasattr(self.config_manager, 'settings') and hasattr(self.config_manager.settings, 'mirror_print'):
@@ -80,6 +82,17 @@ class LabelDetailsDialog(tk.Toplevel):
         self.focus_set()
         self.wait_window()
     
+    def _add_copy_menu(self, widget, value):
+        """Attach a right-click menu to a label widget for copying its value."""
+        def copy_to_clipboard(event=None):
+            self.clipboard_clear()
+            self.clipboard_append(value)
+        menu = tk.Menu(widget, tearoff=0)
+        menu.add_command(label="Copy", command=copy_to_clipboard)
+        def show_menu(event):
+            menu.tk_popup(event.x_root, event.y_root)
+        widget.bind("<Button-3>", show_menu)
+
     def _create_ui(self):
         """Create the user interface elements"""
         # Create main container with padding
@@ -122,14 +135,41 @@ class LabelDetailsDialog(tk.Toplevel):
         # Add label information fields
         fields = [
             ("UPC", "upc"),
-            ("Item Variant Number", "item_variant_number"),
-            ("SKU", "sku"),
             ("Department", "department"),
             ("Category", "category"),
             ("Color", "color"),
             ("Website Color", "website_color"),
             ("Website Name", "website_name")
         ]
+        
+        # Add variant information with prefix highlighted (insert at the beginning)
+        variant_value = self.record.get('item_variant_number', '')
+        
+        # Add prefix row
+        prefix_frame = ttk.Frame(scrollable_frame)
+        prefix_frame.pack(fill='x', padx=10, pady=5)
+        
+        prefix_label = ttk.Label(prefix_frame, text="Variant Prefix:", width=15, anchor='w')
+        prefix_label.pack(side='left', padx=(0, 10))
+        
+        # Extract the first 6 digits as the prefix
+        prefix = variant_value[:6] if len(variant_value) >= 6 else variant_value
+        prefix_value_label = ttk.Label(prefix_frame, text=prefix, wraplength=150, font=('Arial', 10, 'bold'))
+        prefix_value_label.pack(side='left', fill='x', expand=True)
+        self._add_copy_menu(prefix_value_label, prefix)
+        
+        # Add variant row (remainder without prefix)
+        variant_frame = ttk.Frame(scrollable_frame)
+        variant_frame.pack(fill='x', padx=10, pady=5)
+        
+        variant_label = ttk.Label(variant_frame, text="Variant:", width=15, anchor='w')
+        variant_label.pack(side='left', padx=(0, 10))
+        
+        # Extract the remainder of the variant without the prefix
+        variant_remainder = variant_value[6:] if len(variant_value) >= 6 else ""
+        variant_value_label = ttk.Label(variant_frame, text=variant_remainder, wraplength=150)
+        variant_value_label.pack(side='left', fill='x', expand=True)
+        self._add_copy_menu(variant_value_label, variant_remainder)
         
         # Add each field to the scrollable frame
         for i, (label_text, field_name) in enumerate(fields):
@@ -138,13 +178,16 @@ class LabelDetailsDialog(tk.Toplevel):
             field_frame.pack(fill='x', padx=10, pady=5)
             
             # Label
-            label = ttk.Label(field_frame, text=f"{label_text}:", width=15, anchor='e')
+            label = ttk.Label(field_frame, text=f"{label_text}:", width=15, anchor='w')
             label.pack(side='left', padx=(0, 10))
             
             # Value
             value = self.record.get(field_name, "")
             value_label = ttk.Label(field_frame, text=value, wraplength=150)
             value_label.pack(side='left', fill='x', expand=True)
+            self._add_copy_menu(value_label, value)
+        
+
         
         # Right column - Label Preview (replacing the files list)
         preview_frame = ttk.LabelFrame(details_frame, text="Label")
@@ -425,6 +468,8 @@ class LabelDetailsDialog(tk.Toplevel):
     def _update_status(self, message):
         """Update the status message"""
         self.status_var.set(message)
+        
+
 
 def create_label_details_dialog(parent, record, config_manager):
     """

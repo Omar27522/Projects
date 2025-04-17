@@ -47,12 +47,15 @@ class BarcodeGenerator:
             if not os.path.exists(arial_path):
                 raise FileNotFoundError("arial.ttf not found in fonts directory")
             self.font_medium = ImageFont.truetype(arial_path, self.settings.font_size_medium)
+            # Add small font for long variants (30pt)
+            self.font_small = ImageFont.truetype(arial_path, 30)
             
         except Exception as e:
             print(f"Error setting up fonts: {e}")
             print("Using default font as fallback")
             self.font_large = ImageFont.load_default()
             self.font_medium = ImageFont.load_default()
+            self.font_small = ImageFont.load_default()
 
     def generate_barcode_image(self, upc_code: str) -> Optional[Image.Image]:
         """Generate barcode image using python-barcode"""
@@ -162,11 +165,13 @@ class BarcodeGenerator:
                 name1_height = draw.textbbox((0, 0), name_line1 if name_line1 else "", font=self.font_large)[3]
                 draw.text((20, 20 + name1_height), name_line2, font=self.font_large, fill=text_color)
 
-            # Variant text position
+            # Variant text position (dynamic font size)
             if variant:
-                text_width = draw.textlength(variant, font=self.font_medium)
+                # Use 30pt font if variant is over 21 characters, else use standard medium
+                variant_font = self.font_small if len(variant) > 21 else self.font_medium
+                text_width = draw.textlength(variant, font=variant_font)
                 x = (self.settings.LABEL_WIDTH - text_width) // 2
-                draw.text((x, 165), variant, font=self.font_medium, fill=text_color)
+                draw.text((x, 165), variant, font=variant_font, fill=text_color)
 
             # Generate barcode
             barcode_image = self.generate_barcode_image(data.upc_code)

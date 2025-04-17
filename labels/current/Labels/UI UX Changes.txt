@@ -1,11 +1,6 @@
 Date: Testing/Purpose
 
-		RETURNS DATA Dialog
-			Labels Tab.
-	DONE	--------	Add a more practical search function for Returns Data.
-
-		CREATE LABEL
-	Open the Labels Tab from the frame
+		I'm not sure what to add. It feels like I need to vibe more with Prod Testing before we can release an Alpha version. 
 
 
 

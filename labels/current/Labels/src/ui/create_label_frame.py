@@ -25,6 +25,7 @@ from src.utils.file_utils import get_central_log_file_path, ensure_directory_exi
 from src.utils.log_manager import log_shipping_event
 from src.utils.text_context_menu import add_context_menu
 from src.ui.window_transparency import TransparencyManager, create_transparency_toggle_button
+from src.ui.returns_data_dialog import ReturnsDataDialog
 
 # Configure logging
 logs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'logs')
@@ -79,8 +80,8 @@ class CreateLabelFrame(tk.Frame):
     
     def _create_ui(self):
         """Create the user interface elements"""
-        # Create a frame for the content with padding
-        content_frame = tk.Frame(self, bg='white', padx=20, pady=20)
+        # Create a frame for the content with reduced vertical padding
+        content_frame = tk.Frame(self, bg='white', padx=20, pady=10)
         content_frame.pack(fill='both', expand=True)
         
         # Add a return button in the top-left corner
@@ -101,6 +102,22 @@ class CreateLabelFrame(tk.Frame):
             font=("Arial", 10, "bold")
         )
         return_button.pack(side='left')
+    
+        # Add a button to open the Returns Data Dialog
+        def open_returns_data_dialog():
+            ReturnsDataDialog(self.winfo_toplevel(), self.config_manager)
+        
+        returns_data_button = tk.Button(
+            return_frame,
+            text="📄",
+            bg="#2196F3",  # Light blue
+            fg="white",
+            font=("Arial", 10, "bold"),  # Match the font size of the Returns button
+            command=open_returns_data_dialog,
+            width=3,
+            padx=3  # Add horizontal padding inside the button
+        )
+        returns_data_button.pack(side='left', padx=80)
         
         # Add a pin button on the right side to toggle stay-on-top
         def toggle_stay_on_top():
@@ -124,8 +141,8 @@ class CreateLabelFrame(tk.Frame):
         pin_frame = tk.Frame(return_frame, bg='white')
         pin_frame.pack(side='right')
         
-        pin_label = tk.Label(pin_frame, text="Pin:", bg='white', font=('TkDefaultFont', 10))
-        pin_label.pack(side=tk.LEFT, padx=(0, 5))
+        #pin_label = tk.Label(pin_frame, text="Pin:", bg='white', font=('TkDefaultFont', 10))
+        #pin_label.pack(side=tk.LEFT, padx=(0, 5))
         
         # Set initial button state based on saved setting
         initial_pin_color = '#FFD700' if self.stay_on_top_var.get() else '#D3D3D3'  # Gold if on, Light Gray if off
@@ -148,7 +165,7 @@ class CreateLabelFrame(tk.Frame):
         
         # Title
         self.title_frame = tk.Frame(content_frame, bg='white')
-        self.title_frame.pack(pady=(0, 20))
+        self.title_frame.pack(pady=(0, 10))
         
         self.title_label = tk.Label(
             self.title_frame,
@@ -178,7 +195,7 @@ class CreateLabelFrame(tk.Frame):
         ]
         
         form_frame = tk.Frame(content_frame, bg='white')
-        form_frame.pack(fill='x', pady=10)
+        form_frame.pack(fill='x', pady=5)
         
         self.field_widgets = create_form_field_group(form_frame, fields)
         
