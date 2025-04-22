@@ -113,17 +113,12 @@ welcome_window/
 
 ## Dependencies
 - Python 3.6+
-- Pillow
 - pywin32
-- pandas
 - pyautogui
-- python-barcode
 - gspread
 - oauth2client
-- psutil
-- tkcalendar
-
-
+- Pillow
+- pandas
 
 ### Core Functionality
 - **Frame-based UI** with modular components

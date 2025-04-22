@@ -58,38 +58,38 @@ class BarcodeGenerator:
             self.font_small = ImageFont.load_default()
 
     def generate_barcode_image(self, upc_code: str) -> Optional[Image.Image]:
-        """Generate barcode image using python-barcode"""
+        """Generate barcode image using python-barcode, cleaning Excel/CSV artifacts."""
         try:
-            # Ensure UPC code is exactly 12 digits
-            upc_code = str(upc_code).strip()
-            if len(upc_code) != 12 or not upc_code.isdigit():
+            from src.utils.csv_processor import clean_and_validate_barcode
+            cleaned_upc = clean_and_validate_barcode(upc_code)
+            if not cleaned_upc:
                 raise ValueError(f"Invalid UPC code: {upc_code}. Must be exactly 12 digits.")
+            upc_code = cleaned_upc
 
             # Create UPC-A barcode
             barcode_class = barcode.get_barcode_class('upc')
             barcode_writer = ImageWriter()
             
-            # Set specific options for better barcode appearance
+            # Use settings from config for barcode appearance
             barcode_writer.set_options({
-                'module_height': 120.0,    # Taller bars for better visibility
-                'module_width': 2.5,      # Wider individual bars with better spacing
-                'quiet_zone': 6.5,        # Increased quiet zone for better scanning
-                'font_size': 12,          # Size of UPC text
-                'text_distance': 6.0,     # Distance of UPC text from bars
-                'write_text': True,       # Show the UPC number
-                'background': 'white',    # White background
-                'foreground': 'black',    # Black bars
-                'center_text': True,      # Center the UPC number
-                'dpi': 600                # Higher DPI for much better print quality
+                'module_width': self.settings.barcode_module_width,
+                'quiet_zone': self.settings.barcode_quiet_zone,
+                'font_size': self.settings.barcode_font_size,
+                'text_distance': self.settings.barcode_text_distance,
+                'write_text': self.settings.barcode_write_text,
+                'background': self.settings.barcode_background,
+                'foreground': self.settings.barcode_foreground,
+                'center_text': self.settings.barcode_center_text,
+                'dpi': self.settings.barcode_dpi
             })
             
             # Generate barcode
             barcode_obj = barcode_class(upc_code, writer=barcode_writer)
             barcode_image = barcode_obj.render()
             
-            # Set fixed dimensions
-            target_width = 700   # Increased width for better bar separation
-            target_height = 350  # Increased height
+            # Use settings from config for dimensions
+            target_width = self.settings.barcode_width
+            target_height = self.settings.barcode_height
             
             # Resize using high-quality resampling
             barcode_image = barcode_image.resize(

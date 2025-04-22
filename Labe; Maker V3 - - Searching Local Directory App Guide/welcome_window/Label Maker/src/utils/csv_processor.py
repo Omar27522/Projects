@@ -94,34 +94,35 @@ def process_product_name(full_name: str) -> Tuple[str, str, str]:
     
     return name_line1, name_line2, variant
 
-def is_valid_barcode(barcode: str) -> bool:
-    """Check if barcode consists of exactly 12 digits"""
-    # Convert to string and remove any whitespace
+def clean_and_validate_barcode(barcode: str) -> str | None:
+    """Return cleaned 12-digit barcode string, or None if invalid. Logs corrections and problems."""
     barcode = str(barcode).strip()
-    
-    # Handle numeric values that might be in scientific notation
-    try:
-        # Convert scientific notation to regular number
-        if 'e' in barcode.lower():
-            barcode = f"{float(barcode):.0f}"
-        # Remove any decimal points and zeros after them
-        elif '.' in barcode:
-            barcode = barcode.split('.')[0]
-    except ValueError:
-        return False
-    
-    # Check if it's exactly 12 digits
-    if len(barcode) != 12:
-        return False
-    
-    # Check if all characters are digits
-    return barcode.isdigit()
+    # Remove .0 if present and preceding is 12 digits
+    if barcode.endswith('.0') and barcode[:-2].isdigit() and len(barcode[:-2]) == 12:
+        logger.warning(f"Barcode '{barcode}' had trailing '.0' (Excel float artifact); auto-corrected to '{barcode[:-2]}'")
+        barcode = barcode[:-2]
+    # Remove any decimal part if present (robust)
+    if '.' in barcode:
+        parts = barcode.split('.')
+        if parts[0].isdigit() and len(parts[0]) == 12:
+            logger.warning(f"Barcode '{barcode}' had decimal part; auto-corrected to '{parts[0]}'")
+            barcode = parts[0]
+    # Final validation
+    if not barcode.isdigit() or len(barcode) != 12:
+        logger.warning(f"Malformed or non-string barcode detected: '{barcode}' (should be a 12-digit string)")
+        return None
+    return barcode
+
+# Backwards compatibility
+is_valid_barcode = lambda barcode: clean_and_validate_barcode(barcode) is not None
+
+
 
 def create_batch_labels(csv_path: str, main_window):
     """Create labels in batch from a CSV file"""
     try:
         # Read the CSV file with numeric columns as strings to preserve leading zeros and prevent float conversion
-        df = pd.read_csv(csv_path, dtype={'Goods Barcode': str})
+        df = pd.read_csv(csv_path, dtype={'Upc': str})
         
         # Get save directory from settings or use default
         save_dir = main_window.config_manager.settings.last_directory
@@ -134,30 +135,27 @@ def create_batch_labels(csv_path: str, main_window):
         
         # Process each row
         for _, row in df.iterrows():
-            barcode = str(row['Goods Barcode'])
-            
-            # Remove any decimal part (e.g., ".0") that might be present
-            if '.' in barcode:
-                barcode = barcode.split('.')[0]
-                logger.info(f"Removed decimal part from barcode: {barcode}")
-            
-            # Skip if barcode is invalid
-            if not is_valid_barcode(barcode):
+            raw_barcode = str(row['Upc'])
+            cleaned_barcode = clean_and_validate_barcode(raw_barcode)
+            if not cleaned_barcode:
                 skipped_labels += 1
-                logger.warning(f"Skipping invalid barcode: {barcode}")
+                logger.warning(f"Skipping invalid barcode: {raw_barcode}")
                 continue
-                
-            full_name = str(row['Goods Name'])
-            
+            # Use only the cleaned barcode from here on
+            barcode = cleaned_barcode
+
+            full_name = str(row['Label Name'])
+
             # Process the product name
             name_line1, name_line2, variant = process_product_name(full_name)
-            
+
             # Log the product name processing results
             logger.info(f"Full product name: {full_name}")
             logger.info(f"Extracted name_line1: {name_line1}")
             logger.info(f"Extracted name_line2: {name_line2}")
             logger.info(f"Extracted variant: {variant}")
-            
+            logger.info(f"Barcode used for label: {barcode}")
+
             # Create label data
             label_data = LabelData(
                 name_line1=name_line1,
@@ -165,7 +163,7 @@ def create_batch_labels(csv_path: str, main_window):
                 variant=variant,
                 upc_code=barcode
             )
-            
+
             # Generate the label
             label_image = main_window.barcode_generator.generate_label(label_data)
             if label_image:
@@ -173,23 +171,23 @@ def create_batch_labels(csv_path: str, main_window):
                 safe_name1 = sanitize_filename(name_line1)
                 safe_name2 = sanitize_filename(name_line2) if name_line2 else ""
                 safe_variant = sanitize_filename(variant)
-                
+
                 # For debugging
                 logger.info(f"Original variant: {variant}")
                 logger.info(f"Sanitized variant: {safe_variant}")
                 logger.info(f"Barcode: {barcode}")
-                
+
                 if safe_name2:
                     filename = f"{safe_name1} {safe_name2} - {safe_variant}_label_{barcode}.png"
                 else:
                     filename = f"{safe_name1} - {safe_variant}_label_{barcode}.png"
-                
+
                 logger.info(f"Generated filename: {filename}")
-                
+
                 filepath = os.path.join(save_dir, filename)
                 label_image.save(filepath)
                 labels_created += 1
-                
+
                 # Update label counter in settings
                 main_window.config_manager.settings.label_counter += 1
                 main_window.png_count.set(f"Labels: {main_window.config_manager.settings.label_counter}")

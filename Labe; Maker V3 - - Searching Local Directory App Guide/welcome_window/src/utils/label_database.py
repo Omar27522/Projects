@@ -123,7 +123,7 @@ def import_csv(file_path, replace_existing=False):
                     continue
                 
                 # Extract SKU from the Variant or label name
-                sku = row.get('Variant ', '').strip()
+                sku = row.get('Variant', '').strip()
                 if not sku:
                     # Try to extract from label name
                     label_name = row.get('Label Name', '')
@@ -133,7 +133,7 @@ def import_csv(file_path, replace_existing=False):
                 # Prepare the record
                 record = (
                     row.get('Upc', '').strip(),
-                    row.get('Variant ', '').strip(),
+                    row.get('Variant', '').strip(),
                     row.get('Department', '').strip(),
                     row.get('Category', '').strip(),
                     row.get('Color', '').strip(),

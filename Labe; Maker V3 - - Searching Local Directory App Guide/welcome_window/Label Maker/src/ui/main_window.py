@@ -1077,7 +1077,7 @@ class MainWindow(tk.Tk):
                     df = pd.read_csv(file_path)
                     
                     # Validate required columns
-                    required_columns = ['Goods Barcode', 'Goods Name']
+                    required_columns = ['Upc', 'Label Name']
                     missing_columns = [col for col in required_columns if col not in df.columns]
                     if missing_columns:
                         raise ValueError(f"Missing required columns in CSV: {', '.join(missing_columns)}\n"
@@ -1085,13 +1085,13 @@ class MainWindow(tk.Tk):
                     
                     # Debug: Print the first few product names before processing
                     print("\nOriginal product names:")
-                    for i, name in enumerate(df['Goods Name'].head()):
+                    for i, name in enumerate(df['Label Name'].head()):
                         print(f"  {i+1}: '{name}'")
                     
                     # We'll let process_product_name handle the camelCase processing
                     # Debug: Print the first few product names
                     print("\nProduct names from CSV:")
-                    for i, name in enumerate(df['Goods Name'].head()):
+                    for i, name in enumerate(df['Label Name'].head()):
                         print(f"  {i+1}: '{name}'")
                     
                     total_rows = len(df)
@@ -1116,7 +1116,7 @@ class MainWindow(tk.Tk):
                         progress_label.config(text=f"Processing row {index + 1} of {total_rows}\n{labels_created} labels created")
                         progress_window.update()
                         
-                        barcode = str(row['Goods Barcode'])
+                        barcode = str(row['Upc'])
                         
                         # Skip if barcode is invalid
                         if not is_valid_barcode(barcode):
@@ -1125,7 +1125,7 @@ class MainWindow(tk.Tk):
                             
                         # Get the product name directly from CSV
                         # process_product_name will handle camelCase processing
-                        full_name = str(row['Goods Name'])
+                        full_name = str(row['Label Name'])
                         
                         # Process the product name
                         name_line1, name_line2, variant = process_product_name(full_name)
@@ -1176,9 +1176,10 @@ class MainWindow(tk.Tk):
                     
                 except Exception as e:
                     # Schedule UI updates on the main thread
+                    error_message = f"Failed to create batch labels: {str(e)}"
                     progress_window.after(0, lambda: [
                         progress_window.destroy(),
-                        messagebox.showerror("Error", f"Failed to create batch labels: {str(e)}")
+                        messagebox.showerror("Error", error_message)
                     ])
                     logger.error(f"Error creating batch labels: {str(e)}")
             
@@ -1271,9 +1272,9 @@ class MainWindow(tk.Tk):
         # Create settings window
         self.settings_window = tk.Toplevel(self)
         self.settings_window.title("Settings")
-        self.settings_window.geometry("400x500")
+        self.settings_window.geometry("400x600")
         self.settings_window.minsize(400, 500)
-        self.settings_window.resizable(False, False)
+        self.settings_window.resizable(True, True)  # Allow resizing
         
         # Set window icon using settings-specific icon
         self._set_window_icon(self.settings_window, '32', 'settings')
@@ -1295,9 +1296,41 @@ class MainWindow(tk.Tk):
 
     def _create_settings_content(self):
         """Create settings window content"""
-        # Create main frame with padding
-        main_frame = ttk.Frame(self.settings_window, padding="10")
-        main_frame.pack(fill=tk.BOTH, expand=True)
+        # Create a canvas with scrollbar for scrolling
+        canvas = tk.Canvas(self.settings_window)
+        scrollbar = ttk.Scrollbar(self.settings_window, orient="vertical", command=canvas.yview)
+        
+        # Configure the canvas
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.bind('<Configure>', lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        
+        # Pack the canvas and scrollbar
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+        # Create a frame inside the canvas for the content
+        main_frame = ttk.Frame(canvas, padding="10")
+        
+        # Add the frame to the canvas
+        canvas_window = canvas.create_window((0, 0), window=main_frame, anchor="nw")
+        
+        # Make the frame expand to the width of the canvas
+        def configure_frame(event):
+            canvas.itemconfig(canvas_window, width=event.width)
+        
+        canvas.bind('<Configure>', lambda event: [canvas.configure(scrollregion=canvas.bbox("all")), configure_frame(event)])
+        
+        # Enable mousewheel scrolling
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        
+        # Unbind the mousewheel event when the window is destroyed
+        def _on_destroy(event):
+            canvas.unbind_all("<MouseWheel>")
+        
+        self.settings_window.bind("<Destroy>", _on_destroy)
 
         # Font Sizes
         font_frame = ttk.LabelFrame(main_frame, text="Font Settings", padding="5")
@@ -1318,25 +1351,109 @@ class MainWindow(tk.Tk):
         # Barcode Settings
         barcode_frame = ttk.LabelFrame(main_frame, text="Barcode Settings", padding="5")
         barcode_frame.pack(fill=tk.X, pady=5)
-
+        
+        # Create a notebook for barcode settings to organize them
+        barcode_notebook = ttk.Notebook(barcode_frame)
+        barcode_notebook.pack(fill=tk.X, expand=True, padx=5, pady=5)
+        
+        # Basic dimensions tab
+        basic_tab = ttk.Frame(barcode_notebook, padding=5)
+        barcode_notebook.add(basic_tab, text="Basic")
+        
         # Barcode Width
-        ttk.Label(barcode_frame, text="Barcode Width:").grid(row=0, column=0, padx=5, pady=2)
-        barcode_width = ttk.Entry(barcode_frame, width=10)
+        ttk.Label(basic_tab, text="Barcode Width:").grid(row=0, column=0, padx=5, pady=2, sticky="w")
+        barcode_width = ttk.Entry(basic_tab, width=10)
         barcode_width.insert(0, str(self.config_manager.settings.barcode_width))
         barcode_width.grid(row=0, column=1, padx=5, pady=2)
-
+        
         # Barcode Height
-        ttk.Label(barcode_frame, text="Barcode Height:").grid(row=1, column=0, padx=5, pady=2)
-        barcode_height = ttk.Entry(barcode_frame, width=10)
+        ttk.Label(basic_tab, text="Barcode Height:").grid(row=1, column=0, padx=5, pady=2, sticky="w")
+        barcode_height = ttk.Entry(basic_tab, width=10)
         barcode_height.insert(0, str(self.config_manager.settings.barcode_height))
         barcode_height.grid(row=1, column=1, padx=5, pady=2)
+        
+        # DPI Setting
+        ttk.Label(basic_tab, text="DPI:").grid(row=2, column=0, padx=5, pady=2, sticky="w")
+        dpi_entry = ttk.Entry(basic_tab, width=10)
+        dpi_entry.insert(0, str(self.config_manager.settings.DPI))
+        dpi_entry.grid(row=2, column=1, padx=5, pady=2)
+        
+        # Barcode DPI Setting
+        ttk.Label(basic_tab, text="Barcode DPI:").grid(row=3, column=0, padx=5, pady=2, sticky="w")
+        barcode_dpi_entry = ttk.Entry(basic_tab, width=10)
+        barcode_dpi_entry.insert(0, str(self.config_manager.settings.barcode_dpi))
+        barcode_dpi_entry.grid(row=3, column=1, padx=5, pady=2)
+        
+        # Advanced tab for barcode appearance
+        advanced_tab = ttk.Frame(barcode_notebook, padding=5)
+        barcode_notebook.add(advanced_tab, text="Advanced")
+        
+        # Module Height (bar height)
+        ttk.Label(advanced_tab, text="Bar Height:").grid(row=0, column=0, padx=5, pady=2, sticky="w")
+        module_height_entry = ttk.Entry(advanced_tab, width=10)
+        module_height_entry.insert(0, str(self.config_manager.settings.barcode_module_height))
+        module_height_entry.grid(row=0, column=1, padx=5, pady=2)
+        
+        # Module Width (bar width)
+        ttk.Label(advanced_tab, text="Bar Width:").grid(row=1, column=0, padx=5, pady=2, sticky="w")
+        module_width_entry = ttk.Entry(advanced_tab, width=10)
+        module_width_entry.insert(0, str(self.config_manager.settings.barcode_module_width))
+        module_width_entry.grid(row=1, column=1, padx=5, pady=2)
+        
+        # Quiet Zone
+        ttk.Label(advanced_tab, text="Quiet Zone:").grid(row=2, column=0, padx=5, pady=2, sticky="w")
+        quiet_zone_entry = ttk.Entry(advanced_tab, width=10)
+        quiet_zone_entry.insert(0, str(self.config_manager.settings.barcode_quiet_zone))
+        quiet_zone_entry.grid(row=2, column=1, padx=5, pady=2)
+        
+        # Text tab for text-related settings
+        text_tab = ttk.Frame(barcode_notebook, padding=5)
+        barcode_notebook.add(text_tab, text="Text")
+        
+        # UPC Font Size
+        ttk.Label(text_tab, text="UPC Font Size:").grid(row=0, column=0, padx=5, pady=2, sticky="w")
+        font_size_entry = ttk.Entry(text_tab, width=10)
+        font_size_entry.insert(0, str(self.config_manager.settings.barcode_font_size))
+        font_size_entry.grid(row=0, column=1, padx=5, pady=2)
+        
+        # Text Distance
+        ttk.Label(text_tab, text="Text Distance:").grid(row=1, column=0, padx=5, pady=2, sticky="w")
+        text_distance_entry = ttk.Entry(text_tab, width=10)
+        text_distance_entry.insert(0, str(self.config_manager.settings.barcode_text_distance))
+        text_distance_entry.grid(row=1, column=1, padx=5, pady=2)
+        
+        # Show UPC Number
+        write_text_var = tk.BooleanVar(value=self.config_manager.settings.barcode_write_text)
+        write_text_cb = ttk.Checkbutton(text_tab, text="Show UPC Number", variable=write_text_var)
+        write_text_cb.grid(row=2, column=0, columnspan=2, sticky="w", pady=2)
+        
+        # Center UPC Text
+        center_text_var = tk.BooleanVar(value=self.config_manager.settings.barcode_center_text)
+        center_text_cb = ttk.Checkbutton(text_tab, text="Center UPC Text", variable=center_text_var)
+        center_text_cb.grid(row=3, column=0, columnspan=2, sticky="w", pady=2)
+        
+        # Colors tab
+        colors_tab = ttk.Frame(barcode_notebook, padding=5)
+        barcode_notebook.add(colors_tab, text="Colors")
+        
+        # Background Color
+        ttk.Label(colors_tab, text="Background:").grid(row=0, column=0, padx=5, pady=2, sticky="w")
+        background_entry = ttk.Entry(colors_tab, width=10)
+        background_entry.insert(0, self.config_manager.settings.barcode_background)
+        background_entry.grid(row=0, column=1, padx=5, pady=2)
+        
+        # Foreground Color
+        ttk.Label(colors_tab, text="Foreground:").grid(row=1, column=0, padx=5, pady=2, sticky="w")
+        foreground_entry = ttk.Entry(colors_tab, width=10)
+        foreground_entry.insert(0, self.config_manager.settings.barcode_foreground)
+        foreground_entry.grid(row=1, column=1, padx=5, pady=2)
 
         # CSV Import Frame
         csv_frame = ttk.LabelFrame(main_frame, text="Batch Import", padding="5")
         csv_frame.pack(fill=tk.X, pady=5)
 
         # CSV Import Description
-        ttk.Label(csv_frame, text="Import multiple labels from a CSV file.\nRequired columns: 'Goods Name', 'Goods Barcode'", 
+        ttk.Label(csv_frame, text="Import multiple labels from a CSV file.\nRequired columns: 'Label Name', 'Upc'", 
                  justify=tk.LEFT).pack(padx=5, pady=2)
 
         # Upload CSV Button
@@ -1393,16 +1510,51 @@ class MainWindow(tk.Tk):
                 new_barcode_width = int(barcode_width.get())
                 new_barcode_height = int(barcode_height.get())
                 new_transparency = transparency_var.get()
+                
+                # Validate and save DPI settings
+                new_dpi = int(dpi_entry.get())
+                new_barcode_dpi = int(barcode_dpi_entry.get())
+                
+                # Validate and save barcode appearance settings
+                new_module_height = float(module_height_entry.get())
+                new_module_width = float(module_width_entry.get())
+                new_quiet_zone = float(quiet_zone_entry.get())
+                new_font_size = int(font_size_entry.get())
+                new_text_distance = float(text_distance_entry.get())
+                new_background = background_entry.get()
+                new_foreground = foreground_entry.get()
 
                 if not (0.1 <= new_transparency <= 1.0):
                     raise ValueError("Transparency must be between 0.1 and 1.0")
+                
+                if new_dpi < 72:
+                    raise ValueError("DPI must be at least 72")
+                    
+                if new_barcode_dpi < 72:
+                    raise ValueError("Barcode DPI must be at least 72")
 
+                # Save basic settings
                 self.config_manager.settings.font_size_large = new_font_large
                 self.config_manager.settings.font_size_medium = new_font_medium
                 self.config_manager.settings.barcode_width = new_barcode_width
                 self.config_manager.settings.barcode_height = new_barcode_height
                 self.config_manager.settings.always_on_top = always_on_top_var.get()
                 self.config_manager.settings.transparency_level = new_transparency
+                
+                # Save DPI settings
+                self.config_manager.settings.DPI = new_dpi
+                self.config_manager.settings.barcode_dpi = new_barcode_dpi
+                
+                # Save barcode appearance settings
+                self.config_manager.settings.barcode_module_height = new_module_height
+                self.config_manager.settings.barcode_module_width = new_module_width
+                self.config_manager.settings.barcode_quiet_zone = new_quiet_zone
+                self.config_manager.settings.barcode_font_size = new_font_size
+                self.config_manager.settings.barcode_text_distance = new_text_distance
+                self.config_manager.settings.barcode_write_text = write_text_var.get()
+                self.config_manager.settings.barcode_center_text = center_text_var.get()
+                self.config_manager.settings.barcode_background = new_background
+                self.config_manager.settings.barcode_foreground = new_foreground
 
                 self.config_manager.save_settings()
                 self.settings_window.destroy()
@@ -1410,13 +1562,17 @@ class MainWindow(tk.Tk):
             except ValueError as e:
                 messagebox.showerror("Invalid Input", str(e))
 
+        # Add a button frame at the bottom that stays visible
+        button_frame = ttk.Frame(main_frame)
+        button_frame.pack(fill=tk.X, pady=10)
+        
         save_btn = ttk.Button(
-            main_frame,
+            button_frame,
             text="Save Settings",
             command=save_settings,
             style="Accent.TButton"
         )
-        save_btn.pack(pady=10)
+        save_btn.pack(pady=5, padx=10)
 
     def preview_label(self):
         """Show label preview window"""

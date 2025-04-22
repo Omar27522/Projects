@@ -208,7 +208,7 @@ def create_batch_labels(csv_path, main_window):
 
         # Process each row
         for _, row in df.iterrows():
-            barcode = str(row['Goods Barcode'])
+            barcode = str(row['Upc'])
 
             # Skip if barcode is invalid
             if not is_valid_barcode(barcode):
@@ -216,7 +216,7 @@ def create_batch_labels(csv_path, main_window):
                 logger.warning(f"Skipping invalid barcode: {barcode}")
                 continue
 
-            full_name = str(row['Goods Name'])
+            full_name = str(row['Label Name'])
 
             # Process the product name
             name_line1, name_line2, variant = process_product_name(full_name)
