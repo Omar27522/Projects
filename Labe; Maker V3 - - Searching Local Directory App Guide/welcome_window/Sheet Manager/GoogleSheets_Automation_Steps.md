@@ -15,7 +15,7 @@ This document describes the process and requirements for automating the end-of-d
 
 ## Manual EOD Process (Current)
 1. Go to the "Daily Activity" sheet.
-2. Select cell F5 (the start of the user data).
+2. Select cell F5 (the start of the 1st user data).
 3. Press `Ctrl+Shift+Down Arrow` to select all rows for the day in that column.
 4. Press `Ctrl+Shift+Left Arrow` to select all columns for those rows, covering all user data for the day.
 5. Copy the selection.
@@ -26,13 +26,13 @@ This document describes the process and requirements for automating the end-of-d
 ---
 
 ## Automation Goals
-- **Automate Data Selection**: Script should programmatically select all relevant user data starting from F5, covering all rows and columns for the day.
+- **Automate Data Selection**: Script should programmatically select all relevant user data starting from the user's fifth cell (First user F5), covering all rows and columns for the day.
 - **Automate Data Copying**: Script should copy the selected data and append/paste it into the correct week in the "ALL Work" sheet.
 - **Weekly Archival**: At the start of each week, script should duplicate the current week's columns to the right, creating a new section for the new week.
 
 ---
 
-## Google Sheets Script Function Example
+## Google Sheets Script Function Example Current State
 
 A function for the "Steps❗️" sheet to select the data as described:
 
@@ -55,7 +55,9 @@ function selectUserData() {
 ---
 
 ## Next Steps
-- Integrate this function into your Google Sheets via Apps Script.
+- Create a new Apps Script deployment, I'm not sure what yo use. (Web App, API Executable, Library)
+- Integate this deployment for future updating thtough the Python APP Sheets Manager.
+- Integrate this function into your Google Sheets via Apps Script.	//NOT SURE ABOUT THIS
 - Expand the script to automate copying and pasting data into the "ALL Work" sheet, and handle weekly archival.
 - Optionally, trigger the script on a schedule (e.g., every day at EOD) or via a custom menu/button.
 

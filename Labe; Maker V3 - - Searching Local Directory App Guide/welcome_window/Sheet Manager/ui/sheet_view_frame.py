@@ -10,9 +10,10 @@ class SheetViewFrame(tk.Frame):
     Main working frame for interacting with the selected Google Sheet.
     This is where sheet data viewing and manipulation will happen.
     """
-    def __init__(self, parent, on_return=None):
+    def __init__(self, parent, main_window=None, on_return=None):
         super().__init__(parent, bg="white")
         self.parent = parent
+        self._main_window = main_window if main_window is not None else parent
         self.on_return = on_return
         self._create_widgets()
         
@@ -26,11 +27,17 @@ class SheetViewFrame(tk.Frame):
                         fg="white", bg="#1976d2")
         title.pack(side=tk.LEFT, padx=20)
         
+        # Settings button in header
+        settings_btn = tk.Button(header, text="Settings", command=self._open_settings,
+                                bg="#607d8b", fg="white", font=("Roboto", 10),
+                                relief=tk.FLAT, padx=10)
+        settings_btn.pack(side=tk.RIGHT, padx=(0,10), pady=15)
+
         # Return button in header
         return_btn = tk.Button(header, text="Change Sheet", command=self._on_return,
                               bg="#1565c0", fg="white", font=("Roboto", 10),
                               relief=tk.FLAT, padx=10)
-        return_btn.pack(side=tk.RIGHT, padx=20, pady=15)
+        return_btn.pack(side=tk.RIGHT, padx=(10,10), pady=15)
         
         # Main content area - placeholder for future sheet functionality
         content = tk.Frame(self, bg="white")
@@ -75,6 +82,33 @@ class SheetViewFrame(tk.Frame):
         automation_frame = SheetAutomationFrame(self.parent, on_return=self._return_from_automation)
         automation_frame.pack(fill=tk.BOTH, expand=True)
     
+    def _open_settings(self):
+        """Open the Settings UI dialog with Scripts Manager access"""
+        import tkinter as tk
+        import tkinter.messagebox as messagebox
+        settings_win = tk.Toplevel(self)
+        settings_win.title("Settings")
+        settings_win.geometry("320x180")
+        settings_win.transient(self)
+        settings_win.grab_set()
+
+        label = tk.Label(settings_win, text="Sheets Manager Settings", font=("Roboto", 12, "bold"))
+        label.pack(pady=(18, 10))
+
+        scripts_btn = tk.Button(settings_win, text="Open Scripts Manager", bg="#1976d2", fg="white", font=("Roboto", 10, "bold"), command=self._open_scripts_manager)
+        scripts_btn.pack(pady=(10, 0))
+
+        close_btn = tk.Button(settings_win, text="Close", command=settings_win.destroy)
+        close_btn.pack(pady=14)
+
+    def _open_scripts_manager(self):
+        # Call the main window's _show_scripts_manager if available
+        if hasattr(self._main_window, '_show_scripts_manager'):
+            self._main_window._show_scripts_manager()
+        else:
+            import tkinter.messagebox as messagebox
+            messagebox.showerror("Error", "Cannot open Scripts Manager from here.")
+
     def _return_from_automation(self):
         """Return from automation frame back to sheet view"""
         # Clear automation frame

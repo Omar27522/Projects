@@ -31,7 +31,7 @@ class SheetsManagerWindow(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Sheets Manager")
-        self.geometry("560x525")
+        self.geometry("800x525") #LETS CHANGE THIS so IT expands automatically so all the content fits.*/
         self.configure(bg="#f7f9fa")
         self._create_widgets()
 
@@ -39,8 +39,14 @@ class SheetsManagerWindow(tk.Tk):
         from modules.welcome import WelcomeModule
         from modules.connection import ConnectionModule
         from modules.sheet_view import SheetViewModule
+        from modules.scripts_manager import ScriptsManagerModule
         from config.settings_manager import settings_manager
-        
+
+        # Menu bar (remove Features menu)
+        menubar = tk.Menu(self)
+        self.config(menu=menubar)
+        # You can add other menus here as needed (e.g., File, Edit, Help)
+
         # Container for swapping modules
         self._module_container = tk.Frame(self, bg="#f7f9fa")
         self._module_container.pack(fill=tk.BOTH, expand=True)
@@ -74,12 +80,18 @@ class SheetsManagerWindow(tk.Tk):
     def _show_sheet_view(self):
         from modules.sheet_view import SheetViewModule
         self._clear_module()
-        self._sheet_view_module = SheetViewModule(self._module_container, on_return=self._show_connection)
+        self._sheet_view_module = SheetViewModule(self._module_container, main_window=self, on_return=self._show_connection)
         self._sheet_view_module.get_frame().pack(fill=tk.BOTH, expand=True)
 
     def _clear_module(self):
         for widget in self._module_container.winfo_children():
             widget.destroy()
+
+    def _show_scripts_manager(self):
+        from modules.scripts_manager import ScriptsManagerModule
+        self._clear_module()
+        self._scripts_manager_module = ScriptsManagerModule(self._module_container, on_back=self._show_sheet_view)
+        self._scripts_manager_module.get_frame().pack(fill=tk.BOTH, expand=True)
 
     def _on_start(self):
         # This method can be connected to WelcomeModule if needed
