@@ -3,6 +3,7 @@ Sheet View Frame - Main working area for the Sheets Manager application.
 """
 import tkinter as tk
 from tkinter import ttk
+from ui.sheetAutomation import SheetAutomationFrame
 
 class SheetViewFrame(tk.Frame):
     """
@@ -38,11 +39,18 @@ class SheetViewFrame(tk.Frame):
         # Placeholder message
         placeholder = tk.Label(content, text="Sheet View - Ready for implementation",
                              font=("Roboto", 14), fg="#555555", bg="white")
-        placeholder.pack(pady=50)
+        placeholder.pack(pady=30)
         
         sheet_info = tk.Label(content, text="This frame will contain sheet viewing and editing functionality.",
                             font=("Roboto", 12), fg="#777777", bg="white", wraplength=500)
         sheet_info.pack(pady=10)
+        
+        # Automation button
+        automation_btn = tk.Button(content, text="Open Sheet Automation", 
+                                 bg="#FF9800", fg="white", font=("Roboto", 11, "bold"),
+                                 relief=tk.FLAT, padx=15, pady=8,
+                                 command=self._open_automation)
+        automation_btn.pack(pady=20)
         
         # Status bar
         status_bar = tk.Frame(self, bg="#f5f5f5", height=30)
@@ -56,3 +64,23 @@ class SheetViewFrame(tk.Frame):
         """Handle the return button click to go back to connection frame"""
         if self.on_return:
             self.on_return()
+    
+    def _open_automation(self):
+        """Open the Sheet Automation frame"""
+        # Clear current frame
+        for widget in self.parent.winfo_children():
+            widget.destroy()
+        
+        # Create and show automation frame
+        automation_frame = SheetAutomationFrame(self.parent, on_return=self._return_from_automation)
+        automation_frame.pack(fill=tk.BOTH, expand=True)
+    
+    def _return_from_automation(self):
+        """Return from automation frame back to sheet view"""
+        # Clear automation frame
+        for widget in self.parent.winfo_children():
+            widget.destroy()
+        
+        # Recreate and show self
+        self.__init__(self.parent, on_return=self.on_return)
+        self.pack(fill=tk.BOTH, expand=True)

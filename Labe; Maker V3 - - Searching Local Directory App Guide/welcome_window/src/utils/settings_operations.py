@@ -4,6 +4,8 @@ Utility functions for handling settings operations.
 import os
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
+import subprocess
+import sys
 
 from src.config.config_manager import ConfigManager
 from src.utils.ui_utils import center_window, create_button, make_window_modal
@@ -76,14 +78,53 @@ def create_settings_dialog(parent, config_manager, update_label_count_callback, 
     # Bind mousewheel for Windows
     canvas.bind_all('<MouseWheel>', on_mousewheel)
     
+    # Title section with Sheet Manager button
+    title_section = tk.Frame(content_frame, bg='white')
+    title_section.pack(fill='x', pady=(0, 10))
+    
     # Title
     title_label = tk.Label(
-        content_frame, 
+        title_section, 
         text="Settings", 
         font=("Arial", 16, "bold"), 
         bg='white'
     )
-    title_label.pack(pady=(0, 20))
+    title_label.pack(side='left', pady=(0, 10))
+    
+    # Function to open Sheet Manager
+    def open_sheet_manager():
+        try:
+            # Path to Sheet Manager main.pyw
+            sheet_manager_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 
+                                            'Sheet Manager', 'main.pyw')
+            
+            # Check if the file exists
+            if not os.path.exists(sheet_manager_path):
+                messagebox.showerror("Error", f"Sheet Manager not found at: {sheet_manager_path}")
+                return
+                
+            # Launch Sheet Manager using Python executable
+            python_exe = sys.executable
+            subprocess.Popen([python_exe, sheet_manager_path], 
+                           shell=True,  # Use shell on Windows
+                           creationflags=subprocess.CREATE_NEW_CONSOLE)  # Create new console window
+            
+            # Close the settings dialog
+            settings_dialog.destroy()
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to open Sheet Manager: {str(e)}")
+    
+    # Sheet Manager Button
+    sheet_manager_btn = create_button(
+        title_section,
+        text="Open Sheet Manager",
+        command=open_sheet_manager,
+        bg='#1976d2',
+        fg='white',
+        padx=10,
+        pady=5
+    )
+    sheet_manager_btn.pack(side='right', padx=(10, 0), pady=(0, 10))
     
     # Labels Directory Section
     directory_section = tk.LabelFrame(content_frame, text="Labels Directory", font=("Arial", 12, "bold"), bg='white', padx=10, pady=10)
