@@ -1,4 +1,7 @@
 <?php
+
+include ('page.php');
+
 $title="Welcome";
 $dir = './';
 //$about ='active';
@@ -101,9 +104,9 @@ function content(){
                 'Business Cards'
   ];
 
-    include_once('./content/about.php');
+    
 }
 
-include_once('./code/functions.php');
-include ('./code/html_structure/page.php');
+
+
 ?>
