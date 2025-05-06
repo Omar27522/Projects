@@ -8,8 +8,19 @@
 </head>
 <body>
 <form action="process_image.php" method="post" enctype="multipart/form-data">
-<input class="file" type="file" name="image" accept="image/*"> <a href="./batch_resize_form.php"><h3>Choose Multiple Files</h3></a>
-    <p>
+    <div class="upload-section">
+        <div class="file-upload upload-button">
+            <input type="file" name="image" id="singleUpload" accept="image/*">
+            <label for="singleUpload">
+                <span class="icon">📷</span>
+                Choose Single File
+            </label>
+        </div>
+        <a href="./batch_resize_form.php" class="batch-option">
+            <span class="icon">🖼️</span>
+            Choose Multiple Files
+        </a>
+    </div>    <p>
         <label for="name">Name: <span class="file">Include extension</span></label><br />
 <input type="text" name="name" id="name" placeholder="Enter new name+extension" required><br />
         <label for="height">Height:</label><br />

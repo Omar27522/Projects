@@ -10,7 +10,7 @@
     <h1>Batch Image Resizer</h1>
     <a href="./" class="wright"><h3>Choose Single File</h3></a><br/>
     <form action="batch_resize.php" method="post" enctype="multipart/form-data">
-        <p>
+        <p><a href="#images"><label for="images">Select Images:</label></a>
             <input class="file" type="file" name="images[]" id="images" accept="image/*" multiple required>
         </p>
         <p>
