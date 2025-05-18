@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image and Text Dialogs</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- INSTRUCTIONS FOR USING THIS SYSTEM -->
+    <div class="instructions">
+        <h2>Image and Text Dialog System</h2>
+        <h3>How to Use:</h3>
+        <ol>
+            <li><strong>Image Carousels:</strong> Click on any image with class <code>linked-text-img</code> to open a carousel dialog.</li>
+            <li><strong>Navigate Images:</strong> Use left and right arrow keys to navigate through images in the carousel.</li>
+            <li><strong>Text Dialogs:</strong> Click on any text with class <code>linked-text</code> to open a text dialog.</li>
+            <li><strong>Close Dialogs:</strong> Press ESC key or click outside the dialog to close it.</li>
+        </ol>
+        
+        <h3>How to Implement:</h3>
+        <ol>
+            <li><strong>Define Images:</strong> Add all carousel images to the <code>&lt;template id="carousel-images"&gt;</code> element.</li>
+            <li><strong>Create Image Trigger:</strong> Add <code>&lt;span tabindex="0" class="linked-text-img"&gt;&lt;img src="..."&gt;&lt;/span&gt;</code></li>
+            <li><strong>Create Dialog Container:</strong> Add <code>&lt;div class="image-dialog" data-carousel="true" data-start-index="X"&gt;&lt;/div&gt;</code> where X is the starting image index (0-based).</li>
+            <li><strong>For Text Dialogs:</strong> Use <code>&lt;span tabindex="0" class="linked-text"&gt;Text&lt;/span&gt;</code> and <code>&lt;div class="link-dialog"&gt;Content&lt;/div&gt;</code></li>
+            <li><strong>Wrap in Container:</strong> Always wrap triggers and dialogs in a <code>&lt;div class="multi-link-container"&gt;</code></li>
+        </ol>
+    </div>
+
+    <!-- Define a single list of images to be used by all carousels -->
+    <template id="carousel-images">
+        <figure class="carousel-item" data-image-index="0">
+            <img src="menuStart_BlankPage.png" alt="Blank Page">
+            <figcaption><a href="menuStart_BlankPage.png">menuStart_BlankPage.png</a></figcaption>
+        </figure>
+        <figure class="carousel-item" data-image-index="1">
+            <img src="banner.jpg" alt="Banner">
+            <figcaption><a href="banner.jpg">banner.jpg</a></figcaption>
+        </figure>
+        <figure class="carousel-item" data-image-index="2">
+            <img src="favicon.png" alt="Favicon">
+            <figcaption><a href="favicon.png">favicon.png</a></figcaption>
+        </figure>
+        <figure class="carousel-item" data-image-index="3">
+            <img src="image well fix it.jpg" alt="Fix It Image">
+            <figcaption><a href="image well fix it.jpg">image well fix it.jpg</a></figcaption>
+        </figure>
+        <figure class="carousel-item" data-image-index="4">
+            <img src="100.png" alt="100">
+            <figcaption><a href="100.png">100.png</a></figcaption>
+        </figure>
+        <figure class="carousel-item" data-image-index="5">
+            <img src="OIG2.jpg" alt="OIG2">
+            <figcaption><a href="OIG2.jpg">OIG2.jpg</a></figcaption>
+        </figure>
+        <figure class="carousel-item" data-image-index="6">
+            <img src="computer CPU.jpg" alt="Computer CPU">
+            <figcaption><a href="computer CPU.jpg">computer CPU.jpg</a></figcaption>
+        </figure>
+        <figure class="carousel-item" data-image-index="7">
+            <img src="cone.jpg" alt="Cone">
+            <figcaption><a href="cone.jpg">cone.jpg</a></figcaption>
+        </figure>
+        <figure class="carousel-item" data-image-index="8">
+            <img src="help.jpg" alt="Help">
+            <figcaption><a href="help.jpg">help.jpg</a></figcaption>
+        </figure>
+        <figure class="carousel-item" data-image-index="9">
+            <img src="img2.jpg" alt="Image 2">
+            <figcaption><a href="img2.jpg">img2.jpg</a></figcaption>
+        </figure>
+        <figure class="carousel-item" data-image-index="10">
+            <img src="messaging1.jpg" alt="Messaging">
+            <figcaption><a href="messaging1.jpg">messaging1.jpg</a></figcaption>
+        </figure>
+        <figure class="carousel-item" data-image-index="11">
+            <img src="sath.jpg" alt="Sath">
+            <figcaption><a href="sath.jpg">sath.jpg</a></figcaption>
+        </figure>
+        <figure class="carousel-item" data-image-index="12">
+            <img src="thm.jpg" alt="THM">
+            <figcaption><a href="thm.jpg">thm.jpg</a></figcaption>
+        </figure>
+    </template>
+
+    <div class="demo-section">
+        <h2>Interactive Image & Text Demo</h2>
+        <p class="demo-description">Click on any thumbnail to open a carousel. Use left/right arrow keys to navigate through images.</p>
+        
+        <div class="demo-grid">
+            <!-- Row 1: Different starting points for the carousel -->
+            <div class="demo-row">
+                <h3>Carousels with Different Starting Points</h3>
+                <div class="carousel-group">
+                    <div class="multi-link-container">
+                        <div class="thumbnail-container">
+                            <span tabindex="0" class="linked-text-img">
+                                <img src="menuStart_BlankPage.png" alt="Start with Blank Page" class="thumbnail">
+                            </span>
+                            <p>Start at #1</p>
+                        </div>
+                        <div class="image-dialog" data-carousel="true" data-start-index="0"></div>
+                    </div>
+                    
+                    <div class="multi-link-container">
+                        <div class="thumbnail-container">
+                            <span tabindex="0" class="linked-text-img">
+                                <img src="banner.jpg" alt="Start with Banner" class="thumbnail">
+                            </span>
+                            <p>Start at #2</p>
+                        </div>
+                        <div class="image-dialog" data-carousel="true" data-start-index="1"></div>
+                    </div>
+                    
+                    <div class="multi-link-container">
+                        <div class="thumbnail-container">
+                            <span tabindex="0" class="linked-text-img">
+                                <img src="computer CPU.jpg" alt="Start with CPU" class="thumbnail">
+                            </span>
+                            <p>Start at #7</p>
+                        </div>
+                        <div class="image-dialog" data-carousel="true" data-start-index="6"></div>
+                    </div>
+                    
+                    <div class="multi-link-container">
+                        <div class="thumbnail-container">
+                            <span tabindex="0" class="linked-text-img">
+                                <img src="thm.jpg" alt="Start with THM" class="thumbnail">
+                            </span>
+                            <p>Start at #13</p>
+                        </div>
+                        <div class="image-dialog" data-carousel="true" data-start-index="12"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Row 2: Text dialog examples -->
+            <div class="demo-row">
+                <h3>Text Dialog Examples</h3>
+                <div class="text-dialog-group">
+                    <div class="multi-link-container">
+                        <span tabindex="0" class="linked-text">Simple Text Dialog</span>
+                        <div class="link-dialog">
+                            <h4>Simple Text Content</h4>
+                            <p tabindex="0">This is a basic text dialog example. You can put any content here.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="multi-link-container">
+                        <span tabindex="0" class="linked-text">Formatted Text Dialog</span>
+                        <div class="link-dialog">
+                            <h4>Formatted Content</h4>
+                            <p>This dialog contains <strong>formatted text</strong> with <em>different styles</em>.</p>
+                            <ul>
+                                <li>List item 1</li>
+                                <li>List item 2</li>
+                                <li>List item 3</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="multi-link-container">
+                        <span tabindex="0" class="linked-text">Mixed Content Dialog</span>
+                        <div class="link-dialog">
+                            <h4>Mixed Content Example</h4>
+                            <p>This dialog contains both text and an image:</p>
+                            <img src="help.jpg" alt="Help" style="max-width: 200px;">
+                            <p>You can combine different types of content in a single dialog.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Row 3: Real-world Examples -->
+            <div class="demo-row">
+                <h3>Real-world Examples</h3>
+                
+                <!-- User Guide Example -->
+                <div class="real-world-example">
+                    <h4>User Guide</h4>
+                    <div class="documentation-example">
+                        <h5>Getting Started with Your New Smart Home</h5>
+                        <p>Welcome to your new smart home system! Here's what you'll need to get started:</p>
+                        <ul>
+                            <li>A smartphone or tablet with Bluetooth</li>
+                            <li>Your home Wi-Fi network name and password</li>
+                            <li>The Smart Home Hub 
+                                <div class="multi-link-container">
+                                    <span tabindex="0" class="linked-text-img"><img src="help.jpg" alt="help" width="16px" style="vertical-align: middle;"></span>
+                                    <div class="image-dialog" data-carousel="true" data-start-index="8"></div>
+                                </div> (included in your package)
+                            </li>
+                        </ul>
+                        <p>First, download the Smart Home app 
+                            <div class="multi-link-container">
+                                <span tabindex="0" class="linked-text">from your app store</span>
+                                <div class="link-dialog">
+                                    <h4>Download Instructions</h4>
+                                    <p>For iPhone users:</p>
+                                    <ol>
+                                        <li>Open the App Store</li>
+                                        <li>Search for "Smart Home Connect"</li>
+                                        <li>Tap "Get" to download</li>
+                                    </ol>
+                                    <p>For Android users:</p>
+                                    <ol>
+                                        <li>Open Google Play Store</li>
+                                        <li>Search for "Smart Home Connect"</li>
+                                        <li>Tap "Install"</li>
+                                    </ol>
+                                </div>
+                            </div> and follow the setup wizard.
+                        </p>
+                        <p>Your Smart Home Hub connects all your devices. See the diagram below for how everything works together:</p>
+                        <div class="centered-content">
+                            <div class="multi-link-container">
+                                <span tabindex="0" class="linked-text-img"><img src="computer CPU.jpg" alt="Smart Home System" width="200px" class="inline-thumbnail"></span>
+                                <div class="image-dialog" data-carousel="true" data-start-index="6"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Educational Content Example -->
+                <div class="real-world-example">
+                    <h4>Educational Content</h4>
+                    <div class="education-example">
+                        <h5>Understanding Photosynthesis</h5>
+                        <p>Photosynthesis is the process by which green plants and some other organisms use sunlight to synthesize foods with carbon dioxide and water. 
+                            <div class="multi-link-container">
+                                <span tabindex="0" class="linked-text">Learn more about this process</span>
+                                <div class="link-dialog">
+                                    <h4>Photosynthesis Process</h4>
+                                    <p>Photosynthesis occurs in two stages:</p>
+                                    <ol>
+                                        <li><strong>Light-dependent reactions</strong>: These reactions take place in the thylakoid membrane and require direct light energy.</li>
+                                        <li><strong>Light-independent reactions</strong> (Calvin cycle): These reactions take place in the stroma and don't require direct light energy.</li>
+                                    </ol>
+                                    <p>The overall chemical equation for photosynthesis is:</p>
+                                    <p><code>6CO₂ + 6H₂O + light energy → C₆H₁₂O₆ + 6O₂</code></p>
+                                </div>
+                            </div>
+                        </p>
+                        <div class="two-column-content">
+                            <div class="column">
+                                <p>Plants use specialized cells called 
+                                    <div class="multi-link-container">
+                                        <span tabindex="0" class="linked-text">chloroplasts</span>
+                                        <div class="link-dialog">
+                                            <h4>Chloroplasts</h4>
+                                            <p>Chloroplasts are organelles found in plant cells and other eukaryotic organisms that conduct photosynthesis.</p>
+                                            <p>Key features:</p>
+                                            <ul>
+                                                <li>Contain the pigment chlorophyll</li>
+                                                <li>Have their own DNA</li>
+                                                <li>Originated from cyanobacteria through endosymbiosis</li>
+                                            </ul>
+                                        </div>
+                                    </div> to capture light energy.
+                                </p>
+                            </div>
+                            <div class="column">
+                                <div class="multi-link-container">
+                                    <span tabindex="0" class="linked-text-img"><img src="OIG2.jpg" alt="Plant cells" width="150px" class="inline-thumbnail"></span>
+                                    <div class="image-dialog" data-carousel="true" data-start-index="5"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Copy-Paste Example Section -->
+    <div class="demo-section">
+        <h2>Copy-Paste Example</h2>
+        <p class="demo-description">Here's a simple example you can copy and paste into your own HTML with minimal edits.</p>
+        
+        <div class="code-container">
+            <pre><code class="html">&lt;!-- 1. First include the CSS --&gt;
+&lt;style&gt;
+  /* Basic dialog styling */
+  .link-dialog, .image-dialog {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    z-index: 1000;
+    max-width: 80%;
+  }
+
+  .link-dialog.visible, .image-dialog.visible {
+    display: block;
+  }
+
+  .linked-text, .linked-text-img {
+    cursor: pointer;
+    color: blue;
+    text-decoration: underline;
+  }
+
+  .multi-link-container {
+    display: inline-block;
+  }
+
+  .dialog-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+  }
+
+  .dialog-backdrop.active {
+    display: block;
+  }
+
+  figure {
+    margin: 0;
+    text-align: center;
+  }
+
+  figure img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Carousel styling */
+  .carousel-item {
+    display: none;
+  }
+
+  .carousel-item.active {
+    display: block;
+  }
+&lt;/style&gt;
+
+&lt;!-- 2. Define your image template --&gt;
+&lt;template id="carousel-images"&gt;
+  &lt;figure class="carousel-item" data-image-index="0"&gt;
+    &lt;img src="image1.jpg" alt="Image 1"&gt;
+    &lt;figcaption&gt;&lt;a href="image1.jpg"&gt;Image 1&lt;/a&gt;&lt;/figcaption&gt;
+  &lt;/figure&gt;
+  &lt;figure class="carousel-item" data-image-index="1"&gt;
+    &lt;img src="image2.jpg" alt="Image 2"&gt;
+    &lt;figcaption&gt;&lt;a href="image2.jpg"&gt;Image 2&lt;/a&gt;&lt;/figcaption&gt;
+  &lt;/figure&gt;
+  &lt;figure class="carousel-item" data-image-index="2"&gt;
+    &lt;img src="image3.jpg" alt="Image 3"&gt;
+    &lt;figcaption&gt;&lt;a href="image3.jpg"&gt;Image 3&lt;/a&gt;&lt;/figcaption&gt;
+  &lt;/figure&gt;
+&lt;/template&gt;
+
+&lt;!-- 3. Create your content with dialogs --&gt;
+&lt;div class="content"&gt;
+  &lt;h2&gt;Image and Text Dialogs Example&lt;/h2&gt;
+  
+  &lt;!-- Image Example 1 --&gt;
+  &lt;div class="multi-link-container"&gt;
+    &lt;span tabindex="0" class="linked-text-img"&gt;&lt;img src="image1.jpg" alt="Image 1" width="100px"&gt;&lt;/span&gt;
+    &lt;div class="image-dialog" data-carousel="true" data-start-index="0"&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  
+  &lt;!-- Image Example 2 --&gt;
+  &lt;div class="multi-link-container"&gt;
+    &lt;span tabindex="0" class="linked-text-img"&gt;&lt;img src="image2.jpg" alt="Image 2" width="100px"&gt;&lt;/span&gt;
+    &lt;div class="image-dialog" data-carousel="true" data-start-index="1"&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  
+  &lt;!-- Image Example 3 --&gt;
+  &lt;div class="multi-link-container"&gt;
+    &lt;span tabindex="0" class="linked-text-img"&gt;&lt;img src="image3.jpg" alt="Image 3" width="100px"&gt;&lt;/span&gt;
+    &lt;div class="image-dialog" data-carousel="true" data-start-index="2"&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  
+  &lt;h3&gt;Text Dialog Examples&lt;/h3&gt;
+  &lt;p&gt;
+    Here is some text with 
+    &lt;div class="multi-link-container"&gt;
+      &lt;span tabindex="0" class="linked-text"&gt;dialog example 1&lt;/span&gt;
+      &lt;div class="link-dialog"&gt;
+        &lt;h4&gt;Dialog 1 Title&lt;/h4&gt;
+        &lt;p&gt;This is the content for dialog 1.&lt;/p&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    and 
+    &lt;div class="multi-link-container"&gt;
+      &lt;span tabindex="0" class="linked-text"&gt;dialog example 2&lt;/span&gt;
+      &lt;div class="link-dialog"&gt;
+        &lt;h4&gt;Dialog 2 Title&lt;/h4&gt;
+        &lt;p&gt;This is the content for dialog 2.&lt;/p&gt;
+        &lt;ul&gt;
+          &lt;li&gt;Item 1&lt;/li&gt;
+          &lt;li&gt;Item 2&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    and 
+    &lt;div class="multi-link-container"&gt;
+      &lt;span tabindex="0" class="linked-text"&gt;dialog example 3&lt;/span&gt;
+      &lt;div class="link-dialog"&gt;
+        &lt;h4&gt;Dialog 3 Title&lt;/h4&gt;
+        &lt;p&gt;This is the content for dialog 3.&lt;/p&gt;
+        &lt;img src="image1.jpg" alt="Image in dialog" style="max-width: 200px;"&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;.
+  &lt;/p&gt;
+&lt;/div&gt;
+
+&lt;!-- 4. Include the JavaScript --&gt;
+&lt;script src="engine.js"&gt;&lt;/script&gt;
+</code></pre>
+        </div>
+    </div>
+
+    <!-- Include the engine.js file that handles all dialog functionality -->
+    <script src="engine.js"></script>
+</body>
+</html>
